@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============ AUTH ============
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // bcrypt hashed
+  nama      String
+  role      String   @default("ADMIN") // SUPER_ADMIN, ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============ PERIODE & GELOMBANG ============
+model Periode {
+  id          String      @id @default(cuid())
+  nama        String      // "Tahun Ajaran 2026/2027"
+  tahunDibuka Int         // 2026 → opsi tahun kelulusan: 2024-2027
+  isActive    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  gelombang   Gelombang[]
+}
+
+model Gelombang {
+  id            String   @id @default(cuid())
+  nama          String   // "Gelombang 1"
+  periodeId     String
+  periode       Periode  @relation(fields: [periodeId], references: [id], onDelete: Cascade)
+  isActive      Boolean  @default(false)
+  tanggalBuka   DateTime
+  tanggalTutup  DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  santri        Santri[]
+}
+
+// ============ SANTRI ============
+enum GenderType {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+enum RiwayatAkademik {
+  MA
+  IJAZAH_PESANTREN
+  SMA
+  SMK
+  PAKET_C
+  LAINNYA
+}
+
+model Santri {
+  id                String           @id @default(cuid())
+  noPendaftaran     String           @unique // Auto-generated: MA-2026-0001
+  nis               String?          @unique // Generated saat admin verifikasi, format: MA-26-0001
+  gelombangId       String
+  gelombang         Gelombang        @relation(fields: [gelombangId], references: [id])
+
+  // Data Pribadi
+  namaLengkap       String
+  namaArab          String
+  asalProvinsi      String
+  noWaSantri        String
+  gender            GenderType
+  email             String
+  namaWali          String
+  noWaWali          String
+
+  // Dokumen
+  fileAkteLahir     String           // Cloudinary URL
+  filePasFoto       String           // Cloudinary URL
+
+  // Akademik
+  riwayatAkademik       RiwayatAkademik
+  riwayatAkademikLainnya String?     // Jika pilih LAINNYA
+  tahunKelulusan        Int
+  fileIjazah            String       // Cloudinary URL
+
+  // Paspor
+  nomorPaspor           String?
+  tanggalKadaluarsaPaspor DateTime?
+  filePaspor            String?      // Cloudinary URL
+
+  // Konfirmasi
+  isVerified        Boolean          @default(false) // Admin verifikasi → trigger NIS generation
+  setujuInvestasi   Boolean          @default(false)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  pembayaran        Pembayaran[]
+  pemberkasan       PemberkasanSantri[]
+  progresSantri     ProgresSantri[]
+}
+
+// ============ PEMBAYARAN ============
+enum StatusBayar {
+  BELUM_BAYAR
+  MENUNGGU_VERIFIKASI
+  LUNAS
+}
+
+model Pembayaran {
+  id            String      @id @default(cuid())
+  santriId      String
+  santri        Santri      @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  tahap         Int         // 1-6
+  nominal       Int         // dalam rupiah
+  status        StatusBayar @default(BELUM_BAYAR)
+  buktiTransfer String?     // Cloudinary URL
+  keterangan    String?
+  tanggalBayar  DateTime?
+  tanggalVerifikasi DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([santriId, tahap])
+}
+
+// ============ PEMBERKASAN ============
+enum KategoriPemberkasan {
+  INDONESIA
+  MESIR
+}
+
+model ItemPemberkasan {
+  id        String              @id @default(cuid())
+  periodeId String
+  nama      String              // "Akta Lahir asli + FC (5)"
+  kategori  KategoriPemberkasan
+  urutan    Int
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  santriItems PemberkasanSantri[]
+}
+
+model PemberkasanSantri {
+  id               String          @id @default(cuid())
+  santriId         String
+  santri           Santri          @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  itemPemberkasanId String
+  itemPemberkasan  ItemPemberkasan @relation(fields: [itemPemberkasanId], references: [id], onDelete: Cascade)
+  sudahDikumpulkan Boolean         @default(false)
+  catatan          String?
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([santriId, itemPemberkasanId])
+}
+
+// ============ PROGRES ============
+model TahapProgres {
+  id        String          @id @default(cuid())
+  periodeId String
+  nama      String          // "Tes Tahdid Mustawa"
+  urutan    Int
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  santriProgres ProgresSantri[]
+}
+
+model ProgresSantri {
+  id             String       @id @default(cuid())
+  santriId       String
+  santri         Santri       @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  tahapProgresId String
+  tahapProgres   TahapProgres @relation(fields: [tahapProgresId], references: [id], onDelete: Cascade)
+  selesai        Boolean      @default(false)
+  tanggalSelesai DateTime?
+  catatan        String?
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([santriId, tahapProgresId])
+}
