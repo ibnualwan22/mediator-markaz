@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import MasterItemManager from "@/components/admin/MasterItemManager";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 

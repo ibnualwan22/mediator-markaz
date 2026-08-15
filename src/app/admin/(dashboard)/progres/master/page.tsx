@@ -3,6 +3,8 @@ import MasterProgresManager from "@/components/admin/MasterProgresManager";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function MasterProgresPage() {
   const tahaps = await prisma.tahapProgres.findMany({
     orderBy: { urutan: 'asc' }

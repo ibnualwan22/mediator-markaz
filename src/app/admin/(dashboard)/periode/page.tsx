@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import PeriodeManager from "@/components/admin/PeriodeManager";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPeriodePage() {
   const periodes = await prisma.periode.findMany({
     orderBy: { createdAt: 'desc' },
