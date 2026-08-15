@@ -28,41 +28,56 @@ export default function Step2DokumenPribadi({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type for pas foto
     if (fieldName === 'filePasFoto' && !file.type.includes('jpeg') && !file.type.includes('jpg')) {
       alert("Pas foto harus berformat JPG/JPEG");
       return;
     }
 
-    // Validate size (5MB for all)
+    // Kini ukurannya bisa dikembalikan ke 5MB karena me-bypass batas Vercel (Direct to Cloudinary)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(`Ukuran file terlalu besar. Maksimal ${maxSize / (1024*1024)}MB.`);
+      alert(`Ukuran file terlalu besar. Maksimal 5MB.`);
       return;
     }
 
     setIsUploading(prev => ({ ...prev, [uploadKey]: true }));
-    
-    // Konversi file ke format Base64 secara instan untuk kebutuhan testing lokal
-    // (Akan otomatis bisa dirender langsung oleh tag <img> di form pendaftaran maupun Dasbor Admin)
-    const reader = new FileReader();
-    reader.onload = () => {
+    try {
+      const signRes = await fetch('/api/cloudinary-sign', { method: 'POST' });
+      if (!signRes.ok) throw new Error("Gagal terhubung ke Secure Server");
+      
+      const { timestamp, signature, apiKey, cloudName } = await signRes.json();
+      
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("api_key", apiKey);
+      fd.append("timestamp", timestamp.toString());
+      fd.append("signature", signature);
+      
+      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: fd
+      });
+      
+      if (!cloudRes.ok) throw new Error("Gagal menyimpan ke Cloudinary");
+      
+      const data = await cloudRes.json();
       setFormData(prev => ({ 
         ...prev, 
-        [fieldName]: reader.result as string 
+        [fieldName]: data.secure_url 
       }));
-      setIsUploading(prev => ({ ...prev, [uploadKey]: false }));
-    };
-    reader.onerror = () => {
-      alert("Gagal memuat file");
+    } catch (e: any) {
+      alert("Error upload file: " + e.message);
+    } finally {
       setIsUploading(prev => ({ ...prev, [uploadKey]: false }));
     }
-    // Baca file sungguhan & jadikan base64 text
-    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUploading.akte || isUploading.foto) {
+      alert("Harap tunggu hingga proses unggah selesai.");
+      return;
+    }
     if (!formData.fileAkteLahir || !formData.filePasFoto) {
       alert("Silakan upload semua dokumen yang diwajibkan.");
       return;
@@ -83,7 +98,7 @@ export default function Step2DokumenPribadi({
           <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
             {formData.fileAkteLahir ? (
               <div className="flex flex-col items-center gap-2">
-                {formData.fileAkteLahir.startsWith("data:image") ? (
+                {formData.fileAkteLahir.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.fileAkteLahir.startsWith("data:image") ? (
                   <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
                      {/* eslint-disable-next-line @next/next/no-img-element */}
                      <img src={formData.fileAkteLahir} alt="Preview Akte" className="w-full h-full object-cover" />
@@ -94,7 +109,7 @@ export default function Step2DokumenPribadi({
                   </div>
                 )}
                 <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.fileAkteLahir}</span>
+                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.fileAkteLahir.split('/').pop()}</span>
                 <button type="button" onClick={() => setFormData(f => ({...f, fileAkteLahir: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
               </div>
             ) : (
@@ -126,7 +141,7 @@ export default function Step2DokumenPribadi({
                    <img src={formData.filePasFoto} alt="Preview Pas Foto" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.filePasFoto}</span>
+                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.filePasFoto.split('/').pop()}</span>
                 <button type="button" onClick={() => setFormData(f => ({...f, filePasFoto: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
               </div>
             ) : (

@@ -33,26 +33,43 @@ export default function Step4Paspor({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran file terlalu besar. Maksimal 5MB.");
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`Ukuran file terlalu besar. Maksimal 5MB.`);
       return;
     }
 
     setIsUploading(true);
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
+    try {
+      const signRes = await fetch('/api/cloudinary-sign', { method: 'POST' });
+      if (!signRes.ok) throw new Error("Gagal terhubung ke Secure Server");
+      
+      const { timestamp, signature, apiKey, cloudName } = await signRes.json();
+      
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("api_key", apiKey);
+      fd.append("timestamp", timestamp.toString());
+      fd.append("signature", signature);
+      
+      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: fd
+      });
+      
+      if (!cloudRes.ok) throw new Error("Gagal menyimpan ke Cloudinary");
+      
+      const data = await cloudRes.json();
       setFormData(prev => ({ 
         ...prev, 
-        filePaspor: reader.result as string 
+        filePaspor: data.secure_url 
       }));
-      setIsUploading(false);
-    };
-    reader.onerror = () => {
-      alert("Gagal memuat file");
+    } catch (e: any) {
+      alert("Error upload file: " + e.message);
+    } finally {
       setIsUploading(false);
     }
-    reader.readAsDataURL(file);
   };
 
   const hasPassport = formData.nomorPaspor.trim().length > 0;
@@ -71,6 +88,11 @@ export default function Step4Paspor({
         ? new Date(formData.tanggalKadaluarsaPaspor).toISOString() 
         : null
     };
+
+    if (isUploading) {
+      alert("Harap tunggu hingga proses unggah selesai.");
+      return;
+    }
 
     onSubmit(finalData);
   };
@@ -117,7 +139,7 @@ export default function Step4Paspor({
               <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
                 {formData.filePaspor ? (
                   <div className="flex flex-col items-center gap-2">
-                    {formData.filePaspor.startsWith("data:image") ? (
+                    {formData.filePaspor.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.filePaspor.startsWith("data:image") ? (
                       <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
                          {/* eslint-disable-next-line @next/next/no-img-element */}
                          <img src={formData.filePaspor} alt="Preview Paspor" className="w-full h-full object-cover" />
@@ -128,7 +150,7 @@ export default function Step4Paspor({
                       </div>
                     )}
                     <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                    <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.filePaspor}</span>
+                    <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.filePaspor.split('/').pop()}</span>
                     <button type="button" onClick={() => setFormData(f => ({...f, filePaspor: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
                   </div>
                 ) : (
