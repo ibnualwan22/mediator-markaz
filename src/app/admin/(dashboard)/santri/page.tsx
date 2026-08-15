@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import SantriTable from "@/components/admin/SantriTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminSantriPage() {
   const santriList = await prisma.santri.findMany({
     orderBy: { createdAt: 'desc' },
