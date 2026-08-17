@@ -15,7 +15,7 @@ export default async function AdminPembayaranSantriPage({ params }: { params: Pr
     }
   });
 
-  if (!santri || !santri.isVerified) {
+  if (!santri) {
     redirect("/admin/pembayaran");
   }
 
@@ -27,7 +27,15 @@ export default async function AdminPembayaranSantriPage({ params }: { params: Pr
         </Link>
         <div>
           <h1 className="text-2xl font-heading font-bold text-text-primary">Kelola Tagihan Santri</h1>
-          <p className="text-text-secondary mt-1">{santri.namaLengkap} - {santri.nis}</p>
+          <p className="text-text-secondary mt-1 flex items-center gap-2">
+            {santri.namaLengkap} 
+            <span className="text-gray-300">|</span> 
+            {santri.nis ? (
+              <span className="font-mono text-primary font-medium">{santri.nis}</span>
+            ) : (
+              <span className="font-mono text-warning text-sm border border-warning px-1.5 py-0.5 rounded">Belum Verifikasi</span>
+            )}
+          </p>
         </div>
       </div>
 

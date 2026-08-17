@@ -8,7 +8,9 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
 
   const santriMembayar = await prisma.santri.findMany({
     where: {
-      isVerified: true,
+      pembayaran: {
+        some: {}
+      },
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },
         { nis: { contains: query, mode: 'insensitive' } }
@@ -60,7 +62,11 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
                 return (
                   <tr key={s.id} className="border-b border-primary-light/10 hover:bg-bg-cream transition-colors">
                     <td className="p-4">
-                      <div className="font-mono font-bold text-primary">{s.nis}</div>
+                      {s.nis ? (
+                        <div className="font-mono font-bold text-primary">{s.nis}</div>
+                      ) : (
+                        <div className="font-mono font-bold text-warning text-xs border border-warning px-1.5 py-0.5 rounded-md inline-block mb-1">Belum Verifikasi</div>
+                      )}
                       <div className="font-semibold text-text-primary mt-0.5">{s.namaLengkap}</div>
                     </td>
                     <td className="p-4">

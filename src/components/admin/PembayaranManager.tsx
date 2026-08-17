@@ -40,6 +40,15 @@ export default function PembayaranManager({ santri, pembayaran }: { santri: any,
       </div>
 
       <div className="space-y-4">
+        {!santri.isVerified && (
+           <div className="bg-primary/5 border border-primary/20 text-primary px-4 py-3 rounded-xl text-sm flex items-start gap-3">
+             <Clock className="w-5 h-5 flex-shrink-0 mt-0.5" />
+             <div>
+               <strong>Perhatian:</strong> Santri ini belum terverifikasi (NIS belum ter-generate).<br/>
+               Melunasi pembayaran <strong>Tahap 1</strong> akan otomatis memverifikasi santri, membuat NIS, dan menerbitkan tagihan tahap berikutnya.
+             </div>
+           </div>
+        )}
         {stages.map(t => {
           const record = payMap.get(t);
           

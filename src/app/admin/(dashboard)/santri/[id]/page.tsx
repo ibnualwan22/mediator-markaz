@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft, User, FileText, GraduationCap, Globe, CheckCircle2 } from "lucide-react";
-import VerifyButton from "@/components/admin/VerifyButton";
 import DocumentViewer from "@/components/admin/DocumentViewer";
 import { redirect } from "next/navigation";
 
@@ -55,17 +54,19 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           <div>
             <h1 className="text-2xl font-heading font-bold text-text-primary flex items-center gap-3">
               Detail Santri
-              {santri.nis && (
+              {santri.nis ? (
                 <span className="px-3 py-1 bg-success/10 text-success text-sm font-bold rounded-full font-mono">
                   NIS: {santri.nis}
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-warning/10 text-warning text-sm font-bold rounded-full">
+                  Menunggu Lunas Tahap 1
                 </span>
               )}
             </h1>
             <p className="text-text-secondary mt-1">Nomor Pendaftaran: {santri.noPendaftaran}</p>
           </div>
         </div>
-
-        <VerifyButton santriId={santri.id} isVerified={santri.isVerified} />
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 pt-4">

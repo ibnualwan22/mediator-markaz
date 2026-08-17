@@ -51,11 +51,28 @@ export async function generateTahap(santriId: string, tahap: number) {
   return { success: true };
 }
 
+import { verifySantri } from "../santri/actions";
+
 export async function updateStatusBayar(pembayaranId: string, status: string) {
+  const pembayaran = await prisma.pembayaran.findUnique({
+    where: { id: pembayaranId },
+    include: { santri: true }
+  });
+
+  if (!pembayaran) {
+    return { success: false, error: "Data pembayaran tidak ditemukan" };
+  }
+
   await prisma.pembayaran.update({
     where: { id: pembayaranId },
     data: { status: status as any } // as StatusPembayaran
   });
+
+  // Jika tahap 1 dilunasi dan santri belum terverifikasi, otomatis verifikasi
+  if (pembayaran.tahap === 1 && status === 'LUNAS' && !pembayaran.santri.isVerified) {
+    await verifySantri(pembayaran.santriId);
+  }
+
   revalidatePath(`/admin/pembayaran`);
   revalidatePath(`/admin/pembayaran/[santriId]`, 'page');
   return { success: true };

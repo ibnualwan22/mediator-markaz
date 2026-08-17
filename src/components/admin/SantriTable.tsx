@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, Eye } from "lucide-react";
+import { Search, Filter, Eye, FileSpreadsheet } from "lucide-react";
+import ImportExcelModal from "./ImportExcelModal";
+import { useRouter } from "next/navigation";
 
 export default function SantriTable({ santriList, gelombangList }: { santriList: any[], gelombangList: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGelombang, setFilterGelombang] = useState("");
+  const [showImportModal, setShowImportModal] = useState(false);
+  const router = useRouter();
 
   const filteredData = santriList.filter(s => {
     const matchSearch = s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -33,6 +37,13 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         </div>
         
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 rounded-lg transition-all text-sm font-semibold"
+          >
+            <FileSpreadsheet size={16} /> Import Excel
+          </button>
+          <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
           <Filter size={18} className="text-text-secondary" />
           <select 
             value={filterGelombang}
@@ -102,6 +113,15 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           </tbody>
         </table>
       </div>
+      <ImportExcelModal 
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        gelombangList={gelombangList}
+        onSuccess={() => {
+          setShowImportModal(false);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }
