@@ -5,7 +5,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminSantriPage() {
   const santriList = await prisma.santri.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: [
+      { gender: 'asc' },
+      { namaLengkap: 'asc' }
+    ],
     include: {
       gelombang: { include: { periode: true } }
     }

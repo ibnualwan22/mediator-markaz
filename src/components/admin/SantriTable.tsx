@@ -62,6 +62,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-primary/5 text-text-primary text-sm">
+              <th className="p-4 font-semibold border-b border-primary-light/20 w-12 text-center">No.</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">No. Pendaftaran / NIS</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">Nama Lengkap</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">Gelombang</th>
@@ -70,8 +71,9 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
             </tr>
           </thead>
           <tbody className="text-sm">
-            {filteredData.length > 0 ? filteredData.map(s => (
+            {filteredData.length > 0 ? filteredData.map((s, index) => (
               <tr key={s.id} className="border-b border-primary-light/10 hover:bg-bg-cream transition-colors">
+                <td className="p-4 text-center font-medium text-text-secondary">{index + 1}</td>
                 <td className="p-4">
                   <div className="font-mono font-medium text-primary">{s.noPendaftaran}</div>
                   {s.nis ? (
@@ -105,7 +107,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
               </tr>
             )) : (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-text-secondary italic">
+                <td colSpan={6} className="p-8 text-center text-text-secondary italic">
                   Tidak ada data santri ditemukan.
                 </td>
               </tr>

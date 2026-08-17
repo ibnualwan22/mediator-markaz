@@ -16,6 +16,7 @@ export default function ImportExcelModal({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [selectedGelombang, setSelectedGelombang] = useState("");
+  const [overwriteExisting, setOverwriteExisting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +48,7 @@ export default function ImportExcelModal({
   const resetForm = () => {
     setFile(null);
     setSelectedGelombang("");
+    setOverwriteExisting(false);
     setResult(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -76,6 +78,7 @@ export default function ImportExcelModal({
     const formData = new FormData();
     formData.append("file", file);
     formData.append("gelombangId", selectedGelombang);
+    formData.append("overwriteExisting", overwriteExisting.toString());
 
     try {
       const res = await fetch("/api/admin/santri/import", {
@@ -181,6 +184,19 @@ export default function ImportExcelModal({
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <input 
+                  type="checkbox" 
+                  id="overwriteCheckbox"
+                  checked={overwriteExisting}
+                  onChange={(e) => setOverwriteExisting(e.target.checked)}
+                  className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary accent-primary"
+                />
+                <label htmlFor="overwriteCheckbox" className="text-sm text-gray-700 cursor-pointer select-none">
+                  Timpa data santri dengan Nama Lengkap yang sama (jika ada)
+                </label>
               </div>
             </div>
           ) : (

@@ -7,6 +7,7 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const gelombangId = formData.get("gelombangId") as string;
+    const overwriteExisting = formData.get("overwriteExisting") === "true";
 
     if (!file || !gelombangId) {
       return NextResponse.json(
@@ -104,43 +105,65 @@ export async function POST(req: Request) {
       const noPendaftaran = `MA-${currentYear}-${paddingCount}`;
 
       try {
-        // Karena ini import bulk dan agar ACID compliant, lebih baik pakai transaction jika memungkinkan.
-        // Tapi proses per baris juga aman untuk menangkap error individual.
-        const santri = await prisma.santri.create({
-          data: {
-            noPendaftaran,
-            gelombangId: gelombangId,
-            
-            namaLengkap: String(namaLengkap),
-            namaArab: String(namaArab),
-            gender: gender,
-            
-            // Placeholder wajib
-            asalProvinsi: "-",
-            noWaSantri: "-",
-            email: "-",
-            namaWali: "-",
-            noWaWali: "-",
-            fileAkteLahir: "-",
-            filePasFoto: "-",
-            fileIjazah: "-",
-            riwayatAkademik: "SMA",
-            tahunKelulusan: currentYear,
-            setujuInvestasi: false, // Belum setuju investasi
-            
-            // Otomatis tergenerate Pembayaran Tahap 1
-            pembayaran: {
-              create: {
-                tahap: 1,
-                nominal: 1000000,
-                status: "BELUM_BAYAR",
-                keterangan: "Investasi fiksasi pendaftaran"
+        let existingSantri = null;
+
+        if (overwriteExisting) {
+          existingSantri = await prisma.santri.findFirst({
+            where: {
+              namaLengkap: String(namaLengkap),
+              gelombangId: gelombangId
+            }
+          });
+        }
+
+        if (existingSantri) {
+          // Update data yang ada
+          const santri = await prisma.santri.update({
+            where: { id: existingSantri.id },
+            data: {
+              namaArab: String(namaArab),
+              gender: gender,
+            }
+          });
+          successCount++;
+          newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
+        } else {
+          // Buat data baru
+          const santri = await prisma.santri.create({
+            data: {
+              noPendaftaran,
+              gelombangId: gelombangId,
+              
+              namaLengkap: String(namaLengkap),
+              namaArab: String(namaArab),
+              gender: gender,
+              
+              // Placeholder wajib
+              asalProvinsi: "-",
+              noWaSantri: "-",
+              email: "-",
+              namaWali: "-",
+              noWaWali: "-",
+              fileAkteLahir: "-",
+              filePasFoto: "-",
+              fileIjazah: "-",
+              riwayatAkademik: "SMA",
+              tahunKelulusan: currentYear,
+              setujuInvestasi: false, 
+              
+              pembayaran: {
+                create: {
+                  tahap: 1,
+                  nominal: 1000000,
+                  status: "BELUM_BAYAR",
+                  keterangan: "Investasi fiksasi pendaftaran"
+                }
               }
             }
-          }
-        });
-        successCount++;
-        newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
+          });
+          successCount++;
+          newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
+        }
       } catch (err: any) {
         console.error(`Gagal import baris ${rowNum}:`, err);
         errors.push(`Baris ${rowNum}: Gagal menyimpan data ${namaLengkap}`);
