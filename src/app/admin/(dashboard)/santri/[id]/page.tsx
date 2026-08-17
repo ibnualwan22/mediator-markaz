@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft, User, FileText, GraduationCap, Globe, CheckCircle2 } from "lucide-react";
 import DocumentViewer from "@/components/admin/DocumentViewer";
+import DeleteSantriButton from "@/components/admin/DeleteSantriButton";
 import { redirect } from "next/navigation";
 
 export default async function AdminSantriDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -67,6 +68,8 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <p className="text-text-secondary mt-1">Nomor Pendaftaran: {santri.noPendaftaran}</p>
           </div>
         </div>
+
+        <DeleteSantriButton santriId={santri.id} namaLengkap={santri.namaLengkap} />
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 pt-4">

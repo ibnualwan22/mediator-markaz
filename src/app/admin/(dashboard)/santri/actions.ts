@@ -64,3 +64,17 @@ export async function verifySantri(santriId: string) {
   
   return { success: true, nis: generatedNis };
 }
+
+export async function deleteSantri(santriId: string) {
+  try {
+    await prisma.santri.delete({
+      where: { id: santriId }
+    });
+    revalidatePath("/admin/santri");
+    revalidatePath("/admin/pembayaran");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Delete Santri Error:", error);
+    return { success: false, error: "Gagal menghapus santri. Silakan coba lagi." };
+  }
+}
