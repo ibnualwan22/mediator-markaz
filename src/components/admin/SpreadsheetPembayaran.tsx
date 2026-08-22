@@ -178,7 +178,7 @@ export default function SpreadsheetPembayaran({
                     <thead className="sticky top-0 z-20 shadow-sm bg-[#faf9f5]">
                       {/* Header Row 1: Groups */}
                       <tr className="text-text-primary text-xs border-b border-primary-light/20">
-                        <th colSpan={2} className="p-2 border-r border-primary-light/20 bg-[#f4f2eb] text-center font-bold">Data Santri</th>
+                        <th colSpan={2} className="p-2 border-r border-primary-light/20 bg-[#f4f2eb] text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
 
                         {tahap1 && tahap1.poinTahap.length > 0 && (
                           <th colSpan={tahap1.poinTahap.length} className="p-2 border-r border-primary-light/20 text-center font-bold">{tahap1.nama}</th>
@@ -196,7 +196,7 @@ export default function SpreadsheetPembayaran({
                       {/* Header Row 2: Sub-columns */}
                       <tr className="text-text-secondary text-[11px] border-b border-primary-light/20">
                         <th className="p-2 border-r border-primary-light/10 bg-white min-w-[80px]">NIS</th>
-                        <th className="p-2 border-r border-primary-light/20 bg-white min-w-[150px]">Nama</th>
+                        <th className="p-2 border-r border-primary-light/20 bg-white min-w-[150px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
 
                         {tahap1 && tahap1.poinTahap.map((poin: any) => (
                            <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px]" title={poin.nama}>

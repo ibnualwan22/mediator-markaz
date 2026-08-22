@@ -12,14 +12,18 @@ import { Settings, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
 export default function SpreadsheetDarulLughoh({
   santriList,
   gelombangs,
+  periodes,
   query,
   selectedGelombangId,
+  selectedPeriodeId,
   setting
 }: {
   santriList: any[],
   gelombangs: any[],
+  periodes: any[],
   query: string,
   selectedGelombangId: string,
+  selectedPeriodeId: string,
   setting: any
 }) {
   const router = useRouter();
@@ -70,21 +74,40 @@ export default function SpreadsheetDarulLughoh({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 flex flex-col h-[calc(100vh-12rem)] overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 flex flex-col h-[calc(100vh-12rem)] w-full max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
 
       {/* Top Bar (Filter + Settings) */}
       <div className="p-4 border-b border-primary-light/20 flex flex-wrap gap-4 justify-between items-center bg-bg-cream/30">
-        <div className="flex gap-4 flex-1">
+        <div className="flex gap-2 flex-1">
+          {/* PERIODE FILTER */}
           <select
-            className="px-3 py-2 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm"
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary max-w-[200px]"
+            value={selectedPeriodeId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) params.set('periodeId', e.target.value);
+              else params.delete('periodeId');
+              
+              params.delete('gelombangId'); // reset gelombang when changing periode
+              router.push(`/admin/darul-lughoh?${params.toString()}`);
+            }}
+          >
+            <option value="" disabled>Pilih Periode</option>
+            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+
+          {/* GELOMBANG FILTER */}
+          <select
+            className="px-3 py-1.5 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm font-medium text-text-secondary"
             value={selectedGelombangId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              params.set("gelombangId", e.target.value);
+              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
+              else params.delete('gelombangId');
               router.push(`?${params.toString()}`);
             }}
           >
-            {gelombangs.length === 0 && <option value="">Semua Gelombang</option>}
+            <option value="all">Semua Gelombang</option>
             {gelombangs.map(g => (
               <option key={g.id} value={g.id}>{g.nama}</option>
             ))}
@@ -96,7 +119,7 @@ export default function SpreadsheetDarulLughoh({
               name="q"
               defaultValue={query}
               placeholder="Cari NIS atau Nama..."
-              className="w-full px-4 py-2 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm"
+              className="w-full px-4 py-1.5 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm"
             />
             <input type="hidden" name="gelombangId" value={selectedGelombangId} />
           </form>
@@ -135,11 +158,11 @@ export default function SpreadsheetDarulLughoh({
       {/* Spreadsheet Table */}
       <div className="flex-1 overflow-auto custom-scrollbar">
         <table className="w-full text-left border-collapse min-w-max">
-          <thead className="sticky top-0 z-20 bg-primary/10 shadow-sm text-xs text-text-primary font-bold">
-            <tr>
-              <th className="p-3 border-r border-primary-light/20 sticky left-0 z-30 bg-primary/10 min-w-[80px]">NIS</th>
-              <th className="p-3 border-r border-primary-light/20 sticky left-[80px] z-30 bg-primary/10 min-w-[150px]">Nama</th>
-              <th className="p-3 border-r border-primary-light/30 sticky left-[230px] z-30 bg-primary/20 backdrop-blur w-24 text-center">Set Level</th>
+          <thead className="sticky top-0 z-20 shadow-sm text-xs text-text-primary font-bold">
+            <tr className="border-b border-primary-light/20">
+              <th className="p-3 border-r border-primary-light/10 bg-[#f4f2eb] min-w-[80px]">NIS</th>
+              <th className="p-3 border-r border-primary-light/20 bg-[#f4f2eb] min-w-[150px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+              <th className="p-3 border-r border-primary-light/30 bg-[#f4f2eb] w-24 text-center">Set Level</th>
 
               {levels.map(lvl => (
                 <th key={lvl} className="p-3 text-center border-r border-primary-light/20 min-w-[180px]">DL Level {lvl}</th>
@@ -152,10 +175,12 @@ export default function SpreadsheetDarulLughoh({
               const maxLvl = santri.darulLughoh.reduce((max: number, d: any) => Math.max(max, d.level), 0);
 
               return (
-                <tr key={santri.id} className="border-b border-primary-light/10 hover:bg-bg-cream/50 group">
-                  <td className="p-2 border-r border-primary-light/10 sticky left-0 z-10 bg-white group-hover:bg-bg-cream font-mono font-medium text-primary">{santri.nis}</td>
-                  <td className="p-2 border-r border-primary-light/10 sticky left-[80px] z-10 bg-white group-hover:bg-bg-cream font-semibold truncate max-w-[150px]">{santri.namaLengkap}</td>
-                  <td className="p-2 border-r border-primary-light/30 sticky left-[230px] z-10 bg-white/90 group-hover:bg-bg-cream/90 text-center">
+                <tr key={santri.id} className="border-b border-primary-light/10 hover:bg-[#faf9f5] transition-colors group">
+                  <td className="p-2 border-r border-primary-light/10 bg-white group-hover:bg-[#faf9f5] font-mono font-medium text-primary">{santri.nis}</td>
+                  <td className="p-2 border-r border-primary-light/20 sticky left-0 z-10 bg-white group-hover:bg-[#faf9f5] font-semibold truncate max-w-[180px] shadow-[2px_0_4px_rgba(0,0,0,0.06)] min-w-[150px]">
+                    <div className="font-bold text-text-primary text-xs truncate" title={santri.namaLengkap}>{santri.namaLengkap}</div>
+                  </td>
+                  <td className="p-2 border-r border-primary-light/30 bg-white group-hover:bg-[#faf9f5] text-center">
                     <select
                       className="p-1 border rounded bg-white text-[10px] w-full cursor-pointer outline-none focus:border-primary"
                       onChange={(e) => handleAssignLevel(santri.id, parseInt(e.target.value))}

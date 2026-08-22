@@ -22,9 +22,10 @@ interface SantriSidebarProps {
 
 const menuItems = [
   { name: "Profil Saya", href: "/santri", icon: <User size={20} /> },
-  { name: "Pembayaran", href: "/santri/pembayaran", icon: <CreditCard size={20} />, comingSoon: true },
-  { name: "Pemberkasan", href: "/santri/pemberkasan", icon: <FolderCheck size={20} />, comingSoon: true },
-  { name: "Progres", href: "/santri/progres", icon: <LineChart size={20} />, comingSoon: true },
+  { name: "Pembayaran", href: "/santri/pembayaran", icon: <CreditCard size={20} /> },
+  { name: "Pemberkasan", href: "/santri/pemberkasan", icon: <FolderCheck size={20} /> },
+  { name: "Progres", href: "/santri/progres", icon: <LineChart size={20} /> },
+  { name: "Darul Lughoh", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
 ];
 
 export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
@@ -88,23 +89,16 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
               return (
                 <Link
                   key={item.href}
-                  href={item.comingSoon ? "#" : item.href}
-                  onClick={() => !item.comingSoon && setIsOpen(false)}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
-                    item.comingSoon
-                      ? "text-text-secondary/40 cursor-not-allowed"
-                      : isActive
+                    isActive
                       ? "bg-primary/10 text-primary"
                       : "text-text-secondary hover:bg-primary/5 hover:text-primary"
                   }`}
                 >
                   {item.icon}
                   <span className="flex-1">{item.name}</span>
-                  {item.comingSoon && (
-                    <span className="text-[10px] bg-primary-light/20 text-primary-light px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Soon
-                    </span>
-                  )}
                 </Link>
               );
             })}

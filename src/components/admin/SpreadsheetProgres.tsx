@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { toggleCheckboxPemberkasan } from "@/app/admin/(dashboard)/pemberkasan/actions";
+import { toggleCheckboxProgres } from "@/app/admin/(dashboard)/progres/actions";
 import { useRouter } from "next/navigation";
 
-export default function SpreadsheetPemberkasan({
+export default function SpreadsheetProgres({
   santriList,
-  items,
+  tahaps,
   gelombangs,
   periodes,
   query,
@@ -14,7 +14,7 @@ export default function SpreadsheetPemberkasan({
   selectedPeriodeId
 }: {
   santriList: any[];
-  items: any[];
+  tahaps: any[];
   gelombangs: any[];
   periodes: any[];
   query: string;
@@ -23,16 +23,13 @@ export default function SpreadsheetPemberkasan({
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [filterKategori, setFilterKategori] = useState<"ALL" | "INDONESIA" | "MESIR">("ALL");
 
-  const visibleItems = items.filter(i => filterKategori === "ALL" || i.kategori === filterKategori);
-  
-  const indoCount = visibleItems.filter(i => i.kategori === 'INDONESIA').length;
-  const mesirCount = visibleItems.filter(i => i.kategori === 'MESIR').length;
+  const activeTahaps = tahaps.filter(t => t.isActive);
+  const inactiveTahapsCount = tahaps.length - activeTahaps.length;
 
-  const handleToggle = async (pemberkasanId: string, currentStatus: boolean) => {
+  const handleToggle = async (progresSantriId: string, currentStatus: boolean) => {
     setIsLoading(true);
-    await toggleCheckboxPemberkasan(pemberkasanId, !currentStatus);
+    await toggleCheckboxProgres(progresSantriId, !currentStatus);
     setIsLoading(false);
   };
 
@@ -40,7 +37,7 @@ export default function SpreadsheetPemberkasan({
     <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 flex flex-col h-[calc(100vh-12rem)] w-full max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
       
       {/* Filter and Search Bar */}
-      <div className="p-4 border-b border-primary-light/20 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream/30">
+      <div className="p-4 border-b border-primary-light/20 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream/30 justify-between">
         <div className="flex gap-2">
           {/* PERIODE FILTER */}
           <select
@@ -52,7 +49,7 @@ export default function SpreadsheetPemberkasan({
               else params.delete('periodeId');
               
               params.delete('gelombangId'); // reset gelombang when changing periode
-              router.push(`/admin/pemberkasan?${params.toString()}`);
+              router.push(`/admin/progres?${params.toString()}`);
             }}
           >
             <option value="" disabled>Pilih Periode</option>
@@ -67,7 +64,7 @@ export default function SpreadsheetPemberkasan({
               const params = new URLSearchParams(window.location.search);
               if (e.target.value !== "all") params.set('gelombangId', e.target.value);
               else params.delete('gelombangId');
-              router.push(`/admin/pemberkasan?${params.toString()}`);
+              router.push(`/admin/progres?${params.toString()}`);
             }}
           >
             <option value="all">Semua Gelombang</option>
@@ -75,16 +72,6 @@ export default function SpreadsheetPemberkasan({
           </select>
         </div>
         
-        <select 
-          className="px-3 py-2 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm font-medium"
-          value={filterKategori}
-          onChange={(e: any) => setFilterKategori(e.target.value)}
-        >
-          <option value="ALL">Semua Kategori Berkas</option>
-          <option value="INDONESIA">Dalam Negeri (INDONESIA)</option>
-          <option value="MESIR">Luar Negeri (MESIR)</option>
-        </select>
-
         <form className="relative flex-1 max-w-sm">
           <input 
             type="text" 
@@ -105,11 +92,11 @@ export default function SpreadsheetPemberkasan({
             <tr className="border-b border-primary-light/20">
               <th colSpan={2} className="p-2 border-r border-primary-light/20 bg-[#f4f2eb] text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
               
-              {indoCount > 0 && (
-                <th colSpan={indoCount} className="p-2 border-r border-primary-light/20 text-center font-bold bg-blue-50 text-blue-800">Berkas Dalam Negeri (INDONESIA)</th>
+              {activeTahaps.length > 0 && (
+                <th colSpan={activeTahaps.length} className="p-2 border-r border-primary-light/20 text-center font-bold bg-green-50 text-green-800">Tahap Akademik Aktif</th>
               )}
-              {mesirCount > 0 && (
-                <th colSpan={mesirCount} className="p-2 border-r border-primary-light/20 text-center font-bold bg-amber-50 text-amber-800">Berkas Luar Negeri (MESIR)</th>
+              {inactiveTahapsCount > 0 && (
+                <th colSpan={inactiveTahapsCount} className="p-2 border-r border-primary-light/20 text-center font-bold bg-gray-50 text-gray-500">Tahap Non-Aktif (Legacy)</th>
               )}
               
               <th className="p-2 bg-[#f4f2eb] text-center font-bold border-l border-primary-light/20">Summary</th>
@@ -120,61 +107,57 @@ export default function SpreadsheetPemberkasan({
               <th className="p-2 border-r border-primary-light/10 bg-[#f4f2eb] min-w-[80px]">NIS</th>
               <th className="p-2 border-r border-primary-light/30 bg-[#f4f2eb] min-w-[150px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               
-              {visibleItems.map(item => (
-                <th key={item.id} className="p-2 border-r border-primary-light/10 bg-[#f4f2eb] min-w-[100px] align-bottom" title={item.nama}>
+              {tahaps.map(tahap => (
+                <th key={tahap.id} className={`p-2 border-r border-primary-light/10 min-w-[100px] align-bottom ${tahap.isActive ? 'bg-[#f4f2eb]' : 'bg-gray-100 text-gray-400'}`} title={tahap.nama}>
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="truncate w-full font-medium pr-1 whitespace-normal break-words leading-tight">{item.nama}</span>
-                    {item.isActive && <span className="bg-danger text-white text-[8px] px-1 rounded">WJB</span>}
+                    <span className="truncate w-full font-medium pr-1 whitespace-normal break-words leading-tight">{tahap.nama}</span>
                   </div>
                 </th>
               ))}
 
-              <th className="p-2 border-l border-primary-light/20 bg-[#f4f2eb] min-w-[100px] text-center text-xs">Progress</th>
+              <th className="p-2 border-l border-primary-light/20 bg-[#f4f2eb] min-w-[100px] text-center text-xs">Penyelesaian</th>
             </tr>
           </thead>
           <tbody className="text-xs">
             {santriList.map((santri: any) => {
               let totalSelesai = 0;
-              let requiredItemsLeft = 0;
+              let activeRequiredCount = 0;
 
               return (
                 <tr key={santri.id} className="border-b border-primary-light/10 hover:bg-[#faf9f5] transition-colors group">
                   <td className="p-2 border-r border-primary-light/10 bg-white group-hover:bg-[#faf9f5] font-mono font-medium text-primary">{santri.nis}</td>
                   <td className="p-2 border-r border-primary-light/30 sticky left-0 z-10 bg-white group-hover:bg-[#faf9f5] font-semibold truncate min-w-[150px] max-w-[200px] shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.namaLengkap}</td>
                   
-                  {visibleItems.map(item => {
-                    const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === item.id);
+                  {tahaps.map(tahap => {
+                    const record = santri.progresSantri.find((p: any) => p.tahapProgresId === tahap.id);
                     
-                    if (record && record.sudahDikumpulkan) {
+                    if (record && record.selesai) {
                       totalSelesai++;
-                    } else if (item.isActive && !record?.sudahDikumpulkan) {
-                      requiredItemsLeft++;
+                    }
+                    if (tahap.isActive) {
+                      activeRequiredCount++;
                     }
 
                     return (
-                      <td key={item.id} className={`p-2 border-r border-primary-light/10 text-center cursor-pointer transition-colors ${record?.sudahDikumpulkan ? 'bg-success/5 hover:bg-success/10' : 'bg-white hover:bg-gray-50'}`}>
+                      <td key={tahap.id} className={`p-2 border-r border-primary-light/10 text-center cursor-pointer transition-colors ${record?.selesai ? 'bg-success/5 hover:bg-success/10' : (!tahap.isActive ? 'bg-gray-50' : 'bg-white hover:bg-gray-50')}`}>
                         {record ? (
-                          <div className="flex justify-center items-center h-full w-full" onClick={() => !isLoading && handleToggle(record.id, record.sudahDikumpulkan)}>
+                          <div className="flex justify-center items-center h-full w-full" onClick={() => !isLoading && handleToggle(record.id, record.selesai)}>
                             <input 
                                type="checkbox" 
-                               checked={record.sudahDikumpulkan}
+                               checked={record.selesai}
                                readOnly
                                className="w-4 h-4 rounded text-success focus:ring-success cursor-pointer"
                             />
                           </div>
                         ) : (
-                          <span className="text-gray-300 text-[10px] italic">No master<br/>(sync)</span>
+                          <span className="text-gray-300 text-[10px] italic">{tahap.isActive ? 'No master (sync)' : '-'}</span>
                         )}
                       </td>
                     );
                   })}
 
                   <td className="p-2 border-l border-primary-light/20 bg-white group-hover:bg-[#faf9f5] text-center font-bold">
-                    {requiredItemsLeft === 0 ? (
-                      <span className="text-success">{totalSelesai} / {visibleItems.length} (OK)</span>
-                    ) : (
-                      <span className="text-danger">{totalSelesai} / {visibleItems.length}</span>
-                    )}
+                    <span className="text-primary">{totalSelesai} / {activeRequiredCount}</span>
                   </td>
                 </tr>
               )
@@ -182,16 +165,16 @@ export default function SpreadsheetPemberkasan({
             
             {santriList.length === 0 && (
               <tr>
-                <td colSpan={visibleItems.length + 3} className="p-8 text-center italic text-text-secondary bg-white">
+                <td colSpan={tahaps.length + 3} className="p-8 text-center italic text-text-secondary bg-white">
                   Belum ada data santri pada filter ini.
                 </td>
               </tr>
             )}
             
-            {items.length === 0 && santriList.length > 0 && (
+            {tahaps.length === 0 && santriList.length > 0 && (
                <tr>
                 <td colSpan={20} className="p-8 text-center italic text-text-secondary bg-white">
-                  Master item berkas masih kosong. Silakan setup di Halaman Master Item.
+                  Master tahap progres akademik masih kosong. Silakan setup di Halaman Master Progres.
                 </td>
               </tr>
             )}

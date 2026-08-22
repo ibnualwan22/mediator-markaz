@@ -3,53 +3,69 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function createTahapProgres(data: { nama: string; urutan: number; iconUrl?: string }) {
-  const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
-  const periodeId = activePeriode ? activePeriode.id : (await prisma.periode.findFirst())?.id || "default";
-
-  await prisma.tahapProgres.create({
-    data: {
-      nama: data.nama,
-      urutan: data.urutan,
-      periodeId
-    }
-  });
-  revalidatePath("/admin/progres/master");
-}
-
-export async function initSantriProgres(santriId: string) {
-  // Get all master stages
-  const tahaps = await prisma.tahapProgres.findMany();
-  
-  // Get existing
-  const existing = await prisma.progresSantri.findMany({
-    where: { santriId }
-  });
-  
-  const existingTahapIds = existing.map(e => e.tahapProgresId);
-
-  const missingTahaps = tahaps.filter(t => !existingTahapIds.includes(t.id));
-
-  if (missingTahaps.length > 0) {
-    await prisma.progresSantri.createMany({
-      data: missingTahaps.map(t => ({
-        santriId,
-        tahapProgresId: t.id,
-        selesai: false
-      }))
+export async function toggleCheckboxProgres(progresSantriId: string, status: boolean) {
+  try {
+    await prisma.progresSantri.update({
+      where: { id: progresSantriId },
+      data: { 
+        selesai: status,
+        tanggalSelesai: status ? new Date() : null
+      }
     });
-  }
 
-  revalidatePath(`/admin/progres/${santriId}`);
+    revalidatePath("/admin/progres");
+    return { success: true };
+  } catch (error) {
+    console.error("Error toggle progres:", error);
+    return { success: false };
+  }
 }
 
-export async function updateProgresSantri(id: string, isSelesai: boolean, keterangan?: string) {
-  await prisma.progresSantri.update({
-    where: { id },
-    data: { 
-      selesai: isSelesai,
-      ...(keterangan !== undefined ? { keterangan } : {}) 
-    }
-  });
-  revalidatePath(`/admin/progres/[santriId]`, 'page');
+export async function createTahapProgres(data: { nama: string; urutan: number; periodeId: string }) {
+  try {
+    await prisma.tahapProgres.create({
+      data: {
+        nama: data.nama,
+        urutan: data.urutan,
+        periodeId: data.periodeId,
+        isActive: true
+      }
+    });
+    revalidatePath("/admin/progres/master");
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating tahap progres:", error);
+    return { success: false };
+  }
+}
+
+export async function updateTahapProgres(id: string, data: { nama: string; urutan: number; isActive: boolean }) {
+  try {
+    await prisma.tahapProgres.update({
+      where: { id },
+      data: {
+        nama: data.nama,
+        urutan: data.urutan,
+        isActive: data.isActive
+      }
+    });
+    revalidatePath("/admin/progres/master");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating tahap progres:", error);
+    return { success: false };
+  }
+}
+
+export async function deleteTahapProgres(id: string) {
+  try {
+    await prisma.tahapProgres.delete({
+      where: { id }
+    });
+    revalidatePath("/admin/progres/master");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting tahap progres:", error);
+    return { success: false };
+  }
 }
