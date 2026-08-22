@@ -54,5 +54,13 @@ export async function updateStatusPemberkasan(id: string, status: string, catata
       ...(catatan !== undefined ? { catatan } : {}) 
     }
   });
-  revalidatePath(`/admin/pemberkasan/[santriId]`, 'page');
+  revalidatePath(`/admin/pemberkasan`);
+}
+
+export async function toggleCheckboxPemberkasan(id: string, sudahDikumpulkan: boolean) {
+  await prisma.pemberkasanSantri.update({
+    where: { id },
+    data: { sudahDikumpulkan }
+  });
+  revalidatePath(`/admin/pemberkasan`);
 }

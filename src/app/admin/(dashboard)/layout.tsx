@@ -29,6 +29,7 @@ export default async function AdminLayout({
     { name: "Data Santri", href: "/admin/santri", icon: <Users size={20} /> },
     { name: "Pembayaran", href: "/admin/pembayaran", icon: <CreditCard size={20} /> },
     { name: "Pemberkasan", href: "/admin/pemberkasan", icon: <FolderCheck size={20} /> },
+    { name: "Darul Lughoh", href: "/admin/darul-lughoh", icon: <LogOut size={20} /> }, // temporarily using LogOut icon since I need a generic one like BookOpen if available
     { name: "Progres Santri", href: "/admin/progres", icon: <LineChart size={20} /> },
   ];
 

@@ -37,30 +37,64 @@ export async function verifySantri(santriId: string) {
   // Gabungkan format: [Gelombang(2)][Tanggal(6)][Urutan(3)]
   const generatedNis = `${kodeGelombang}${tanggalMendaftar}${nomorUrut}`;
 
+  // Resolve default paket
+  let paket = await prisma.paketPembayaran.findFirst({
+    where: { isDefault: true },
+    include: {
+      tahapPaket: {
+        include: { poinTahap: true }
+      }
+    }
+  });
+
+  if (!paket) {
+    paket = await prisma.paketPembayaran.findFirst({
+      include: {
+        tahapPaket: {
+          include: { poinTahap: true }
+        }
+      }
+    });
+  }
+
+  const isAgama = santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN';
+
+  // Build pembayaran records if paket exists
+  const pembayaranRecords: any[] = [];
+  if (paket) {
+    for (const tahap of paket.tahapPaket) {
+      for (const poin of tahap.poinTahap) {
+        const nominalActive = (tahap.isIjazahBased && isAgama && poin.nominalIjazah !== null) ? poin.nominalIjazah : poin.nominal;
+        pembayaranRecords.push({
+          santriId,
+          poinTahapId: poin.id,
+          nominalHarus: nominalActive,
+          nominalDibayar: 0,
+          isLunas: nominalActive === 0
+        });
+      }
+    }
+  }
+
   await prisma.santri.update({
     where: { id: santriId },
     data: {
       isVerified: true,
-      nis: generatedNis
+      nis: generatedNis,
+      paketPembayaranId: paket?.id || null
     }
   });
 
-  const isAgama = santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN';
-  const nominalTahap3 = isAgama ? 3850000 : 4850000;
-
-  // Otomatis terbitkan tagihan tahap 2 sampai 5 (kecuali tahap 6)
-  await prisma.pembayaran.createMany({
-    data: [
-      { santriId, tahap: 2, nominal: 1200000, status: "BELUM_BAYAR", keterangan: "Sebelum Pelaksanaan Tes Tahdid Mustawa" },
-      { santriId, tahap: 3, nominal: nominalTahap3, status: "BELUM_BAYAR", keterangan: "Menjelang Pelaksanaan Ujian Mu'adalah" },
-      { santriId, tahap: 4, nominal: 6500000, status: "BELUM_BAYAR", keterangan: "Sebelum Pengajuan Visa" },
-      { santriId, tahap: 5, nominal: 16250000, status: "BELUM_BAYAR", keterangan: "Sebelum Pemberangkatan" }
-    ]
-  });
-
+  if (pembayaranRecords.length > 0) {
+    await prisma.pembayaranSantri.createMany({
+      data: pembayaranRecords
+    });
+  }
 
   revalidatePath(`/admin/santri/${santriId}`);
   revalidatePath("/admin/santri");
+  revalidatePath("/admin/pembayaran");
+
   
   return { success: true, nis: generatedNis };
 }

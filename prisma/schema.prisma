@@ -96,19 +96,24 @@ model Santri {
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
-  pembayaran        Pembayaran[]
+  paketPembayaranId String?
+  paketPembayaran   PaketPembayaran? @relation(fields: [paketPembayaranId], references: [id])
+  pembayaranSantri  PembayaranSantri[]
+  legacyPembayaran  LegacyPembayaran[]
+  darulLughoh       DarulLughohSantri[]
   pemberkasan       PemberkasanSantri[]
   progresSantri     ProgresSantri[]
 }
 
-// ============ PEMBAYARAN ============
+// ============ LEGACY PEMBAYARAN AREA (ARCHIVED) ============
+// Dipertahankan agar `npx prisma db push` tidak menghapus data lama di production
 enum StatusBayar {
   BELUM_BAYAR
   MENUNGGU_VERIFIKASI
   LUNAS
 }
 
-model Pembayaran {
+model LegacyPembayaran {
   id            String      @id @default(cuid())
   santriId      String
   santri        Santri      @relation(fields: [santriId], references: [id], onDelete: Cascade)
@@ -123,6 +128,93 @@ model Pembayaran {
   updatedAt     DateTime    @updatedAt
 
   @@unique([santriId, tahap])
+  @@map("Pembayaran")
+}
+
+// ============ PAKET PEMBAYARAN (SYSTEM BARU) ============
+model PaketPembayaran {
+  id        String       @id @default(cuid())
+  periodeId String
+  nama      String       // "Paket Reguler"
+  isDefault Boolean      @default(false)  // Paket default saat assign santri
+  urutan    Int          @default(1)
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  tahapPaket TahapPaket[]
+  santri     Santri[]     // Santri yang di-assign ke paket ini
+}
+
+model TahapPaket {
+  id               String          @id @default(cuid())
+  paketPembayaranId String
+  paketPembayaran  PaketPembayaran @relation(fields: [paketPembayaranId], references: [id], onDelete: Cascade)
+  nama             String          // "Tahap 1 - Pendaftaran & Tes"
+  urutan           Int
+  isIjazahBased    Boolean         @default(false)  // Toggle: nominal beda per ijazah
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  poinTahap PoinTahap[]
+
+  @@unique([paketPembayaranId, urutan])
+}
+
+model PoinTahap {
+  id            String     @id @default(cuid())
+  tahapPaketId  String
+  tahapPaket    TahapPaket @relation(fields: [tahapPaketId], references: [id], onDelete: Cascade)
+  nama          String     // "Biaya Pendaftaran"
+  nominal       Int        // Default nominal (untuk non-ijazah atau umum)
+  nominalIjazah Int?       // Nominal khusus MA/Pesantren (jika parent tahap isIjazahBased)
+  urutan        Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  pembayaranSantri PembayaranSantri[]
+}
+
+model PembayaranSantri {
+  id             String    @id @default(cuid())
+  santriId       String
+  santri         Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  poinTahapId    String
+  poinTahap      PoinTahap @relation(fields: [poinTahapId], references: [id], onDelete: Cascade)
+  nominalHarus   Int       // Jumlah yang harus dibayar (resolved dari poinTahap + ijazah logic)
+  nominalDibayar Int       @default(0) // Jumlah yang sudah dibayar (cicilan)
+  isLunas        Boolean   @default(false)
+  tanggalLunas   DateTime?
+  catatan        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([santriId, poinTahapId])
+}
+
+// ============ DARUL LUGHOH ============
+model SettingDL {
+  id             String   @id @default(cuid())
+  nominalPerLevel Int     @default(1950000) // Rp 1.950.000
+  updatedAt      DateTime @updatedAt
+}
+
+model DarulLughohSantri {
+  id             String   @id @default(cuid())
+  santriId       String
+  santri         Santri   @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  level          Int      // 1-6
+  percobaan      Int      @default(1) // 1, 2, 3... (remidi = percobaan baru)
+  nominalHarus   Int      // Snapshot dari SettingDL.nominalPerLevel
+  nominalDibayar Int      @default(0)
+  isLunas        Boolean  @default(false)
+  statusUjian    String   @default("BELUM_UJIAN") // BELUM_UJIAN | LULUS | REMIDI
+  tanggalUjian   DateTime?
+  catatan        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([santriId, level, percobaan])
 }
 
 // ============ PEMBERKASAN ============
