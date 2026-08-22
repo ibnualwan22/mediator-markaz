@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createItemPemberkasan } from "@/app/admin/(dashboard)/pemberkasan/actions";
-import { Plus } from "lucide-react";
+import { createItemPemberkasan, updateItemPemberkasan, deleteItemPemberkasan } from "@/app/admin/(dashboard)/pemberkasan/actions";
+import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
 
 export default function MasterItemManager({ items }: { items: any[] }) {
   const [formData, setFormData] = useState({
@@ -12,6 +12,8 @@ export default function MasterItemManager({ items }: { items: any[] }) {
     urutan: 1
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({ id: "", nama: "", isWajib: true, urutan: 1 });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +22,27 @@ export default function MasterItemManager({ items }: { items: any[] }) {
     await createItemPemberkasan(formData);
     setFormData(f => ({ ...f, nama: "", urutan: f.urutan + 1 }));
     setIsLoading(false);
+  };
+
+  const handleEditData = (item: any) => {
+    setEditingId(item.id);
+    setEditFormData({ id: item.id, nama: item.nama, isWajib: item.isActive || false, urutan: item.urutan });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editFormData.nama) return;
+    setIsLoading(true);
+    await updateItemPemberkasan(editFormData.id, editFormData);
+    setEditingId(null);
+    setIsLoading(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Yakin ingin menghapus berkas ini? Peringatan: Seluruh data centang pemberkasan santri yang berhubungan dengan berkas ini akan raib!")) {
+      setIsLoading(true);
+      await deleteItemPemberkasan(id);
+      setIsLoading(false);
+    }
   };
 
   const indoItems = items.filter(i => i.kategori === "INDONESIA");
@@ -36,23 +59,48 @@ export default function MasterItemManager({ items }: { items: any[] }) {
             <th className="p-4 font-semibold border-b border-primary-light/10 w-16 text-center">Urutan</th>
             <th className="p-4 font-semibold border-b border-primary-light/10">Nama Berkas</th>
             <th className="p-4 font-semibold border-b border-primary-light/10 w-32 text-center">Wajib?</th>
+            <th className="p-4 font-semibold border-b border-primary-light/10 w-24 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody>
           {data.length > 0 ? data.map(i => (
-            <tr key={i.id} className="border-b border-primary-light/10 hover:bg-bg-cream/50">
-              <td className="p-4 text-center font-mono">{i.urutan}</td>
-              <td className="p-4 font-medium text-text-primary">{i.nama}</td>
-              <td className="p-4 text-center">
-                {i.isWajib ? (
-                  <span className="px-2 py-1 bg-danger/10 text-danger text-xs font-bold rounded">Wajib</span>
-                ) : (
-                  <span className="px-2 py-1 bg-text-secondary/10 text-text-secondary text-xs rounded">Opsional</span>
-                )}
-              </td>
+            <tr key={i.id} className={`border-b border-primary-light/10 ${editingId === i.id ? 'bg-primary/5' : 'hover:bg-bg-cream/50'}`}>
+              {editingId === i.id ? (
+                <>
+                  <td className="p-2">
+                    <input type="number" className="w-full px-2 py-1 text-center border rounded bg-white" value={editFormData.urutan} onChange={e => setEditFormData(f => ({ ...f, urutan: parseInt(e.target.value) || 0 }))} />
+                  </td>
+                  <td className="p-2">
+                    <input type="text" className="w-full px-2 py-1 border rounded bg-white" value={editFormData.nama} onChange={e => setEditFormData(f => ({ ...f, nama: e.target.value }))} />
+                  </td>
+                  <td className="p-2 text-center">
+                    <input type="checkbox" className="rounded" checked={editFormData.isWajib} onChange={e => setEditFormData(f => ({ ...f, isWajib: e.target.checked }))} />
+                  </td>
+                  <td className="p-2 text-center flex items-center justify-center gap-2">
+                    <button onClick={handleSaveEdit} className="p-1.5 bg-success/10 text-success rounded hover:bg-success/20"><Check size={16} /></button>
+                    <button onClick={() => setEditingId(null)} className="p-1.5 bg-danger/10 text-danger rounded hover:bg-danger/20"><X size={16} /></button>
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td className="p-4 text-center font-mono">{i.urutan}</td>
+                  <td className="p-4 font-medium text-text-primary">{i.nama}</td>
+                  <td className="p-4 text-center">
+                    {i.isActive ? (
+                      <span className="px-2 py-1 bg-danger/10 text-danger text-xs font-bold rounded">Wajib</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-text-secondary/10 text-text-secondary text-xs rounded">Opsional</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-center flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleEditData(i)} className="text-primary hover:text-primary-dark transition-colors"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDelete(i.id)} className="text-danger hover:text-danger/80 transition-colors"><Trash2 size={16} /></button>
+                  </td>
+                </>
+              )}
             </tr>
           )) : (
-            <tr><td colSpan={3} className="p-4 text-center text-text-secondary italic">Belum ada item</td></tr>
+            <tr><td colSpan={4} className="p-4 text-center text-text-secondary italic">Belum ada item</td></tr>
           )}
         </tbody>
       </table>

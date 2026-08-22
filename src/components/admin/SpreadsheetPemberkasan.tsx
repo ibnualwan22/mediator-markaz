@@ -8,14 +8,18 @@ export default function SpreadsheetPemberkasan({
   santriList,
   items,
   gelombangs,
+  periodes,
   query,
-  selectedGelombangId
+  selectedGelombangId,
+  selectedPeriodeId
 }: {
-  santriList: any[],
-  items: any[],
-  gelombangs: any[],
-  query: string,
-  selectedGelombangId: string
+  santriList: any[];
+  items: any[];
+  gelombangs: any[];
+  periodes: any[];
+  query: string;
+  selectedGelombangId: string;
+  selectedPeriodeId: string;
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -35,22 +39,41 @@ export default function SpreadsheetPemberkasan({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 flex flex-col h-[calc(100vh-12rem)] overflow-hidden">
       
-      {/* Filter Bar */}
-      <div className="p-4 border-b border-primary-light/20 flex flex-wrap gap-4 items-center bg-bg-cream/30">
-        <select 
-          className="px-3 py-2 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm"
-          value={selectedGelombangId}
-          onChange={(e) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("gelombangId", e.target.value);
-            router.push(`?${params.toString()}`);
-          }}
-        >
-          {gelombangs.length === 0 && <option value="">Semua Gelombang</option>}
-          {gelombangs.map(g => (
-            <option key={g.id} value={g.id}>{g.nama}</option>
-          ))}
-        </select>
+      {/* Filter and Search Bar */}
+      <div className="p-4 border-b border-primary-light/20 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream/30">
+        <div className="flex gap-2">
+          {/* PERIODE FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary max-w-[200px]"
+            value={selectedPeriodeId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) params.set('periodeId', e.target.value);
+              else params.delete('periodeId');
+              
+              params.delete('gelombangId'); // reset gelombang when changing periode
+              router.push(`/admin/pemberkasan?${params.toString()}`);
+            }}
+          >
+            <option value="" disabled>Pilih Periode</option>
+            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+
+          {/* GELOMBANG FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary"
+            value={selectedGelombangId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
+              else params.delete('gelombangId');
+              router.push(`/admin/pemberkasan?${params.toString()}`);
+            }}
+          >
+            <option value="all">Semua Gelombang</option>
+            {gelombangs.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
+          </select>
+        </div>
         
         <select 
           className="px-3 py-2 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm font-medium"

@@ -19,6 +19,23 @@ export async function createItemPemberkasan(data: { nama: string; tipe: string; 
   revalidatePath("/admin/pemberkasan/master");
 }
 
+export async function updateItemPemberkasan(id: string, data: { nama: string; urutan: number; isWajib: boolean }) {
+  await prisma.itemPemberkasan.update({
+    where: { id },
+    data: {
+      nama: data.nama,
+      urutan: data.urutan,
+      isActive: data.isWajib,
+    }
+  });
+  revalidatePath("/admin/pemberkasan/master");
+}
+
+export async function deleteItemPemberkasan(id: string) {
+  await prisma.itemPemberkasan.delete({ where: { id } });
+  revalidatePath("/admin/pemberkasan/master");
+}
+
 export async function initSantriPemberkasan(santriId: string) {
   // Get all master items
   const items = await prisma.itemPemberkasan.findMany();
