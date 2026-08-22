@@ -56,16 +56,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // Generate Pembayaran Tahap 1 (Rp 1.000.000)
-    await prisma.pembayaran.create({
-      data: {
-        santriId: santri.id,
-        tahap: 1,
-        nominal: 1000000,
-        status: "BELUM_BAYAR",
-        keterangan: "Investasi fiksasi pendaftaran"
-      }
-    });
+    // Generation of Tahap 1 pembayaran is now handled by PembayaranSantri system during verification.
 
     return NextResponse.json({ success: true, id: santri.id, noPendaftaran });
   } catch (error: any) {

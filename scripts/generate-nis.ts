@@ -69,35 +69,7 @@ async function main() {
     });
 
     // Also apply automatic stages creation based on verified logic
-    try {
-      const isAgama =
-        santri.riwayatAkademik === "MA" ||
-        santri.riwayatAkademik === "IJAZAH_PESANTREN";
-      const nominalTahap3 = isAgama ? 3850000 : 4850000;
-
-      // Check existing payments to avoid duplicates
-      const existingPayments = await prisma.pembayaran.findMany({
-        where: { santriId: santri.id, tahap: { in: [2, 3, 4, 5] } }
-      });
-
-      const existingStages = existingPayments.map(p => p.tahap);
-      
-      const newPayments = [
-        { tahap: 2, nominal: 1200000, status: "BELUM_BAYAR", keterangan: "Sebelum Pelaksanaan Tes Tahdid Mustawa" },
-        { tahap: 3, nominal: nominalTahap3, status: "BELUM_BAYAR", keterangan: "Menjelang Pelaksanaan Ujian Mu'adalah" },
-        { tahap: 4, nominal: 6500000, status: "BELUM_BAYAR", keterangan: "Sebelum Pengajuan Visa" },
-        { tahap: 5, nominal: 16250000, status: "BELUM_BAYAR", keterangan: "Sebelum Pemberangkatan" }
-      ].filter(p => !existingStages.includes(p.tahap))
-       .map(p => ({ ...p, santriId: santri.id }));
-
-      if (newPayments.length > 0) {
-         // @ts-ignore
-         await prisma.pembayaran.createMany({ data: newPayments });
-      }
-
-    } catch (err) {
-      console.log(`Peringatan: Gagal generate tagihan otomatis untuk ${santri.namaLengkap} (mungkin sudah ada)`);
-    }
+    // Generation of new payment format is handled by verify admin actions, or retroactive auto-script in dashboard!
   }
 
   console.log("\n✅ Berhasil membuat NIS untuk semua santri yang belum memiliki.");

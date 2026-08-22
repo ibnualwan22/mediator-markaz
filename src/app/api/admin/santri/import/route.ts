@@ -149,16 +149,7 @@ export async function POST(req: Request) {
               fileIjazah: "-",
               riwayatAkademik: "SMA",
               tahunKelulusan: currentYear,
-              setujuInvestasi: false, 
-              
-              pembayaran: {
-                create: {
-                  tahap: 1,
-                  nominal: 1000000,
-                  status: "BELUM_BAYAR",
-                  keterangan: "Investasi fiksasi pendaftaran"
-                }
-              }
+              setujuInvestasi: false
             }
           });
           successCount++;

@@ -12,9 +12,6 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
   const santri = await prisma.santri.findUnique({
     where: { id: resolvedSearchParams.id },
     include: {
-      pembayaran: {
-        where: { tahap: 1 }
-      }
     }
   });
 
@@ -22,7 +19,7 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
     redirect("/");
   }
 
-  const tagihan = santri.pembayaran[0];
+
 
   return (
     <div className="min-h-screen bg-bg-cream flex flex-col items-center justify-center p-4 py-12">
