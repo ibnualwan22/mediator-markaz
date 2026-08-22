@@ -14,17 +14,21 @@ export default function SpreadsheetPembayaran({
   targetPakets,
   allPakets,
   gelombangs, 
+  periodes,
   query, 
   selectedGelombangId,
-  selectedPaketId
+  selectedPaketId,
+  selectedPeriodeId
 }: { 
   santriList: any[], 
   targetPakets: any[],
   allPakets: any[],
-  gelombangs: any[], 
+  gelombangs: any[],
+  periodes: any[],
   query: string,
   selectedGelombangId: string,
-  selectedPaketId: string
+  selectedPaketId: string,
+  selectedPeriodeId: string
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -86,20 +90,39 @@ export default function SpreadsheetPembayaran({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-primary-light/20 flex flex-col h-[calc(100vh-140px)] w-full max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
-      {/* Filter Bar */}
+      {/* Filter and Search Bar */}
       <div className="p-4 border-b border-primary-light/20 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream/30">
         <div className="flex gap-2">
+          {/* PERIODE FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary max-w-[200px]"
+            value={selectedPeriodeId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) params.set('periodeId', e.target.value);
+              else params.delete('periodeId');
+              
+              // When changing periode, clear gelombang and paket selections
+              params.delete('gelombangId');
+              params.delete('paketId');
+              router.push(`/admin/pembayaran?${params.toString()}`);
+            }}
+          >
+            <option value="" disabled>Pilih Periode</option>
+            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+
           <select
             className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary"
             value={selectedGelombangId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              if (e.target.value) params.set('gelombangId', e.target.value);
+              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
               else params.delete('gelombangId');
               router.push(`/admin/pembayaran?${params.toString()}`);
             }}
           >
-            <option value="">Semua Gelombang</option>
+            <option value="all">Semua Gelombang</option>
             {gelombangs.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
           </select>
 
@@ -131,8 +154,8 @@ export default function SpreadsheetPembayaran({
       </div>
 
       {/* Spreadsheet Container */}
-      <div className="flex-1 w-full relative bg-gray-50/30 px-4 pb-4 pt-0 rounded-b-xl overflow-auto custom-scrollbar">
-        <div className="pt-4 space-y-12">
+      <div className="flex-1 w-full relative bg-gray-50/30 rounded-b-xl overflow-auto custom-scrollbar">
+        <div className="pt-4 pb-8 space-y-12">
           {targetPakets.map((pkt) => {
           const tahaps = pkt.tahapPaket || [];
           const tahap1 = tahaps.length > 0 ? tahaps[0] : null;
@@ -141,7 +164,7 @@ export default function SpreadsheetPembayaran({
 
           return (
             <div key={pkt.id} className="mb-12 last:mb-0">
-              <h2 className="text-lg font-bold text-primary mb-3 px-3 border-l-4 border-primary bg-white py-1 inline-block shadow-sm rounded-r">
+              <h2 className="text-lg font-bold text-primary mb-3 mx-2 px-3 border-l-4 border-primary bg-white py-1 inline-block shadow-sm rounded-r">
                 Paket: {pkt.nama}
               </h2>
               

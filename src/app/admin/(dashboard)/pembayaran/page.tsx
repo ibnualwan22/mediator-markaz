@@ -4,25 +4,28 @@ import { Search, Settings } from "lucide-react";
 import SpreadsheetPembayaran from "@/components/admin/SpreadsheetPembayaran";
 import { redirect } from "next/navigation";
 
-export default async function AdminPembayaranPage({ searchParams }: { searchParams: Promise<{ q?: string, gelombangId?: string, paketId?: string }> }) {
+export default async function AdminPembayaranPage({ searchParams }: { searchParams: Promise<{ q?: string, periodeId?: string, gelombangId?: string, paketId?: string }> }) {
   const resolvedSearchParams = await searchParams;
   const query = resolvedSearchParams.q || "";
+  const filterPeriodeId = resolvedSearchParams.periodeId || "";
   const filterGelombangId = resolvedSearchParams.gelombangId || "";
   const filterPaketId = resolvedSearchParams.paketId || "";
 
-  const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
+  const periodes = await prisma.periode.findMany({ orderBy: { tahunDibuka: 'desc' } });
+  const activePeriode = periodes.find(p => p.isActive) || periodes[0];
+  const selectedPeriodeId = filterPeriodeId || (activePeriode ? activePeriode.id : "");
   
-  const gelombangs = activePeriode ? await prisma.gelombang.findMany({
-    where: { periodeId: activePeriode.id },
-    orderBy: { tanggalBuka: 'asc' }
+  const gelombangs = selectedPeriodeId ? await prisma.gelombang.findMany({
+    where: { periodeId: selectedPeriodeId },
+    orderBy: { nama: 'asc' }
   }) : [];
 
-  // Default Gelombang if not specified and available
-  const selectedGelombangId = filterGelombangId || (gelombangs.length > 0 ? gelombangs[0].id : "");
+  // Default Gelombang: fallback to the first active gelombang, or 'all' if none exist
+  const selectedGelombangId = filterGelombangId || (gelombangs.length > 0 ? gelombangs[0].id : "all");
 
-  // Fetch all packages for the dropdown
-  const allPakets = activePeriode ? await prisma.paketPembayaran.findMany({
-    where: { periodeId: activePeriode.id },
+  // Fetch all packages for the dropdown based on selected periode
+  const allPakets = selectedPeriodeId ? await prisma.paketPembayaran.findMany({
+    where: { periodeId: selectedPeriodeId },
     orderBy: { urutan: 'asc' },
     select: { id: true, nama: true, isDefault: true }
   }) : [];
@@ -70,7 +73,7 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
   const santriList = selectedGelombangId ? await prisma.santri.findMany({
     where: {
       isVerified: true,
-      gelombangId: selectedGelombangId,
+      gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
       paketPembayaranId: selectedPaketId === "all" ? undefined : selectedPaketId,
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },
@@ -83,7 +86,7 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
       },
       darulLughoh: true
     },
-    orderBy: { nis: 'asc' }
+    orderBy: { namaLengkap: 'asc' }
   }) : [];
 
   return (
@@ -106,9 +109,11 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
         targetPakets={targetPakets}
         allPakets={allPakets}
         gelombangs={gelombangs}
+        periodes={periodes}
         query={query}
         selectedGelombangId={selectedGelombangId}
         selectedPaketId={selectedPaketId}
+        selectedPeriodeId={selectedPeriodeId}
       />
     </div>
   );
