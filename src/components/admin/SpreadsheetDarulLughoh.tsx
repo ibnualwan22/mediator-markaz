@@ -165,7 +165,7 @@ export default function SpreadsheetDarulLughoh({
               <th className="p-3 border-r border-primary-light/30 bg-[#f4f2eb] w-24 text-center">Set Level</th>
 
               {levels.map(lvl => (
-                <th key={lvl} className="p-3 text-center border-r border-primary-light/20 min-w-[180px]">DL Level {lvl}</th>
+                <th key={lvl} className="p-3 text-center border-r border-primary-light/20 bg-[#f4f2eb] min-w-[180px]">DL Level {lvl}</th>
               ))}
             </tr>
           </thead>
