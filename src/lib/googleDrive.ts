@@ -1,16 +1,13 @@
 import { google } from "googleapis";
 import { Readable } from "stream";
 
-// Retrieve environment variables
-const clientId = process.env.GOOGLE_CLIENT_ID;
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
 /**
  * Initializes and returns the Google Drive API client
  */
 export function getDriveClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
   if (!clientId || !clientSecret || !refreshToken) {
     throw new Error("Missing Google Drive credentials in environment variables. Please check GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN.");
   }
@@ -111,6 +108,7 @@ export async function ensureSantriFolder(
   gelombang: string,
   santriName: string
 ) {
+  const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
   if (!rootFolderId) {
     throw new Error("GOOGLE_DRIVE_FOLDER_ID is not configured in .env");
   }
