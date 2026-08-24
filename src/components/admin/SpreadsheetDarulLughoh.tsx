@@ -7,7 +7,8 @@ import {
   updateStatusUjianDL, updateSettingDL,
   generateNextLevelDL
 } from "@/app/admin/(dashboard)/darul-lughoh/actions";
-import { Settings, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download } from "lucide-react";
+import ImportExcelModal from "./ImportExcelModal";
 
 export default function SpreadsheetDarulLughoh({
   santriList,
@@ -29,6 +30,7 @@ export default function SpreadsheetDarulLughoh({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [nominalSetting, setNominalSetting] = useState(setting.nominalPerLevel);
 
   // Local state for cicilan inputs
@@ -125,12 +127,26 @@ export default function SpreadsheetDarulLughoh({
           </form>
         </div>
 
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className="flex items-center gap-2 px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors"
-        >
-          <Settings size={16} /> Pengaturan DL
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/admin/darul-lughoh/template"
+            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors"
+          >
+            <Download size={16} /> Download Template
+          </a>
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-success text-white rounded-lg text-sm font-medium hover:bg-success/80 transition-colors"
+          >
+            <Upload size={16} /> Import Excel
+          </button>
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center gap-2 px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors"
+          >
+            <Settings size={16} /> Pengaturan DL
+          </button>
+        </div>
       </div>
 
       {showSettings && (
@@ -275,6 +291,19 @@ export default function SpreadsheetDarulLughoh({
           </tbody>
         </table>
       </div>
+
+      <ImportExcelModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        gelombangList={gelombangs}
+        onSuccess={() => {
+          setShowImport(false);
+          router.refresh();
+        }}
+        uploadUrl="/api/admin/darul-lughoh/import"
+        templateUrl="/api/admin/darul-lughoh/template"
+        showGelombang={false}
+      />
     </div>
   );
 }

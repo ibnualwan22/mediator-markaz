@@ -7,12 +7,18 @@ export default function ImportExcelModal({
   isOpen, 
   onClose, 
   gelombangList,
-  onSuccess
+  onSuccess,
+  uploadUrl = "/api/admin/santri/import",
+  templateUrl = "/api/admin/santri/template",
+  showGelombang = true
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   gelombangList: any[];
   onSuccess: () => void;
+  uploadUrl?: string;
+  templateUrl?: string;
+  showGelombang?: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [selectedGelombang, setSelectedGelombang] = useState("");
@@ -59,7 +65,7 @@ export default function ImportExcelModal({
   };
 
   const downloadTemplate = () => {
-    window.location.href = "/api/admin/santri/template";
+    window.location.href = templateUrl;
   };
 
   const handleImport = async () => {
@@ -67,7 +73,7 @@ export default function ImportExcelModal({
       alert("Pilih file Excel terlebih dahulu");
       return;
     }
-    if (!selectedGelombang) {
+    if (showGelombang && !selectedGelombang) {
       alert("Pilih gelombang penempatan santri");
       return;
     }
@@ -77,11 +83,13 @@ export default function ImportExcelModal({
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("gelombangId", selectedGelombang);
+    if (showGelombang) {
+      formData.append("gelombangId", selectedGelombang);
+    }
     formData.append("overwriteExisting", overwriteExisting.toString());
 
     try {
-      const res = await fetch("/api/admin/santri/import", {
+      const res = await fetch(uploadUrl, {
         method: "POST",
         body: formData,
       });
@@ -130,22 +138,24 @@ export default function ImportExcelModal({
                 </button>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">2. Pilih Gelombang</label>
-                <select 
-                  value={selectedGelombang}
-                  onChange={(e) => setSelectedGelombang(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-sm"
-                >
-                  <option value="">-- Pilih Gelombang Penempatan --</option>
-                  {gelombangList.map(g => (
-                    <option key={g.id} value={g.id}>{g.periode.nama} - {g.nama}</option>
-                  ))}
-                </select>
-              </div>
+              {showGelombang && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">2. Pilih Gelombang</label>
+                  <select 
+                    value={selectedGelombang}
+                    onChange={(e) => setSelectedGelombang(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-sm"
+                  >
+                    <option value="">-- Pilih Gelombang Penempatan --</option>
+                    {gelombangList.map(g => (
+                      <option key={g.id} value={g.id}>{g.periode.nama} - {g.nama}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">3. Upload File Data</label>
+                <label className="text-sm font-semibold text-gray-700">{showGelombang ? '3' : '2'}. Upload File Data</label>
                 <div 
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
@@ -264,7 +274,7 @@ export default function ImportExcelModal({
             </button>
             <button 
               onClick={handleImport}
-              disabled={isLoading || !file || !selectedGelombang}
+              disabled={isLoading || !file || (showGelombang && !selectedGelombang)}
               className="flex-1 py-2.5 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary-light transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
             >
               {isLoading ? (
