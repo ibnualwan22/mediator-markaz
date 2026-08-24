@@ -11,7 +11,7 @@ export default async function DarulLughohPage({ searchParams }: { searchParams: 
   const periodes = await prisma.periode.findMany({ orderBy: { tahunDibuka: 'desc' } });
   const activePeriode = periodes.find(p => p.isActive) || periodes[0];
   const selectedPeriodeId = filterPeriodeId || (activePeriode ? activePeriode.id : "");
-  
+
   const gelombangs = selectedPeriodeId ? await prisma.gelombang.findMany({
     where: { periodeId: selectedPeriodeId },
     orderBy: { nama: 'asc' }
@@ -44,11 +44,11 @@ export default async function DarulLughohPage({ searchParams }: { searchParams: 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-text-primary">Darul Lughoh Management</h1>
+        <h1 className="text-3xl font-heading font-bold text-text-primary">Daurah Lughoh Management</h1>
         <p className="text-text-secondary mt-1">Atur Penempatan Level, Pembayaran, dan Hasil Ujian DL.</p>
       </div>
 
-      <SpreadsheetDarulLughoh 
+      <SpreadsheetDarulLughoh
         santriList={santriList}
         gelombangs={gelombangs}
         periodes={periodes}

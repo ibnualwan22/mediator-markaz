@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Trash2, AlertTriangle, X } from "lucide-react";
 import { deleteSantri } from "@/app/admin/(dashboard)/santri/actions";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId: string, namaLengkap: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,9 +19,10 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
     const result = await deleteSantri(santriId);
     
     if (result.success) {
+      Swal.fire({ title: 'Terhapus!', text: 'Data santri berhasil dihapus.', icon: 'success', timer: 1500, showConfirmButton: false });
       router.push("/admin/santri");
     } else {
-      alert(result.error);
+      Swal.fire('Gagal Menghapus', result.error, 'error');
       setIsLoading(false);
     }
   };

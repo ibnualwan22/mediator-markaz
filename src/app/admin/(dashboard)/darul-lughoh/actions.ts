@@ -172,3 +172,18 @@ export async function generateNextLevelDL(santriId: string, level: number) {
   revalidatePath("/admin/pembayaran");
   return { success: true };
 }
+
+export async function resetAllLevelDL(santriId: string) {
+  try {
+    await prisma.darulLughohSantri.deleteMany({
+      where: { santriId }
+    });
+    
+    revalidatePath("/admin/darul-lughoh");
+    revalidatePath("/admin/pembayaran");
+    return { success: true };
+  } catch (error) {
+    console.error("Reset DL error:", error);
+    return { success: false, error: "Gagal me-reset Darul Lughoh" };
+  }
+}

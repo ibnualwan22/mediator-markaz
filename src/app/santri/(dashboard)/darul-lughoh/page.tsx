@@ -33,7 +33,7 @@ export default async function DarulLughohSantriPage() {
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
           <BookOpen className="w-12 h-12 text-primary mb-3" />
           <h3 className="font-heading font-bold text-primary text-lg">Belum Ada Riwayat Level</h3>
-          <p className="text-text-secondary mt-1">Anda belum ditempatkan pada level Darul Lughoh manapun oleh admin.</p>
+          <p className="text-text-secondary mt-1">Anda belum ditempatkan pada level Daurah Lughoh manapun oleh admin.</p>
         </div>
       </div>
     );
@@ -75,7 +75,7 @@ export default async function DarulLughohSantriPage() {
             Percobaan ke-{currentLevel.percobaan}
           </span>
         </div>
-        
+
         <div className="p-6 sm:p-8">
           <div className="flex items-center gap-4 mb-6 relative z-10">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white shadow-lg">
@@ -96,18 +96,17 @@ export default async function DarulLughohSantriPage() {
             <div>
               <p className="text-xs text-text-secondary font-bold uppercase tracking-wider mb-2">Status Pembayaran</p>
               <div className="flex flex-col gap-1 items-start">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm border ${
-                  currentLevel.isLunas 
-                    ? 'bg-success/15 text-success border-success/30' 
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm border ${currentLevel.isLunas
+                    ? 'bg-success/15 text-success border-success/30'
                     : 'bg-warning/15 text-warning border-warning/30'
-                }`}>
+                  }`}>
                   {currentLevel.isLunas ? (
                     <><CheckCircle2 size={16} /> Lunas</>
                   ) : (
                     <><Clock size={16} /> Belum Lunas (Sisa: {formatRp(currentLevel.nominalHarus - currentLevel.nominalDibayar)})</>
                   )}
                 </span>
-                
+
                 <div className="mt-2 text-sm font-mono flex flex-col">
                   <span className="text-text-secondary">Sudah dibayar: <strong className={currentLevel.nominalDibayar >= currentLevel.nominalHarus ? 'text-success' : 'text-text-primary'}>{formatRp(currentLevel.nominalDibayar)}</strong></span>
                   <span className="text-text-secondary text-xs">Total harus: {formatRp(currentLevel.nominalHarus)}</span>
@@ -126,7 +125,7 @@ export default async function DarulLughohSantriPage() {
 
                 {currentLevel.tanggalUjian && (
                   <p className="mt-2 text-sm text-text-secondary font-medium">
-                    Tanggal Ujian: <span className="text-text-primary">{new Date(currentLevel.tanggalUjian).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</span>
+                    Tanggal Ujian: <span className="text-text-primary">{new Date(currentLevel.tanggalUjian).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                   </p>
                 )}
               </div>
@@ -152,11 +151,11 @@ export default async function DarulLughohSantriPage() {
           <div className="space-y-4">
             {previousLevels.map((lvl) => (
               <div key={lvl.id} className="bg-white rounded-xl border border-primary-light/20 p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center hover:border-primary-light/50 transition-colors shadow-sm">
-                
+
                 <div className="w-12 h-12 shrink-0 rounded-xl bg-bg-cream flex items-center justify-center border-2 border-primary/10">
                   <span className="text-xl font-bold text-text-secondary">{lvl.level}</span>
                 </div>
-                
+
                 <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <h3 className="font-bold text-text-primary mb-1">Level {lvl.level}</h3>
@@ -164,7 +163,7 @@ export default async function DarulLughohSantriPage() {
                       Percobaan {lvl.percobaan}
                     </p>
                   </div>
-                  
+
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] text-text-secondary font-bold uppercase tracking-wider">Ujian</span>
                     <span className={`inline-flex items-center w-max gap-1 px-2 py-0.5 rounded text-xs font-bold border uppercase ${getStatusUjianStyle(lvl.statusUjian)}`}>
@@ -192,7 +191,7 @@ export default async function DarulLughohSantriPage() {
                     {lvl.catatan && <span className="line-clamp-2" title={lvl.catatan}>Catatan: {lvl.catatan}</span>}
                   </div>
                 )}
-                
+
               </div>
             ))}
           </div>

@@ -2,12 +2,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { 
-  Users, 
-  CalendarDays, 
-  CreditCard, 
-  FolderCheck, 
-  LineChart, 
+import {
+  Users,
+  CalendarDays,
+  CreditCard,
+  FolderCheck,
+  LineChart,
   LayoutDashboard,
   LogOut
 } from "lucide-react";
@@ -29,7 +29,7 @@ export default async function AdminLayout({
     { name: "Data Santri", href: "/admin/santri", icon: <Users size={20} /> },
     { name: "Pembayaran", href: "/admin/pembayaran", icon: <CreditCard size={20} /> },
     { name: "Pemberkasan", href: "/admin/pemberkasan", icon: <FolderCheck size={20} /> },
-    { name: "Darul Lughoh", href: "/admin/darul-lughoh", icon: <LogOut size={20} /> }, // temporarily using LogOut icon since I need a generic one like BookOpen if available
+    { name: "Daurah Lughoh", href: "/admin/darul-lughoh", icon: <LogOut size={20} /> }, // temporarily using LogOut icon since I need a generic one like BookOpen if available
     { name: "Progres Santri", href: "/admin/progres", icon: <LineChart size={20} /> },
   ];
 
@@ -44,7 +44,7 @@ export default async function AdminLayout({
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="space-y-1 px-3">
             {menuItems.map((item) => (
-              <Link 
+              <Link
                 key={item.href}
                 href={item.href}
                 className="flex items-center gap-3 px-3 py-2.5 text-text-secondary rounded-xl hover:bg-primary/5 hover:text-primary transition-all font-medium"
@@ -66,8 +66,8 @@ export default async function AdminLayout({
               <p className="text-xs text-text-secondary truncate">{session.user?.role}</p>
             </div>
           </div>
-          <Link 
-            href="/api/auth/signout" 
+          <Link
+            href="/api/auth/signout"
             className="flex items-center gap-2 text-danger hover:bg-danger/10 w-full px-3 py-2 rounded-lg transition-colors text-sm font-medium"
           >
             <LogOut size={18} />

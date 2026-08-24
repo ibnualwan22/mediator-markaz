@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   assignLevelDL, updatePembayaranDL,
   updateStatusUjianDL, updateSettingDL,
-  generateNextLevelDL
+  generateNextLevelDL, resetAllLevelDL
 } from "@/app/admin/(dashboard)/darul-lughoh/actions";
-import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download } from "lucide-react";
+import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download, RotateCcw } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
+import Swal from "sweetalert2";
 
 export default function SpreadsheetDarulLughoh({
   santriList,
@@ -43,19 +44,29 @@ export default function SpreadsheetDarulLughoh({
     await updateSettingDL(nominalSetting);
     setShowSettings(false);
     setIsLoading(false);
+    Swal.fire({ title: 'Tersimpan!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   const handleAssignLevel = async (santriId: string, level: number) => {
     setIsLoading(true);
     await assignLevelDL(santriId, level);
     setIsLoading(false);
+    Swal.fire({ title: 'Level Di-assign!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   const handleStatusChange = async (dlId: string, status: "LULUS" | "REMIDI") => {
-    if (!confirm(`Konfirmasi set status menjadi ${status}? ${status === 'REMIDI' ? 'Ini akan membuat tagihan percobaan baru di level yang sama.' : ''}`)) return;
+    const confirmRes = await Swal.fire({
+      title: 'Konfirmasi',
+      text: `Set status menjadi ${status}? ${status === 'REMIDI' ? 'Ini akan membuat tagihan percobaan baru di level yang sama.' : ''}`,
+      icon: 'question',
+      showCancelButton: true
+    });
+    if (!confirmRes.isConfirmed) return;
+    
     setIsLoading(true);
     await updateStatusUjianDL(dlId, status);
     setIsLoading(false);
+    Swal.fire({ title: `Status Menjadi ${status}!`, icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   const handleCicilanChange = (dlId: string, value: string) => {
@@ -73,6 +84,23 @@ export default function SpreadsheetDarulLughoh({
       delete next[dlId];
       return next;
     });
+  };
+
+  const handleResetDL = async (santriId: string, nama: string) => {
+    const confirmRes = await Swal.fire({
+      title: 'Reset Histori?',
+      text: `Yakin ingin mereset dan menghapus seluruh histori level Darul Lughoh untuk santri ${nama}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Ya, Reset!'
+    });
+    if (!confirmRes.isConfirmed) return;
+    
+    setIsLoading(true);
+    await resetAllLevelDL(santriId);
+    setIsLoading(false);
+    Swal.fire({ title: 'Telah Direset!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   return (
@@ -194,7 +222,19 @@ export default function SpreadsheetDarulLughoh({
                 <tr key={santri.id} className="border-b border-primary-light/10 hover:bg-[#faf9f5] transition-colors group">
                   <td className="p-2 border-r border-primary-light/10 bg-white group-hover:bg-[#faf9f5] font-mono font-medium text-primary">{santri.nis}</td>
                   <td className="p-2 border-r border-primary-light/20 sticky left-0 z-10 bg-white group-hover:bg-[#faf9f5] font-semibold truncate max-w-[180px] shadow-[2px_0_4px_rgba(0,0,0,0.06)] min-w-[150px]">
-                    <div className="font-bold text-text-primary text-xs truncate" title={santri.namaLengkap}>{santri.namaLengkap}</div>
+                    <div className="flex justify-between items-center gap-2 group/name w-full">
+                      <div className="font-bold text-text-primary text-xs truncate" title={santri.namaLengkap}>{santri.namaLengkap}</div>
+                      {santri.darulLughoh && santri.darulLughoh.length > 0 && (
+                        <button
+                          onClick={() => handleResetDL(santri.id, santri.namaLengkap)}
+                          disabled={isLoading}
+                          title="Reset Seluruh Level DL"
+                          className="text-gray-300 hover:text-danger opacity-0 group-hover/name:opacity-100 transition-all p-1 rounded hover:bg-danger/10 flex-shrink-0 outline-none"
+                        >
+                          <RotateCcw size={12} strokeWidth={3} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="p-2 border-r border-primary-light/30 bg-white group-hover:bg-[#faf9f5] text-center">
                     <select
@@ -224,6 +264,7 @@ export default function SpreadsheetDarulLughoh({
                                 setIsLoading(true);
                                 await generateNextLevelDL(santri.id, lvl);
                                 setIsLoading(false);
+                                Swal.fire({ title: `Level ${lvl} Aktif!`, icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
                               }}
                               className="px-2 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white text-[10px] rounded transition-colors font-bold whitespace-nowrap shadow-sm"
                               disabled={isLoading}

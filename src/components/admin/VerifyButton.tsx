@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { verifySantri } from "@/app/admin/(dashboard)/santri/actions";
 import { CheckCircle2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function VerifyButton({ santriId, isVerified }: { santriId: string, isVerified: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,18 +18,28 @@ export default function VerifyButton({ santriId, isVerified }: { santriId: strin
   }
 
   const handleVerify = async () => {
-    if (!confirm("Apakah Anda yakin ingin memverifikasi santri ini (Tindakan ini akan membuat NIS)?")) {
-      return;
-    }
+    const confirmRes = await Swal.fire({
+      title: 'Verifikasi Santri?',
+      text: "Tindakan ini akan membuat NIS baru untuk santri ini.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Verifikasi!'
+    });
+    
+    if (!confirmRes.isConfirmed) return;
 
     setIsLoading(true);
     try {
       const res = await verifySantri(santriId);
       if (!res.success) {
-        alert("Gagal memverifikasi: " + res.error);
+        Swal.fire('Gagal!', res.error, 'error');
+      } else {
+        Swal.fire({ title: 'Berhasil!', text: 'Santri telah diverifikasi', icon: 'success', timer: 2000, showConfirmButton: false });
       }
     } catch (error) {
-      alert("Terjadi kesalahan sistem saat verifikasi.");
+      Swal.fire('Error!', 'Terjadi kesalahan sistem saat verifikasi.', 'error');
     } finally {
       setIsLoading(false);
     }

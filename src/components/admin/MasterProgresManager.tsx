@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createTahapProgres, updateTahapProgres, deleteTahapProgres } from "@/app/admin/(dashboard)/progres/actions";
 import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function MasterProgresManager({ tahaps, selectedPeriodeId }: { tahaps: any[], selectedPeriodeId: string }) {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId }: { ta
     await createTahapProgres({ ...formData, periodeId: selectedPeriodeId });
     setFormData(f => ({ ...f, nama: "", urutan: f.urutan + 1 }));
     setIsLoading(false);
+    Swal.fire({ title: 'Tersimpan!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   const handleEditData = (item: any) => {
@@ -33,13 +35,25 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId }: { ta
     await updateTahapProgres(editFormData.id, editFormData);
     setEditingId(null);
     setIsLoading(false);
+    Swal.fire({ title: 'Diperbarui!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Yakin ingin menghapus tahap ini? Seluruh data progres santri yang bersangkutan akan lenyap!")) {
+    const res = await Swal.fire({
+      title: 'Hapus Tahap?',
+      text: "Seluruh data progres santri yang bersangkutan akan lenyap!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!'
+    });
+    
+    if (res.isConfirmed) {
       setIsLoading(true);
       await deleteTahapProgres(id);
       setIsLoading(false);
+      Swal.fire({ title: 'Terhapus!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
     }
   };
 

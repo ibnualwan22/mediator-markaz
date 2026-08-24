@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { X, Upload, Download, FileSpreadsheet, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function ImportExcelModal({ 
   isOpen, 
@@ -40,7 +41,7 @@ export default function ImportExcelModal({
       if (droppedFile.name.endsWith('.xlsx') || droppedFile.name.endsWith('.xls')) {
         setFile(droppedFile);
       } else {
-        alert("Harap unggah file Excel (.xlsx atau .xls)");
+        Swal.fire({ icon: 'error', title: 'Salah Format', text: 'Harap unggah file Excel (.xlsx atau .xls)' });
       }
     }
   };
@@ -70,11 +71,11 @@ export default function ImportExcelModal({
 
   const handleImport = async () => {
     if (!file) {
-      alert("Pilih file Excel terlebih dahulu");
+      Swal.fire({ icon: 'warning', title: 'File Kosong', text: 'Pilih file Excel terlebih dahulu' });
       return;
     }
     if (showGelombang && !selectedGelombang) {
-      alert("Pilih gelombang penempatan santri");
+      Swal.fire({ icon: 'warning', title: 'Gelombang Kosong', text: 'Pilih gelombang penempatan santri' });
       return;
     }
 
@@ -98,6 +99,13 @@ export default function ImportExcelModal({
       setResult(data);
 
       if (data.success && data.summary.success > 0) {
+        Swal.fire({
+          title: 'Import Selesai!',
+          text: `Berhasil mengimpor ${data.summary.success} data.`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
         onSuccess();
       }
     } catch (error) {

@@ -10,6 +10,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGelombang, setFilterGelombang] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showPasporModal, setShowPasporModal] = useState(false);
   const router = useRouter();
 
   const filteredData = santriList.filter(s => {
@@ -36,12 +37,18 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           />
         </div>
         
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setShowPasporModal(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-warning/10 hover:bg-warning text-warning hover:text-white border border-warning/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"
+          >
+            <FileSpreadsheet size={16} /> Import Paspor
+          </button>
           <button
             onClick={() => setShowImportModal(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 rounded-lg transition-all text-sm font-semibold"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"
           >
-            <FileSpreadsheet size={16} /> Import Excel
+            <FileSpreadsheet size={16} /> Import Bio
           </button>
           <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
           <Filter size={18} className="text-text-secondary" />
@@ -123,6 +130,19 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           setShowImportModal(false);
           router.refresh();
         }}
+      />
+
+      <ImportExcelModal 
+        isOpen={showPasporModal}
+        onClose={() => setShowPasporModal(false)}
+        gelombangList={gelombangList}
+        onSuccess={() => {
+          setShowPasporModal(false);
+          router.refresh();
+        }}
+        uploadUrl="/api/admin/santri/paspor/import"
+        templateUrl="/api/admin/santri/paspor/template"
+        showGelombang={false}
       />
     </div>
   );

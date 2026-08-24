@@ -25,7 +25,7 @@ const menuItems = [
   { name: "Pembayaran", href: "/santri/pembayaran", icon: <CreditCard size={20} /> },
   { name: "Pemberkasan", href: "/santri/pemberkasan", icon: <FolderCheck size={20} /> },
   { name: "Progres", href: "/santri/progres", icon: <LineChart size={20} /> },
-  { name: "Darul Lughoh", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
+  { name: "Daurah Lughoh", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
 ];
 
 export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
@@ -91,11 +91,10 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-text-secondary hover:bg-primary/5 hover:text-primary"
-                  }`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-text-secondary hover:bg-primary/5 hover:text-primary"
+                    }`}
                 >
                   {item.icon}
                   <span className="flex-1">{item.name}</span>

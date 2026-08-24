@@ -112,3 +112,29 @@ export async function deleteSantri(santriId: string) {
     return { success: false, error: "Gagal menghapus santri. Silakan coba lagi." };
   }
 }
+
+export async function updateSantriData(santriId: string, data: any) {
+  try {
+    await prisma.santri.update({
+      where: { id: santriId },
+      data: {
+        namaLengkap: data.namaLengkap,
+        namaArab: data.namaArab,
+        email: data.email,
+        asalProvinsi: data.asalProvinsi,
+        noWaSantri: data.noWaSantri,
+        namaWali: data.namaWali,
+        noWaWali: data.noWaWali,
+        nomorPaspor: data.nomorPaspor,
+      }
+    });
+
+    revalidatePath(`/admin/santri/${santriId}`);
+    revalidatePath("/admin/santri");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Santri Error:", error);
+    return { success: false, error: "Gagal menyimpan perubahan data santri." };
+  }
+}

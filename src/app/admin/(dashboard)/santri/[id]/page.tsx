@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, User, FileText, GraduationCap, Globe, CheckCircle2 } from "lucide-react";
 import DocumentViewer from "@/components/admin/DocumentViewer";
 import DeleteSantriButton from "@/components/admin/DeleteSantriButton";
+import EditSantriModal from "@/components/admin/EditSantriModal";
 import { redirect } from "next/navigation";
 
 export default async function AdminSantriDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -69,7 +70,10 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           </div>
         </div>
 
-        <DeleteSantriButton santriId={santri.id} namaLengkap={santri.namaLengkap} />
+        <div className="flex gap-2 w-full sm:w-auto">
+          <EditSantriModal santri={santri} />
+          <DeleteSantriButton santriId={santri.id} namaLengkap={santri.namaLengkap} />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 pt-4">
