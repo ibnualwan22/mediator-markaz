@@ -45,6 +45,7 @@ export default function Step3Akademik({
 
     setIsUploading(true);
     try {
+      /* === CLOUDINARY LOGIC (DISABLED) ===
       const signRes = await fetch('/api/cloudinary-sign', { method: 'POST' });
       if (!signRes.ok) throw new Error("Gagal terhubung ke Secure Server");
       
@@ -64,6 +65,25 @@ export default function Step3Akademik({
       if (!cloudRes.ok) throw new Error("Gagal menyimpan ke Cloudinary");
       
       const data = await cloudRes.json();
+      */
+
+      // === GOOGLE DRIVE LOGIC ===
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("santriName", initialData.namaLengkap || "Tanpa Nama");
+      fd.append("documentName", "Ijazah");
+
+      const driveRes = await fetch('/api/upload-drive', {
+        method: "POST",
+        body: fd
+      });
+
+      if (!driveRes.ok) {
+        const errDesc = await driveRes.json().catch(() => ({}));
+        throw new Error(errDesc.error || "Gagal mengunggah ke Google Drive");
+      }
+
+      const data = await driveRes.json();
       setFormData(prev => ({ 
         ...prev, 
         fileIjazah: data.secure_url 
