@@ -72,6 +72,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
               <th className="p-4 font-semibold border-b border-primary-light/20 w-12 text-center">No.</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">No. Pendaftaran / NIS</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">Nama Lengkap</th>
+              <th className="p-4 font-semibold border-b border-primary-light/20">No. Paspor</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">Gelombang</th>
               <th className="p-4 font-semibold border-b border-primary-light/20">Status</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 text-center">Aksi</th>
@@ -92,6 +93,13 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
                 <td className="p-4">
                   <div className="font-semibold text-text-primary">{s.namaLengkap}</div>
                   <div className="text-text-secondary text-xs mt-1">{s.noWaSantri}</div>
+                </td>
+                <td className="p-4">
+                  {s.nomorPaspor ? (
+                    <div className="font-mono text-sm font-bold text-gray-700">{s.nomorPaspor}</div>
+                  ) : (
+                    <span className="text-xs italic text-gray-400">- Kosong -</span>
+                  )}
                 </td>
                 <td className="p-4 text-text-secondary">
                   {s.gelombang.periode.nama} <br/> <span className="font-medium text-xs border rounded px-1.5 py-0.5 mt-1 inline-block bg-white">{s.gelombang.nama}</span>
