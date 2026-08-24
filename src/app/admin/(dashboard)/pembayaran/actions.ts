@@ -133,6 +133,67 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
   return { success: true };
 }
 
+export async function bulkUpsertCicilanPembayaran(updates: { santriId: string, poinTahapId: string, nominalHarus: number }[]) {
+  // Execute sequentially or via transaction to avoid concurrent write issues with identical keys
+  // For simplicity and to reuse logic, we can construct Prisma operations and run in a transaction
+  const operations = [];
+  
+  for (const update of updates) {
+    const { santriId, poinTahapId, nominalHarus } = update;
+    
+    // In a real bulk setting, we might want to batch findUnique, but since this is usually < 100 students per page, 
+    // it's acceptable to do a quick find to read current nominalHarus.
+    // However, to optimize, we can find all existing records in one go:
+  }
+  
+  // Actually, let's optimize it:
+  const existingRecords = await prisma.pembayaranSantri.findMany({
+    where: {
+      OR: updates.map(u => ({ santriId: u.santriId, poinTahapId: u.poinTahapId }))
+    }
+  });
+
+  const existingMap = new Map();
+  for (const rec of existingRecords) {
+    existingMap.set(`${rec.santriId}-${rec.poinTahapId}`, rec);
+  }
+
+  const ops = updates.map(update => {
+    const { santriId, poinTahapId, nominalHarus } = update;
+    const p = existingMap.get(`${santriId}-${poinTahapId}`);
+    const resolvedHarus = p ? p.nominalHarus : nominalHarus;
+    
+    if (p) {
+      return prisma.pembayaranSantri.update({
+        where: { id: p.id },
+        data: { 
+          nominalDibayar: resolvedHarus,
+          isLunas: true,
+          tanggalLunas: p.isLunas ? p.tanggalLunas : new Date() 
+        }
+      });
+    } else {
+      return prisma.pembayaranSantri.create({
+        data: {
+          santriId,
+          poinTahapId,
+          nominalHarus: resolvedHarus,
+          nominalDibayar: resolvedHarus,
+          isLunas: true,
+          tanggalLunas: new Date()
+        }
+      });
+    }
+  });
+
+  if (ops.length > 0) {
+    await prisma.$transaction(ops);
+  }
+  
+  revalidatePath("/admin/pembayaran");
+  return { success: true };
+}
+
 export async function changePaketSantri(santriId: string, paketPembayaranId: string) {
   // Update santri record
   await prisma.santri.update({

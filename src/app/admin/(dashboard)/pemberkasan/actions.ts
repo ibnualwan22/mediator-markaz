@@ -81,3 +81,11 @@ export async function toggleCheckboxPemberkasan(id: string, sudahDikumpulkan: bo
   });
   revalidatePath(`/admin/pemberkasan`);
 }
+
+export async function bulkToggleCheckboxPemberkasan(ids: string[], sudahDikumpulkan: boolean) {
+  await prisma.pemberkasanSantri.updateMany({
+    where: { id: { in: ids } },
+    data: { sudahDikumpulkan }
+  });
+  revalidatePath(`/admin/pemberkasan`);
+}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { upsertCicilanPembayaran, changePaketSantri } from "@/app/admin/(dashboard)/pembayaran/actions";
+import { upsertCicilanPembayaran, changePaketSantri, bulkUpsertCicilanPembayaran } from "@/app/admin/(dashboard)/pembayaran/actions";
 import { updatePembayaranDL } from "@/app/admin/(dashboard)/darul-lughoh/actions";
+import { bulkUpdatePembayaranDL } from "@/app/admin/(dashboard)/darul-lughoh/actions";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -86,6 +87,53 @@ export default function SpreadsheetPembayaran({
     
     records.sort((a: any, b: any) => a.percobaan - b.percobaan);
     return records;
+  };
+
+  const handleSetLunasAllTahap = async (poin: any, isIjazahBased: boolean, santris: any[]) => {
+    const updates: any[] = [];
+    santris.forEach(santri => {
+      let harus = poin.nominal;
+      if (isIjazahBased && poin.nominalIjazah) {
+        if (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN') {
+          harus = poin.nominalIjazah;
+        }
+      }
+      const ps = santri.pembayaranSantri.find((s: any) => s.poinTahapId === poin.id);
+      const dibayar = ps?.nominalDibayar || 0;
+      if (dibayar < harus) { // Only if not lunas
+        updates.push({
+          santriId: santri.id,
+          poinTahapId: poin.id,
+          nominalHarus: harus
+        });
+      }
+    });
+
+    if (updates.length > 0) {
+      setIsLoading(true);
+      await bulkUpsertCicilanPembayaran(updates);
+      setIsLoading(false);
+    }
+  };
+
+  const handleSetLunasAllDL = async (level: number, santris: any[]) => {
+    const updates: any[] = [];
+    santris.forEach(santri => {
+      const attempts = getDLRecords(santri, level);
+      if (attempts) {
+        attempts.forEach((dl: any) => {
+          if (dl.nominalHarus > 0 && dl.nominalDibayar < dl.nominalHarus) {
+             updates.push({ id: dl.id, nominalDibayar: dl.nominalHarus });
+          }
+        });
+      }
+    });
+
+    if (updates.length > 0) {
+      setIsLoading(true);
+      await bulkUpdatePembayaranDL(updates);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -199,7 +247,7 @@ export default function SpreadsheetPembayaran({
                         <th className="p-2 border-r border-primary-light/20 bg-white min-w-[150px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
 
                         {tahap1 && tahap1.poinTahap.map((poin: any) => (
-                           <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px]" title={poin.nama}>
+                           <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px] group" title={poin.nama}>
                              <div className="truncate w-full font-medium flex items-center justify-between">
                                {poin.nama}
                                {tahap1.isIjazahBased && <span className="bg-warning text-white text-[8px] px-1 rounded">Ijazah</span>}
@@ -207,18 +255,32 @@ export default function SpreadsheetPembayaran({
                              <div className="text-[9px] text-text-secondary font-normal mt-0.5">
                                {tahap1.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
                              </div>
+                             <button 
+                               onClick={() => handleSetLunasAllTahap(poin, tahap1.isIjazahBased, pktSantris)}
+                               disabled={isLoading || pktSantris.length === 0}
+                               className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                             >
+                               SET LUNAS ALL
+                             </button>
                            </th>
                         ))}
 
                         {dlLevels.map((lvl) => (
-                          <th key={lvl} className="p-2 border-r border-primary-light/10 min-w-[120px] bg-amber-50 text-amber-600 text-center font-bold">
-                            Level {lvl}
+                          <th key={lvl} className="p-2 border-r border-primary-light/10 min-w-[120px] bg-amber-50 text-amber-600 font-bold group">
+                            <div className="text-center w-full">Level {lvl}</div>
+                            <button 
+                               onClick={() => handleSetLunasAllDL(lvl, pktSantris)}
+                               disabled={isLoading || pktSantris.length === 0}
+                               className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                             >
+                               SET LUNAS ALL
+                             </button>
                           </th>
                         ))}
 
                         {remainingTahaps.map((t: any) => 
                           t.poinTahap.map((poin: any) => (
-                            <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px]" title={poin.nama}>
+                            <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px] group" title={poin.nama}>
                               <div className="truncate w-full font-medium flex items-center justify-between">
                                 {poin.nama}
                                 {t.isIjazahBased && <span className="bg-warning text-white text-[8px] px-1 rounded">Ijazah</span>}
@@ -226,6 +288,13 @@ export default function SpreadsheetPembayaran({
                               <div className="text-[9px] text-text-secondary font-normal mt-0.5">
                                 {t.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
                               </div>
+                              <button 
+                               onClick={() => handleSetLunasAllTahap(poin, t.isIjazahBased, pktSantris)}
+                               disabled={isLoading || pktSantris.length === 0}
+                               className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                             >
+                               SET LUNAS ALL
+                             </button>
                             </th>
                           ))
                         )}

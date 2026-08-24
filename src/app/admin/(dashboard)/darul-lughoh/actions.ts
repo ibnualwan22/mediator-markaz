@@ -78,6 +78,22 @@ export async function updatePembayaranDL(id: string, nominalDibayar: number) {
   revalidatePath("/admin/pembayaran");
 }
 
+export async function bulkUpdatePembayaranDL(updates: { id: string, nominalDibayar: number }[]) {
+  const ops = updates.map(update => {
+    return prisma.darulLughohSantri.update({
+      where: { id: update.id },
+      data: { nominalDibayar: update.nominalDibayar, isLunas: true } // Since we only bulk update to Set Lunas
+    });
+  });
+
+  if (ops.length > 0) {
+    await prisma.$transaction(ops);
+  }
+
+  revalidatePath("/admin/darul-lughoh");
+  revalidatePath("/admin/pembayaran");
+}
+
 export async function updateStatusUjianDL(id: string, status: string) {
   const current = await prisma.darulLughohSantri.findUnique({ where: { id } });
   if (!current) return { success: false, error: "Not found" };

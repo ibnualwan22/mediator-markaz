@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toggleCheckboxPemberkasan } from "@/app/admin/(dashboard)/pemberkasan/actions";
+import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
 
 export default function SpreadsheetPemberkasan({
@@ -33,6 +33,20 @@ export default function SpreadsheetPemberkasan({
   const handleToggle = async (pemberkasanId: string, currentStatus: boolean) => {
     setIsLoading(true);
     await toggleCheckboxPemberkasan(pemberkasanId, !currentStatus);
+    setIsLoading(false);
+  };
+
+  const handleCheckAll = async (itemId: string) => {
+    const idsToUpdate: string[] = [];
+    for (const santri of santriList) {
+      const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === itemId);
+      if (record && !record.sudahDikumpulkan) {
+        idsToUpdate.push(record.id);
+      }
+    }
+    if (idsToUpdate.length === 0) return;
+    setIsLoading(true);
+    await bulkToggleCheckboxPemberkasan(idsToUpdate, true);
     setIsLoading(false);
   };
 
@@ -121,11 +135,18 @@ export default function SpreadsheetPemberkasan({
               <th className="p-2 border-r border-primary-light/30 bg-[#f4f2eb] min-w-[150px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               
               {visibleItems.map(item => (
-                <th key={item.id} className="p-2 border-r border-primary-light/10 bg-[#f4f2eb] min-w-[100px] align-bottom" title={item.nama}>
+                <th key={item.id} className="p-2 border-r border-primary-light/10 bg-[#f4f2eb] min-w-[100px] align-bottom group" title={item.nama}>
                   <div className="flex justify-between items-center text-[10px]">
                     <span className="truncate w-full font-medium pr-1 whitespace-normal break-words leading-tight">{item.nama}</span>
-                    {item.isActive && <span className="bg-danger text-white text-[8px] px-1 rounded">WJB</span>}
+                    {item.isActive && <span className="bg-danger text-white text-[8px] px-1 rounded ml-1">WJB</span>}
                   </div>
+                  <button 
+                    onClick={() => handleCheckAll(item.id)}
+                    disabled={isLoading}
+                    className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                  >
+                    CHECK ALL
+                  </button>
                 </th>
               ))}
 
