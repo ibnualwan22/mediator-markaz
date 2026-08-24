@@ -2,31 +2,23 @@ import { google } from "googleapis";
 import { Readable } from "stream";
 
 // Retrieve environment variables
-const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-// Handle private key formatting: in .env, literal \n is used, so we replace it with actual newlines
-const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+const clientId = process.env.GOOGLE_CLIENT_ID;
+const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-// Define the scopes needed for full Drive access
-const SCOPES = ["https://www.googleapis.com/auth/drive"];
 
 /**
  * Initializes and returns the Google Drive API client
  */
 export function getDriveClient() {
-  if (!clientEmail || !privateKey) {
-    throw new Error("Missing Google Drive credentials in environment variables.");
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error("Missing Google Drive credentials in environment variables. Please check GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN.");
   }
 
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: clientEmail,
-      private_key: privateKey,
-    },
-    scopes: SCOPES,
-  });
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, "https://developers.google.com/oauthplayground");
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-  return google.drive({ version: "v3", auth });
+  return google.drive({ version: "v3", auth: oauth2Client });
 }
 
 /**
