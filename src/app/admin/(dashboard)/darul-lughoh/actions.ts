@@ -78,6 +78,15 @@ export async function updatePembayaranDL(id: string, nominalDibayar: number) {
   revalidatePath("/admin/pembayaran");
 }
 
+export async function updateDarulLughohMeta(id: string, tanggalJatuhTempo: Date | null, catatan: string | null) {
+  await prisma.darulLughohSantri.update({
+    where: { id },
+    data: { tanggalJatuhTempo, catatan }
+  });
+  revalidatePath("/admin/darul-lughoh");
+  revalidatePath("/admin/pembayaran");
+}
+
 export async function bulkUpdatePembayaranDL(updates: { id: string, nominalDibayar: number }[]) {
   const ops = updates.map(update => {
     return prisma.darulLughohSantri.update({

@@ -70,7 +70,7 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
     if (single) targetPakets.push(single);
   }
 
-  const santriList = selectedGelombangId ? await prisma.santri.findMany({
+  let santriList = selectedGelombangId ? await prisma.santri.findMany({
     where: {
       isVerified: true,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
@@ -88,6 +88,17 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
     },
     orderBy: { namaLengkap: 'asc' }
   }) : [];
+
+  // Sort by maximum Darul Lughoh level descending
+  santriList = santriList.sort((a, b) => {
+    const maxA = a.darulLughoh.length > 0 ? Math.max(...a.darulLughoh.map(d => d.level)) : 0;
+    const maxB = b.darulLughoh.length > 0 ? Math.max(...b.darulLughoh.map(d => d.level)) : 0;
+    
+    if (maxA !== maxB) {
+      return maxB - maxA; // descending
+    }
+    return (a.namaLengkap || "").localeCompare(b.namaLengkap || "");
+  });
 
   return (
     <div className="space-y-6 min-w-0">

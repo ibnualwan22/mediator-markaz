@@ -74,6 +74,14 @@ export async function updateStatusPemberkasan(id: string, status: string, catata
   revalidatePath(`/admin/pemberkasan`);
 }
 
+export async function updateFileUrl(id: string, fileUrl: string | null) {
+  await prisma.pemberkasanSantri.update({
+    where: { id },
+    data: { fileUrl }
+  });
+  revalidatePath(`/admin/pemberkasan`);
+}
+
 export async function toggleCheckboxPemberkasan(id: string, sudahDikumpulkan: boolean) {
   await prisma.pemberkasanSantri.update({
     where: { id },

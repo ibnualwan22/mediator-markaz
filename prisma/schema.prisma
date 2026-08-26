@@ -162,15 +162,15 @@ model TahapPaket {
 }
 
 model PoinTahap {
-  id            String     @id @default(cuid())
-  tahapPaketId  String
-  tahapPaket    TahapPaket @relation(fields: [tahapPaketId], references: [id], onDelete: Cascade)
-  nama          String     // "Biaya Pendaftaran"
-  nominal       Int        // Default nominal (untuk non-ijazah atau umum)
-  nominalIjazah Int?       // Nominal khusus MA/Pesantren (jika parent tahap isIjazahBased)
-  urutan        Int
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id               String     @id @default(cuid())
+  tahapPaketId     String
+  tahapPaket       TahapPaket @relation(fields: [tahapPaketId], references: [id], onDelete: Cascade)
+  nama             String     // "Biaya Pendaftaran"
+  nominal          Int        // Default nominal (untuk non-ijazah atau umum)
+  nominalIjazah    Int?       // Nominal khusus MA/Pesantren (jika parent tahap isIjazahBased)
+  urutan           Int
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   pembayaranSantri PembayaranSantri[]
 }
@@ -185,6 +185,7 @@ model PembayaranSantri {
   nominalDibayar Int       @default(0) // Jumlah yang sudah dibayar (cicilan)
   isLunas        Boolean   @default(false)
   tanggalLunas   DateTime?
+  tanggalJatuhTempo DateTime?
   catatan        String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -210,6 +211,7 @@ model DarulLughohSantri {
   isLunas        Boolean  @default(false)
   statusUjian    String   @default("BELUM_UJIAN") // BELUM_UJIAN | LULUS | REMIDI
   tanggalUjian   DateTime?
+  tanggalJatuhTempo DateTime?
   catatan        String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -244,6 +246,7 @@ model PemberkasanSantri {
   itemPemberkasan  ItemPemberkasan @relation(fields: [itemPemberkasanId], references: [id], onDelete: Cascade)
   sudahDikumpulkan Boolean         @default(false)
   catatan          String?
+  fileUrl          String?
   updatedAt        DateTime        @updatedAt
 
   @@unique([santriId, itemPemberkasanId])

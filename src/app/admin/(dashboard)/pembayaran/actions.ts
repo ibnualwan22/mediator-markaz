@@ -97,7 +97,84 @@ export async function deletePoinTahap(id: string) {
 
 // ============ PEMBAYARAN SANTRI (SPREADSHEET ACTION) ============
 
-export async function upsertCicilanPembayaran(santriId: string, poinTahapId: string, nominalDibayar: number, nominalHarus: number) {
+export async function updatePembayaranSantriMeta(santriId: string, poinTahapId: string, tanggalJatuhTempo: Date | null, catatan: string | null) {
+  // Try to find the nominalHarus if creating a new record
+  const santri = await prisma.santri.findUnique({
+    where: { id: santriId },
+    include: {
+      paketPembayaran: {
+        include: {
+          tahapPaket: { include: { poinTahap: true } }
+        }
+      }
+    }
+  });
+
+  let nominalHarus = 0;
+  if (santri && santri.paketPembayaran) {
+    for (const t of santri.paketPembayaran.tahapPaket) {
+      const pt = t.poinTahap.find(p => p.id === poinTahapId);
+      if (pt) {
+        nominalHarus = pt.nominal;
+        if (t.isIjazahBased && pt.nominalIjazah) {
+          if (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN') {
+            nominalHarus = pt.nominalIjazah;
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  await prisma.pembayaranSantri.upsert({
+    where: { santriId_poinTahapId: { santriId, poinTahapId } },
+    update: { tanggalJatuhTempo, catatan },
+    create: {
+      santriId,
+      poinTahapId,
+      nominalHarus,
+      nominalDibayar: 0,
+      isLunas: false,
+      tanggalJatuhTempo,
+      catatan
+    }
+  });
+  
+  revalidatePath("/admin/pembayaran");
+}
+
+export async function upsertCicilanPembayaran(santriId: string, poinTahapId: string, inputNominalDibayar: number, nominalHarus: number) {
+  const santri = await prisma.santri.findUnique({
+    where: { id: santriId },
+    include: {
+      paketPembayaran: {
+        include: {
+          tahapPaket: {
+            orderBy: { urutan: 'asc' },
+            include: { poinTahap: { orderBy: { urutan: 'asc' } } }
+          }
+        }
+      }
+    }
+  });
+
+  if (!santri || !santri.paketPembayaran) {
+    return { success: false, error: "Santri atau paket tidak ditemukan" };
+  }
+
+  // Get all points in order
+  const allPoints = santri.paketPembayaran.tahapPaket.flatMap(t => 
+    t.poinTahap.map(p => ({
+      ...p,
+      isIjazahBased: t.isIjazahBased
+    }))
+  );
+
+  const startIndex = allPoints.findIndex(p => p.id === poinTahapId);
+  if (startIndex === -1) {
+    return { success: false, error: "Point tahap tidak ditemukan di paket santri" };
+  }
+
   const p = await prisma.pembayaranSantri.findUnique({ 
     where: { 
       santriId_poinTahapId: { santriId, poinTahapId } 
@@ -105,13 +182,19 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
   });
 
   const resolvedHarus = p ? p.nominalHarus : nominalHarus;
-  const isLunas = nominalDibayar >= resolvedHarus;
+  
+  // Calculate surplus
+  let currentNominal = Math.min(inputNominalDibayar, resolvedHarus);
+  let surplus = Math.max(0, inputNominalDibayar - resolvedHarus);
 
+  const isLunas = currentNominal >= resolvedHarus;
+
+  // Process the current point
   if (p) {
     await prisma.pembayaranSantri.update({
       where: { id: p.id },
       data: { 
-        nominalDibayar,
+        nominalDibayar: currentNominal,
         isLunas,
         tanggalLunas: isLunas && !p.isLunas ? new Date() : p.tanggalLunas 
       }
@@ -122,15 +205,67 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
         santriId,
         poinTahapId,
         nominalHarus: resolvedHarus,
-        nominalDibayar,
+        nominalDibayar: currentNominal,
         isLunas,
         tanggalLunas: isLunas ? new Date() : null
       }
     });
   }
 
+  // Distribute surplus to subsequent points
+  let currentIdx = startIndex + 1;
+  while (surplus > 0 && currentIdx < allPoints.length) {
+    const nextPt = allPoints[currentIdx];
+    
+    // Resolve nextPt required amount
+    let nextHarus = nextPt.nominal;
+    if (nextPt.isIjazahBased && nextPt.nominalIjazah) {
+      if (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN') {
+        nextHarus = nextPt.nominalIjazah;
+      }
+    }
+
+    const nextP = await prisma.pembayaranSantri.findUnique({
+      where: { santriId_poinTahapId: { santriId, poinTahapId: nextPt.id } }
+    });
+
+    const nextDibayar = nextP ? nextP.nominalDibayar : 0;
+    const nextKekurangan = Math.max(0, nextHarus - nextDibayar);
+
+    if (nextKekurangan > 0) {
+      const takeAmount = Math.min(surplus, nextKekurangan);
+      const newNextDibayar = nextDibayar + takeAmount;
+      const nextIsLunas = newNextDibayar >= nextHarus;
+
+      if (nextP) {
+        await prisma.pembayaranSantri.update({
+          where: { id: nextP.id },
+          data: {
+            nominalDibayar: newNextDibayar,
+            isLunas: nextIsLunas,
+            tanggalLunas: nextIsLunas && !nextP.isLunas ? new Date() : nextP.tanggalLunas
+          }
+        });
+      } else {
+        await prisma.pembayaranSantri.create({
+          data: {
+            santriId,
+            poinTahapId: nextPt.id,
+            nominalHarus: nextHarus,
+            nominalDibayar: newNextDibayar,
+            isLunas: nextIsLunas,
+            tanggalLunas: nextIsLunas ? new Date() : null
+          }
+        });
+      }
+      surplus -= takeAmount;
+    }
+    
+    currentIdx++;
+  }
+
   revalidatePath("/admin/pembayaran");
-  return { success: true };
+  return { success: true, remainingSurplus: surplus };
 }
 
 export async function bulkUpsertCicilanPembayaran(updates: { santriId: string, poinTahapId: string, nominalHarus: number }[]) {

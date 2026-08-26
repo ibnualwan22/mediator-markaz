@@ -39,10 +39,19 @@ export default async function AdminPemberkasanPage({ searchParams }: { searchPar
       ]
     },
     include: {
-      pemberkasan: true
-    },
-    orderBy: { namaLengkap: 'asc' }
+      pemberkasan: true,
+      gelombang: {
+        include: { periode: true }
+      }
+    }
   }) : [];
+
+  if (santriList.length > 0) {
+    santriList.sort((a, b) => {
+      const getNo = (nis: string | null) => nis ? parseInt(nis.slice(-3)) || 9999 : 9999;
+      return getNo(a.nis) - getNo(b.nis);
+    });
+  }
 
   // Auto-sync missing PemberkasanSantri records without requiring manual action
   if (items.length > 0 && santriList.length > 0) {
