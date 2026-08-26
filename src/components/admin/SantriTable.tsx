@@ -11,6 +11,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   const [filterGelombang, setFilterGelombang] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPasporModal, setShowPasporModal] = useState(false);
+  const [showUrutModal, setShowUrutModal] = useState(false);
   const router = useRouter();
 
   const filteredData = santriList.filter(s => {
@@ -43,6 +44,12 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
             className="flex items-center justify-center gap-2 px-4 py-2 bg-warning/10 hover:bg-warning text-warning hover:text-white border border-warning/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"
           >
             <FileSpreadsheet size={16} /> Import Paspor
+          </button>
+          <button
+            onClick={() => setShowUrutModal(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-success/10 hover:bg-success text-success hover:text-white border border-success/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"
+          >
+            <FileSpreadsheet size={16} /> Import Nomor Urut
           </button>
           <button
             onClick={() => setShowImportModal(true)}
@@ -85,9 +92,12 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
                 <td className="p-4">
                   <div className="font-mono font-medium text-primary">{s.noPendaftaran}</div>
                   {s.nis ? (
-                    <div className="text-xs font-mono font-bold text-success mt-1">{s.nis}</div>
+                    <div className="text-xs font-mono font-bold text-success mt-1">NIS: {s.nis}</div>
                   ) : (
                     <div className="text-xs text-text-secondary/70 mt-1">NIS belum ada</div>
+                  )}
+                  {s.nomorUrut && (
+                    <div className="text-[10px] font-bold text-purple-600 mt-1.5 bg-purple-100 px-2 py-0.5 rounded-full inline-block">Urut: {s.nomorUrut}</div>
                   )}
                 </td>
                 <td className="p-4">
@@ -152,6 +162,19 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         }}
         uploadUrl="/api/admin/santri/paspor/import"
         templateUrl="/api/admin/santri/paspor/template"
+        showGelombang={false}
+      />
+      
+      <ImportExcelModal 
+        isOpen={showUrutModal}
+        onClose={() => setShowUrutModal(false)}
+        gelombangList={gelombangList}
+        onSuccess={() => {
+          setShowUrutModal(false);
+          router.refresh();
+        }}
+        uploadUrl="/api/admin/santri/nis/import"
+        templateUrl="/api/admin/santri/nis/template"
         showGelombang={false}
       />
     </div>

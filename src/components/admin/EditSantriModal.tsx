@@ -19,6 +19,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
     noWaWali: santri.noWaWali || "",
     nomorPaspor: santri.nomorPaspor || "",
     nis: santri.nis || "",
+    nomorUrut: santri.nomorUrut || "",
   });
 
   const handleChange = (e: any) => {
@@ -77,8 +78,12 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                     <input type="text" name="namaArab" value={formData.namaArab} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">NIS (Utk Ubah No Urut)</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">NIS Lengkap</label>
                     <input type="text" name="nis" value={formData.nis} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all font-mono text-primary font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Nomor Urut Pendaftaran</label>
+                    <input type="text" name="nomorUrut" value={formData.nomorUrut} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all font-mono text-purple-600 font-bold" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Asal Provinsi</label>

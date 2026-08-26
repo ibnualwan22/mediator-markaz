@@ -61,6 +61,7 @@ model Santri {
   id                String           @id @default(cuid())
   noPendaftaran     String           @unique // Auto-generated: MA-2026-0001
   nis               String?          @unique // Generated saat admin verifikasi, format: MA-26-0001
+  nomorUrut         String?          // Nomor urut independen yang bisa diimport via excel
   gelombangId       String
   gelombang         Gelombang        @relation(fields: [gelombangId], references: [id])
 

@@ -81,6 +81,7 @@ export async function verifySantri(santriId: string) {
     data: {
       isVerified: true,
       nis: generatedNis,
+      nomorUrut: nomorUrut,
       paketPembayaranId: paket?.id || null
     }
   });
@@ -127,6 +128,7 @@ export async function updateSantriData(santriId: string, data: any) {
         noWaWali: data.noWaWali,
         nomorPaspor: data.nomorPaspor,
         nis: data.nis,
+        nomorUrut: data.nomorUrut,
       }
     });
 
