@@ -3,9 +3,19 @@ import MasterPaketManager from "@/components/admin/MasterPaketManager";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default async function MasterPembayaranPage() {
-  const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
+export default async function MasterPembayaranPage({ searchParams }: { searchParams: Promise<{ periodeId?: string }> }) {
+  const resolvedParams = await searchParams;
+  let activePeriode;
+  if (resolvedParams.periodeId) {
+    activePeriode = await prisma.periode.findUnique({ where: { id: resolvedParams.periodeId } });
+  }
+  if (!activePeriode) {
+    activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
+  }
+
   const periodeId = activePeriode?.id;
+
+  const periodes = await prisma.periode.findMany({ orderBy: { tahunDibuka: 'desc' } });
 
   const pakets = await prisma.paketPembayaran.findMany({
     where: periodeId ? { periodeId } : {},
@@ -25,16 +35,16 @@ export default async function MasterPembayaranPage() {
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-start gap-4 mb-8">
-        <Link href="/admin/pembayaran" className="p-2 border border-primary-light/40 rounded-lg bg-white text-text-primary hover:bg-bg-cream transition-colors mt-1 shadow-sm">
+        <Link href={`/admin/pembayaran${periodeId ? `?periodeId=${periodeId}` : ''}`} className="p-2 border border-primary-light/40 rounded-lg bg-white text-text-primary hover:bg-bg-cream transition-colors mt-1 shadow-sm">
           <ArrowLeft size={20} />
         </Link>
         <div>
           <h1 className="text-3xl font-heading font-bold text-text-primary">Master Paket Pembayaran</h1>
-          <p className="text-text-secondary mt-1">Kelola paket, tahap, dan rincian poin pembayaran untuk santri.</p>
+          <p className="text-text-secondary mt-1">Kelola master paket periode <span className="font-bold text-primary">{activePeriode?.nama}</span></p>
         </div>
       </div>
 
-      <MasterPaketManager pakets={pakets} />
+      <MasterPaketManager pakets={pakets} periodes={periodes} currentPeriodeId={periodeId} />
     </div>
   );
 }

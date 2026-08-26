@@ -36,6 +36,39 @@ export async function deleteItemPemberkasan(id: string) {
   revalidatePath("/admin/pemberkasan/master");
 }
 
+export async function duplicateItemPemberkasanFromPeriode(sourcePeriodeId: string, targetPeriodeId: string) {
+  try {
+    const sourceItems = await prisma.itemPemberkasan.findMany({
+      where: { periodeId: sourcePeriodeId },
+      orderBy: { urutan: 'asc' }
+    });
+
+    if (sourceItems.length === 0) {
+      return { success: false, error: 'Tidak ada item berkas di periode sumber.' };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of sourceItems) {
+        await tx.itemPemberkasan.create({
+          data: {
+            periodeId: targetPeriodeId,
+            nama: item.nama,
+            kategori: item.kategori,
+            urutan: item.urutan,
+            isActive: item.isActive,
+          }
+        });
+      }
+    });
+
+    revalidatePath("/admin/pemberkasan/master");
+    return { success: true };
+  } catch (err) {
+    console.error("Duplicate Error:", err);
+    return { success: false, error: "Terjadi kesalahan saat menduplikasi item berkas." };
+  }
+}
+
 export async function initSantriPemberkasan(santriId: string) {
   // Get all master items
   const items = await prisma.itemPemberkasan.findMany();

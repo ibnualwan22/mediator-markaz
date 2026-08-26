@@ -24,6 +24,7 @@ export default async function DarulLughohPage({ searchParams }: { searchParams: 
   const santriList = selectedGelombangId ? await prisma.santri.findMany({
     where: {
       isVerified: true,
+      isWithdrawn: false,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },

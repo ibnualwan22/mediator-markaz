@@ -4,6 +4,7 @@ import { ArrowLeft, User, FileText, GraduationCap, Globe, CheckCircle2 } from "l
 import DocumentViewer from "@/components/admin/DocumentViewer";
 import DeleteSantriButton from "@/components/admin/DeleteSantriButton";
 import EditSantriModal from "@/components/admin/EditSantriModal";
+import WithdrawSantriButton from "@/components/admin/WithdrawSantriButton";
 import { redirect } from "next/navigation";
 
 export default async function AdminSantriDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +19,15 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
   if (!santri) {
     redirect("/admin/santri");
   }
+
+  const gelombangList = await prisma.gelombang.findMany({
+    include: { periode: true },
+    orderBy: { nama: 'asc' }
+  });
+  
+  const paketList = await prisma.paketPembayaran.findMany({
+    orderBy: { urutan: 'asc' }
+  });
 
   const DataGroup = ({ title, icon, children }: any) => (
     <div className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden mb-6">
@@ -56,7 +66,11 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           <div>
             <h1 className="text-2xl font-heading font-bold text-text-primary flex items-center gap-3">
               Detail Santri
-              {santri.nis ? (
+              {santri.isWithdrawn ? (
+                <span className="px-3 py-1 bg-danger/10 text-danger text-sm font-bold rounded-full">
+                  Mengundurkan Diri
+                </span>
+              ) : santri.nis ? (
                 <span className="px-3 py-1 bg-success/10 text-success text-sm font-bold rounded-full font-mono">
                   NIS: {santri.nis}
                 </span>
@@ -71,6 +85,12 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
+          <WithdrawSantriButton 
+            santriId={santri.id} 
+            isWithdrawn={santri.isWithdrawn} 
+            gelombangList={gelombangList}
+            paketList={paketList}
+          />
           <EditSantriModal santri={santri} />
           <DeleteSantriButton santriId={santri.id} namaLengkap={santri.namaLengkap} />
         </div>
@@ -107,6 +127,16 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
               </dd>
             </div>
           </DataGroup>
+          
+          {santri.isWithdrawn && santri.withdrawnNote && (
+            <DataGroup title="5. Catatan Mundur" icon={<User size={20} />}>
+              <div className="sm:col-span-2">
+                 <p className="text-sm font-semibold text-danger bg-danger/10 p-4 rounded-lg italic">
+                    &quot;{santri.withdrawnNote}&quot;
+                 </p>
+              </div>
+            </DataGroup>
+          )}
         </div>
 
         <div className="space-y-6">

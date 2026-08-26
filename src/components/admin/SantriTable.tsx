@@ -80,7 +80,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           </thead>
           <tbody className="text-sm">
             {filteredData.length > 0 ? filteredData.map((s, index) => (
-              <tr key={s.id} className="border-b border-primary-light/10 hover:bg-bg-cream transition-colors">
+              <tr key={s.id} className={`border-b border-primary-light/10 hover:bg-bg-cream transition-colors ${s.isWithdrawn ? 'opacity-60 bg-red-50/50' : ''}`}>
                 <td className="p-4 text-center font-medium text-text-secondary">{index + 1}</td>
                 <td className="p-4">
                   <div className="font-mono font-medium text-primary">{s.noPendaftaran}</div>
@@ -105,7 +105,9 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
                   {s.gelombang.periode.nama} <br/> <span className="font-medium text-xs border rounded px-1.5 py-0.5 mt-1 inline-block bg-white">{s.gelombang.nama}</span>
                 </td>
                 <td className="p-4">
-                  {s.isVerified ? (
+                  {s.isWithdrawn ? (
+                    <span className="px-2.5 py-1 bg-danger/10 text-danger font-bold text-xs rounded-full">Mundur</span>
+                  ) : s.isVerified ? (
                     <span className="px-2.5 py-1 bg-success/10 text-success font-bold text-xs rounded-full">Terverifikasi</span>
                   ) : (
                     <span className="px-2.5 py-1 bg-warning/10 text-warning font-bold text-xs rounded-full">Menunggu</span>

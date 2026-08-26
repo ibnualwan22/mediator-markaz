@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createTahapProgres, updateTahapProgres, deleteTahapProgres } from "@/app/admin/(dashboard)/progres/actions";
-import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
+import { createTahapProgres, updateTahapProgres, deleteTahapProgres, duplicateTahapProgresFromPeriode } from "@/app/admin/(dashboard)/progres/actions";
+import { Plus, Edit2, Trash2, X, Check, Copy } from "lucide-react";
 import Swal from "sweetalert2";
 
-export default function MasterProgresManager({ tahaps, selectedPeriodeId }: { tahaps: any[], selectedPeriodeId: string }) {
+export default function MasterProgresManager({ tahaps, selectedPeriodeId, periodes }: { tahaps: any[], selectedPeriodeId: string, periodes: any[] }) {
   const [formData, setFormData] = useState({
     nama: "",
     urutan: tahaps.length > 0 ? tahaps.length + 1 : 1,
@@ -57,6 +57,41 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId }: { ta
     }
   };
 
+  const handleDuplicate = async () => {
+    const periodesOptions = periodes
+      .filter((p: any) => p.id !== selectedPeriodeId)
+      .reduce((acc: any, p: any) => {
+         acc[p.id] = p.nama;
+         return acc;
+      }, {});
+
+    if (Object.keys(periodesOptions).length === 0) {
+      Swal.fire('Info', 'Tidak ada periode lain yang tersedia untuk diduplikasi.', 'info');
+      return;
+    }
+
+    const { value: sourcePeriodeId } = await Swal.fire({
+      title: 'Duplikat Master Tahap Progres',
+      text: 'Pilih periode sumber untuk menyalin seluruh struktur tahap progresnya.',
+      input: 'select',
+      inputOptions: periodesOptions,
+      inputPlaceholder: 'Pilih Periode',
+      showCancelButton: true,
+      confirmButtonText: 'Duplikat'
+    });
+
+    if (sourcePeriodeId && selectedPeriodeId) {
+      setIsLoading(true);
+      const res = await duplicateTahapProgresFromPeriode(sourcePeriodeId, selectedPeriodeId);
+      setIsLoading(false);
+      if (res.success) {
+        Swal.fire('Berhasil', 'Tahap Progres telah diduplikasi!', 'success');
+      } else {
+        Swal.fire('Gagal', res.error, 'error');
+      }
+    }
+  };
+
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-1">
@@ -98,7 +133,32 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId }: { ta
         </div>
       </div>
 
-      <div className="md:col-span-2">
+      <div className="md:col-span-2 space-y-4">
+        {tahaps.length === 0 && (
+           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center text-text-secondary flex flex-col items-center gap-4">
+             <div className="italic">Belum ada tahap progres. Silakan buat di form, atau duplikat dari periode lalu agar lebih cepat.</div>
+             <button 
+                onClick={handleDuplicate}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-6 py-2.5 bg-text-primary text-white hover:bg-black rounded-lg transition-colors font-medium shadow-sm"
+             >
+                <Copy size={16} /> Duplikat dari Periode Lain 
+             </button>
+           </div>
+        )}
+
+        {tahaps.length > 0 && (
+          <div className="flex justify-end mb-4">
+             <button 
+                onClick={handleDuplicate}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-primary-light/40 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
+             >
+                <Copy size={16} /> Salin Progres Periode Lain
+             </button>
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 overflow-hidden mb-6">
           <div className="bg-primary/5 px-6 py-3 border-b border-primary-light/20">
             <h3 className="font-bold text-primary">Tahap Progres Studi ({tahaps.length} Tahap)</h3>

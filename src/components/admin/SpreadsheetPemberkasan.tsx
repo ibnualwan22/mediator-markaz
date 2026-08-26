@@ -163,7 +163,7 @@ export default function SpreadsheetPemberkasan({
         </div>
         
         {summaryExpanded && (
-          <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[35vh] overflow-y-auto custom-scrollbar">
             {visibleItems.map(item => {
               // Hitung jumlah santri yang BELUM lengkap untuk item ini
               const belumLengkap = santriList.filter(santri => {

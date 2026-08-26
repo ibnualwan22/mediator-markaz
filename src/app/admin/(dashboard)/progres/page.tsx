@@ -29,6 +29,7 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
   const santriList = selectedGelombangId ? await prisma.santri.findMany({
     where: {
       isVerified: true,
+      isWithdrawn: false,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },
@@ -89,7 +90,7 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
           <p className="text-text-secondary mt-1">Pantau kesiapan dan keberangkatan santri secara makro.</p>
         </div>
         <Link 
-          href="/admin/progres/master" 
+          href={`/admin/progres/master${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`} 
           className="flex items-center gap-2 px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors"
         >
           <Settings size={16} /> Pengaturan Tahap

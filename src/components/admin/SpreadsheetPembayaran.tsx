@@ -94,32 +94,48 @@ export default function SpreadsheetPembayaran({
     const res = await upsertCicilanPembayaran(santriId, poinTahapId, currentVal, nominalHarus);
     setIsLoading(false);
 
-    if (res?.success && currentVal > nominalHarus) {
-      if (res.remainingSurplus && res.remainingSurplus > 0) {
-        window.alert(`Sisa uang Rp ${res.remainingSurplus.toLocaleString('id-ID')} tidak bisa dibagikan karena tidak ada tagihan kolom berikutnya.`);
-      } else {
-        window.alert(`Kelebihan nominal berhasil otomatis didistribusikan ke tagihan berikutnya.`);
-      }
-    }
-
     // Remove local override so it syncs with server state on revalidate
     setLocalCicilan(prev => {
       const next = { ...prev };
       delete next[`${santriId}-${poinTahapId}`];
       return next;
     });
+
+    // Refresh FIRST, then show non-blocking toast
+    router.refresh();
+
+    if (res?.success && currentVal > nominalHarus) {
+      const Swal = (await import('sweetalert2')).default;
+      if (res.remainingSurplus && res.remainingSurplus > 0) {
+        Swal.fire({ title: 'Perhatian', text: `Sisa uang Rp ${res.remainingSurplus.toLocaleString('id-ID')} tidak bisa dibagikan karena tidak ada tagihan kolom berikutnya.`, icon: 'warning', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+      } else {
+        Swal.fire({ title: 'Didistribusikan!', text: 'Kelebihan nominal berhasil otomatis didistribusikan ke tagihan berikutnya.', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+      }
+    }
   };
 
-  const handleBlurDL = async (dlId: string, currentVal: number, originalVal: number) => {
+  const handleBlurDL = async (dlId: string, currentVal: number, originalVal: number, nominalHarus: number) => {
     if (currentVal === originalVal) return;
     setIsLoading(true);
-    await updatePembayaranDL(dlId, currentVal);
+    const res = await updatePembayaranDL(dlId, currentVal);
     setIsLoading(false);
+    
     setLocalCicilan(prev => {
       const next = { ...prev };
       delete next[`dl-${dlId}`];
       return next;
     });
+
+    router.refresh();
+
+    if (res?.success && currentVal > nominalHarus) {
+      const Swal = (await import('sweetalert2')).default;
+      if (res.remainingSurplus && res.remainingSurplus > 0) {
+        Swal.fire({ title: 'Perhatian', text: `Sisa uang Rp ${res.remainingSurplus.toLocaleString('id-ID')} tidak bisa dibagikan karena tidak ada tagihan DL berikutnya.`, icon: 'warning', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+      } else {
+        Swal.fire({ title: 'Didistribusikan!', text: 'Kelebihan nominal berhasil otomatis didistribusikan ke level DL berikutnya.', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+      }
+    }
   };
 
   const getDLRecords = (santri: any, level: number) => {
@@ -487,6 +503,9 @@ export default function SpreadsheetPembayaran({
                                         placeholder="0"
                                         onChange={(e) => handleCicilanChange(k, e.target.value)}
                                         onBlur={() => handleBlur(santri.id, poin.id, displayVal, dibayar, harus)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') e.currentTarget.blur();
+                                        }}
                                         disabled={isLoading}
                                         className={`w-full px-2 py-1 text-xs outline-none border rounded bg-white font-medium ${borderClass}`}
                                       />
@@ -559,7 +578,32 @@ export default function SpreadsheetPembayaran({
                                                 <span className="text-text-secondary text-[8px]">Tes Ke- {dl.percobaan}</span>
                                                 <span>{dl.statusUjian === 'LULUS' ? '✅' : '🔄'}</span>
                                               </div>
-                                              <div className="text-[10px] font-bold text-success flex items-center justify-center gap-1">LUNAS</div>
+                                              <div className="flex items-center justify-between px-1">
+                                                <div className="text-[10px] font-bold text-success flex items-center gap-1">LUNAS</div>
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    const Swal = (await import('sweetalert2')).default;
+                                                    const result = await Swal.fire({
+                                                      title: 'Batalkan Pembayaran?',
+                                                      text: `Yakin ingin mengulang nominal pembayaran menjadi 0 untuk DL Tes Ke- ${dl.percobaan}?`,
+                                                      icon: 'warning',
+                                                      showCancelButton: true,
+                                                      confirmButtonText: 'Ya, Batalkan',
+                                                      cancelButtonText: 'Tidak',
+                                                      confirmButtonColor: '#e11d48'
+                                                    });
+                                                    if (result.isConfirmed) {
+                                                      handleBlurDL(dl.id, 0, dl.nominalDibayar, dl.nominalHarus);
+                                                    }
+                                                  }}
+                                                  disabled={isLoading}
+                                                  className="text-[8px] text-danger/70 hover:text-danger underline outline-none disabled:opacity-50"
+                                                  title="Batalkan pembayaran"
+                                                >
+                                                  Batal
+                                                </button>
+                                              </div>
                                             </div>
                                           );
                                         }
@@ -584,7 +628,10 @@ export default function SpreadsheetPembayaran({
                                                 value={displayStr}
                                                 placeholder="0"
                                                 onChange={(e) => handleCicilanChange(k, e.target.value)}
-                                                onBlur={() => handleBlurDL(dl.id, displayVal, dl.nominalDibayar)}
+                                                onBlur={() => handleBlurDL(dl.id, displayVal, dl.nominalDibayar, dl.nominalHarus)}
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Enter') e.currentTarget.blur();
+                                                }}
                                                 disabled={isLoading}
                                                 className={`w-full px-2 py-1 text-xs outline-none border rounded bg-white font-medium ${isInputLunas ? 'border-success/30 focus:border-success text-success' : 'border-warning/30 focus:border-warning text-danger'}`}
                                               />
@@ -595,7 +642,7 @@ export default function SpreadsheetPembayaran({
                                                       type="button"
                                                       onClick={() => {
                                                         handleCicilanChange(k, String(dl.nominalHarus));
-                                                        handleBlurDL(dl.id, dl.nominalHarus, dl.nominalDibayar);
+                                                        handleBlurDL(dl.id, dl.nominalHarus, dl.nominalDibayar, dl.nominalHarus);
                                                       }}
                                                       className="text-[8px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
                                                     >

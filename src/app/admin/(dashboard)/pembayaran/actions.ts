@@ -50,6 +50,63 @@ export async function deletePaket(id: string) {
   revalidatePath("/admin/pembayaran/master");
 }
 
+export async function duplicatePaketFromPeriode(sourcePeriodeId: string, currentPeriodeId: string) {
+  const sourcePakets = await prisma.paketPembayaran.findMany({
+    where: { periodeId: sourcePeriodeId },
+    include: {
+      tahapPaket: {
+        include: { poinTahap: true }
+      }
+    }
+  });
+
+  if (sourcePakets.length === 0) {
+    return { success: false, error: "Tidak ada paket yang ditemukan pada periode sumber." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const p of sourcePakets) {
+        const newPaket = await tx.paketPembayaran.create({
+          data: {
+            periodeId: currentPeriodeId,
+            nama: p.nama,
+            urutan: p.urutan,
+            isDefault: p.isDefault,
+          }
+        });
+        for (const t of p.tahapPaket) {
+          const newTahap = await tx.tahapPaket.create({
+            data: {
+              paketPembayaranId: newPaket.id,
+              nama: t.nama,
+              urutan: t.urutan,
+              isIjazahBased: t.isIjazahBased
+            }
+          });
+          for (const pt of t.poinTahap) {
+            await tx.poinTahap.create({
+              data: {
+                tahapPaketId: newTahap.id,
+                nama: pt.nama,
+                urutan: pt.urutan,
+                nominal: pt.nominal,
+                nominalIjazah: pt.nominalIjazah
+              }
+            });
+          }
+        }
+      }
+    });
+    
+    revalidatePath("/admin/pembayaran/master");
+    return { success: true };
+  } catch (err) {
+    console.error("Duplicate Error:", err);
+    return { success: false, error: "Terjadi kesalahan saat menduplikasi paket." };
+  }
+}
+
 // ============ TAHAP PAKET CRUD ============
 
 export async function createTahapPaket(data: { paketPembayaranId: string; nama: string; urutan: number; isIjazahBased: boolean }) {
@@ -187,6 +244,9 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
   let currentNominal = Math.min(inputNominalDibayar, resolvedHarus);
   let surplus = Math.max(0, inputNominalDibayar - resolvedHarus);
 
+  console.log('[UPSERT] santriId:', santriId, 'poinTahapId:', poinTahapId);
+  console.log('[UPSERT] input:', inputNominalDibayar, 'resolvedHarus:', resolvedHarus, 'currentNominal:', currentNominal, 'surplus:', surplus);
+
   const isLunas = currentNominal >= resolvedHarus;
 
   // Process the current point
@@ -264,6 +324,7 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
     currentIdx++;
   }
 
+  console.log('[UPSERT] Final remainingSurplus:', surplus);
   revalidatePath("/admin/pembayaran");
   return { success: true, remainingSurplus: surplus };
 }

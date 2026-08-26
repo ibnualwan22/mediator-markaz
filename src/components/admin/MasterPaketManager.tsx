@@ -4,11 +4,13 @@ import { useState } from "react";
 import { 
   createPaket, deletePaket, setPaketDefault, 
   createTahapPaket, deleteTahapPaket, 
-  createPoinTahap, deletePoinTahap 
+  createPoinTahap, deletePoinTahap,
+  duplicatePaketFromPeriode
 } from "@/app/admin/(dashboard)/pembayaran/actions";
-import { Plus, Trash2, ChevronDown, ChevronRight, CheckCircle2, Bookmark } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, CheckCircle2, Bookmark, Copy } from "lucide-react";
+import Swal from "sweetalert2";
 
-export default function MasterPaketManager({ pakets }: { pakets: any[] }) {
+export default function MasterPaketManager({ pakets, periodes, currentPeriodeId }: { pakets: any[], periodes: any[], currentPeriodeId?: string }) {
   const [expandedPaket, setExpandedPaket] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,10 +53,45 @@ export default function MasterPaketManager({ pakets }: { pakets: any[] }) {
     setIsLoading(false);
   };
 
+  const handleDuplicate = async () => {
+    const periodesOptions = periodes
+      .filter((p: any) => p.id !== currentPeriodeId)
+      .reduce((acc: any, p: any) => {
+         acc[p.id] = p.nama;
+         return acc;
+      }, {});
+
+    if (Object.keys(periodesOptions).length === 0) {
+      Swal.fire('Info', 'Tidak ada periode lain yang tersedia untuk diduplikasi.', 'info');
+      return;
+    }
+
+    const { value: sourcePeriodeId } = await Swal.fire({
+      title: 'Duplikat Master Paket',
+      text: 'Pilih periode sumber untuk menyalin seluruh paket, tahapan, dan poin tagihannya.',
+      input: 'select',
+      inputOptions: periodesOptions,
+      inputPlaceholder: 'Pilih Periode',
+      showCancelButton: true,
+      confirmButtonText: 'Duplikat Sekarang'
+    });
+
+    if (sourcePeriodeId && currentPeriodeId) {
+      setIsLoading(true);
+      const res = await duplicatePaketFromPeriode(sourcePeriodeId, currentPeriodeId);
+      setIsLoading(false);
+      if (res.success) {
+        Swal.fire('Berhasil', 'Paket telah diduplikasi secara menyeluruh!', 'success');
+      } else {
+        Swal.fire('Gagal', res.error, 'error');
+      }
+    }
+  };
+
   return (
     <div className="grid md:grid-cols-3 gap-8">
       {/* KIRI - Form Tambah Paket */}
-      <div className="md:col-span-1">
+      <div className="md:col-span-1 space-y-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-primary-light/20 sticky top-24">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Plus size={18} className="text-primary" /> Tambah Paket Baru
@@ -76,7 +113,7 @@ export default function MasterPaketManager({ pakets }: { pakets: any[] }) {
                 </label>
               </div>
             </div>
-            <button type="submit" disabled={isLoading} className="w-full px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-50 mt-2 shadow-sm">
+              <button type="submit" disabled={isLoading} className="w-full px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-50 mt-2 shadow-sm">
               Buat Paket
             </button>
           </form>
@@ -86,9 +123,28 @@ export default function MasterPaketManager({ pakets }: { pakets: any[] }) {
       {/* KANAN - List Paket */}
       <div className="md:col-span-2 space-y-4">
         {pakets.length === 0 && (
-           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center italic text-text-secondary">
-             Belum ada paket pembayaran. Silakan buat di form sebelah kiri.
+           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center text-text-secondary flex flex-col items-center gap-4">
+             <div className="italic">Belum ada paket pembayaran. Silakan buat di form, atau duplikat dari periode lalu agar lebih cepat.</div>
+             <button 
+                onClick={handleDuplicate}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-6 py-2.5 bg-text-primary text-white hover:bg-black rounded-lg transition-colors font-medium shadow-sm"
+             >
+                <Copy size={16} /> Duplikat dari Periode Lain 
+             </button>
            </div>
+        )}
+
+        {pakets.length > 0 && (
+          <div className="flex justify-end mb-4">
+             <button 
+                onClick={handleDuplicate}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-primary-light/40 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
+             >
+                <Copy size={16} /> Salin Paket Periode Lain
+             </button>
+          </div>
         )}
 
         {pakets.map(paket => (

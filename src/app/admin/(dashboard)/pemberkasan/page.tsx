@@ -32,6 +32,7 @@ export default async function AdminPemberkasanPage({ searchParams }: { searchPar
   const santriList = selectedGelombangId ? await prisma.santri.findMany({
     where: {
       isVerified: true,
+      isWithdrawn: false,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },
@@ -91,7 +92,7 @@ export default async function AdminPemberkasanPage({ searchParams }: { searchPar
           <p className="text-text-secondary mt-1">Lacak kelengkapan berkas pendaftaran santri secara horizontal.</p>
         </div>
         <Link 
-          href="/admin/pemberkasan/master" 
+          href={`/admin/pemberkasan/master${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`} 
           className="px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors shadow-sm flex items-center gap-2"
         >
           <Settings size={16} /> Master Item Berkas

@@ -18,6 +18,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
     namaWali: santri.namaWali || "",
     noWaWali: santri.noWaWali || "",
     nomorPaspor: santri.nomorPaspor || "",
+    nis: santri.nis || "",
   });
 
   const handleChange = (e: any) => {
@@ -74,6 +75,10 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Arab</label>
                     <input type="text" name="namaArab" value={formData.namaArab} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">NIS (Utk Ubah No Urut)</label>
+                    <input type="text" name="nis" value={formData.nis} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all font-mono text-primary font-bold" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Asal Provinsi</label>

@@ -92,6 +92,9 @@ model Santri {
   // Konfirmasi
   isVerified        Boolean          @default(false) // Admin verifikasi → trigger NIS generation
   setujuInvestasi   Boolean          @default(false)
+  isWithdrawn       Boolean          @default(false) // Santri mengundurkan diri
+  withdrawnAt       DateTime?
+  withdrawnNote     String?
 
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt

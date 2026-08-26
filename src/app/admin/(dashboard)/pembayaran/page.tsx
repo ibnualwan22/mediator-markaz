@@ -73,6 +73,7 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
   let santriList = selectedGelombangId ? await prisma.santri.findMany({
     where: {
       isVerified: true,
+      isWithdrawn: false,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
       paketPembayaranId: selectedPaketId === "all" ? undefined : selectedPaketId,
       OR: [
@@ -108,7 +109,7 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
           <p className="text-text-secondary mt-1">Lacak dan input pembayaran cicilan santri secara horizontal.</p>
         </div>
         <Link 
-          href="/admin/pembayaran/master"
+          href={`/admin/pembayaran/master${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`}
           className="flex items-center gap-2 px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors shadow-sm"
         >
           <Settings size={16} /> Master Paket

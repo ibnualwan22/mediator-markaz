@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createItemPemberkasan, updateItemPemberkasan, deleteItemPemberkasan } from "@/app/admin/(dashboard)/pemberkasan/actions";
-import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
+import { createItemPemberkasan, updateItemPemberkasan, deleteItemPemberkasan, duplicateItemPemberkasanFromPeriode } from "@/app/admin/(dashboard)/pemberkasan/actions";
+import { Plus, Edit2, Trash2, X, Check, Copy } from "lucide-react";
 import Swal from "sweetalert2";
 
-export default function MasterItemManager({ items }: { items: any[] }) {
+export default function MasterItemManager({ items, periodes, currentPeriodeId }: { items: any[], periodes: any[], currentPeriodeId?: string }) {
   const [formData, setFormData] = useState({
     nama: "",
     tipe: "INDO",
@@ -54,6 +54,41 @@ export default function MasterItemManager({ items }: { items: any[] }) {
       await deleteItemPemberkasan(id);
       setIsLoading(false);
       Swal.fire({ title: 'Terhapus!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+    }
+  };
+
+  const handleDuplicate = async () => {
+    const periodesOptions = periodes
+      .filter((p: any) => p.id !== currentPeriodeId)
+      .reduce((acc: any, p: any) => {
+         acc[p.id] = p.nama;
+         return acc;
+      }, {});
+
+    if (Object.keys(periodesOptions).length === 0) {
+      Swal.fire('Info', 'Tidak ada periode lain yang tersedia untuk diduplikasi.', 'info');
+      return;
+    }
+
+    const { value: sourcePeriodeId } = await Swal.fire({
+      title: 'Duplikat Master Berkas',
+      text: 'Pilih periode sumber untuk menyalin daftar berkasnya.',
+      input: 'select',
+      inputOptions: periodesOptions,
+      inputPlaceholder: 'Pilih Periode',
+      showCancelButton: true,
+      confirmButtonText: 'Duplikat'
+    });
+
+    if (sourcePeriodeId && currentPeriodeId) {
+      setIsLoading(true);
+      const res = await duplicateItemPemberkasanFromPeriode(sourcePeriodeId, currentPeriodeId);
+      setIsLoading(false);
+      if (res.success) {
+        Swal.fire('Berhasil', 'Berkas telah disalin!', 'success');
+      } else {
+        Swal.fire('Gagal', res.error, 'error');
+      }
     }
   };
 
@@ -185,6 +220,31 @@ export default function MasterItemManager({ items }: { items: any[] }) {
       </div>
 
       <div className="md:col-span-2">
+        {items.length === 0 && (
+           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center text-text-secondary flex flex-col items-center gap-4 mb-6">
+             <div className="italic">Belum ada berkas pembayaran. Silakan buat di form, atau duplikat dari periode lalu.</div>
+             <button 
+                onClick={handleDuplicate}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-6 py-2.5 bg-text-primary text-white hover:bg-black rounded-lg transition-colors font-medium shadow-sm"
+             >
+                <Copy size={16} /> Duplikat dari Periode Lain 
+             </button>
+           </div>
+        )}
+
+        {items.length > 0 && (
+          <div className="flex justify-end mb-4">
+             <button 
+                onClick={handleDuplicate}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-primary-light/40 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
+             >
+                <Copy size={16} /> Salin Berkas Periode Lain
+             </button>
+          </div>
+        )}
+
         {renderTable(indoItems, "Berkas Dalam Negeri (INDO)")}
         {renderTable(mesirItems, "Berkas Luar Negeri (MESIR)")}
       </div>

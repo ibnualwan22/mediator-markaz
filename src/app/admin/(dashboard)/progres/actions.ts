@@ -69,3 +69,35 @@ export async function deleteTahapProgres(id: string) {
     return { success: false };
   }
 }
+
+export async function duplicateTahapProgresFromPeriode(sourcePeriodeId: string, currentPeriodeId: string) {
+  try {
+    const sourceTahaps = await prisma.tahapProgres.findMany({
+      where: { periodeId: sourcePeriodeId },
+      orderBy: { urutan: 'asc' }
+    });
+
+    if (sourceTahaps.length === 0) {
+      return { success: false, error: 'Tidak ada tahap progres di periode sumber.' };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const tahap of sourceTahaps) {
+        await tx.tahapProgres.create({
+          data: {
+            periodeId: currentPeriodeId,
+            nama: tahap.nama,
+            urutan: tahap.urutan,
+            isActive: tahap.isActive
+          }
+        });
+      }
+    });
+
+    revalidatePath("/admin/progres/master");
+    return { success: true };
+  } catch (error) {
+    console.error("Error duplicating tahap progres:", error);
+    return { success: false, error: 'Kesusahan menduplikasi tahap.' };
+  }
+}

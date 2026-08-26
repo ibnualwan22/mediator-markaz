@@ -32,7 +32,7 @@ export default async function MasterProgresPage({ searchParams }: { searchParams
         </div>
       </div>
 
-      <MasterProgresManager tahaps={tahaps} selectedPeriodeId={selectedPeriodeId} />
+      <MasterProgresManager tahaps={tahaps} selectedPeriodeId={selectedPeriodeId} periodes={periodes} />
     </div>
   );
 }

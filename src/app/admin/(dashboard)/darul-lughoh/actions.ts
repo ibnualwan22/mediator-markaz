@@ -66,16 +66,54 @@ export async function assignLevelDL(santriId: string, level: number) {
 
 export async function updatePembayaranDL(id: string, nominalDibayar: number) {
   const dl = await prisma.darulLughohSantri.findUnique({ where: { id } });
-  if (!dl) return;
+  if (!dl) return { success: false, error: "Record not found" };
 
-  const isLunas = nominalDibayar >= dl.nominalHarus;
+  let currentNominal = Math.min(nominalDibayar, dl.nominalHarus);
+  let surplus = Math.max(0, nominalDibayar - dl.nominalHarus);
+
+  const isLunas = currentNominal >= dl.nominalHarus;
   await prisma.darulLughohSantri.update({
     where: { id },
-    data: { nominalDibayar, isLunas }
+    data: { nominalDibayar: currentNominal, isLunas }
   });
+
+  if (surplus > 0) {
+    const allDLs = await prisma.darulLughohSantri.findMany({
+      where: { santriId: dl.santriId },
+      orderBy: [
+        { level: 'asc' },
+        { percobaan: 'asc' }
+      ]
+    });
+
+    const startIndex = allDLs.findIndex(d => d.id === dl.id);
+    if (startIndex !== -1) {
+      for (let i = startIndex + 1; i < allDLs.length; i++) {
+        if (surplus <= 0) break;
+        const nextDl = allDLs[i];
+        const nextKekurangan = Math.max(0, nextDl.nominalHarus - nextDl.nominalDibayar);
+        
+        if (nextKekurangan > 0) {
+          const takeAmount = Math.min(surplus, nextKekurangan);
+          const newDibayar = nextDl.nominalDibayar + takeAmount;
+          
+          await prisma.darulLughohSantri.update({
+            where: { id: nextDl.id },
+            data: { 
+              nominalDibayar: newDibayar, 
+              isLunas: newDibayar >= nextDl.nominalHarus 
+            }
+          });
+          
+          surplus -= takeAmount;
+        }
+      }
+    }
+  }
 
   revalidatePath("/admin/darul-lughoh");
   revalidatePath("/admin/pembayaran");
+  return { success: true, remainingSurplus: surplus };
 }
 
 export async function updateDarulLughohMeta(id: string, tanggalJatuhTempo: Date | null, catatan: string | null) {
