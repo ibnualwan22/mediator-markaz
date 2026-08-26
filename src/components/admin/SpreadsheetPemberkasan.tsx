@@ -259,7 +259,7 @@ export default function SpreadsheetPemberkasan({
                     })
                     .map(santri => {
                       const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === activeItemModal.id);
-                      const noUrut = santri.nis ? santri.nis.slice(-3) : '-';
+                      const noUrut = santri.nomorUrut ? santri.nomorUrut : (santri.nis ? santri.nis.slice(-3) : '-');
 
                       return (
                         <tr key={santri.id} className="hover:bg-gray-50">
@@ -385,7 +385,7 @@ export default function SpreadsheetPemberkasan({
               return (
                 <tr key={santri.id} className="border-b border-primary-light/10 hover:bg-[#faf9f5] transition-colors group">
                   <td className="p-2 border-r border-primary-light/10 bg-white group-hover:bg-[#faf9f5] font-mono font-bold text-text-secondary text-center">
-                    {santri.nis ? santri.nis.slice(-3) : '-'}
+                    {santri.nomorUrut || (santri.nis ? santri.nis.slice(-3) : '-')}
                   </td>
                   <td className="p-2 border-r border-primary-light/10 bg-white group-hover:bg-[#faf9f5] font-mono font-medium text-primary text-[11px] whitespace-nowrap">{santri.nis}</td>
                   <td className="p-2 border-r border-primary-light/30 sticky left-0 z-10 bg-white group-hover:bg-[#faf9f5] font-semibold truncate min-w-[150px] max-w-[200px] shadow-[2px_0_4px_rgba(0,0,0,0.06)]" title={santri.namaLengkap}>{santri.namaLengkap}</td>

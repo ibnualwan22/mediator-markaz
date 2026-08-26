@@ -39,7 +39,10 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
     include: {
       progresSantri: true
     },
-    orderBy: { namaLengkap: 'asc' }
+    orderBy: [
+      { nomorUrut: 'asc' },
+      { namaLengkap: 'asc' }
+    ]
   }) : [];
 
   // Auto-sync missing ProgresSantri records without requiring manual action

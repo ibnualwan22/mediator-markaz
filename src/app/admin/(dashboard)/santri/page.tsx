@@ -7,6 +7,7 @@ export default async function AdminSantriPage() {
   const santriList = await prisma.santri.findMany({
     orderBy: [
       { gender: 'asc' },
+      { nomorUrut: 'asc' },
       { namaLengkap: 'asc' }
     ],
     include: {

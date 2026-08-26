@@ -49,8 +49,8 @@ export default async function AdminPemberkasanPage({ searchParams }: { searchPar
 
   if (santriList.length > 0) {
     santriList.sort((a, b) => {
-      const getNo = (nis: string | null) => nis ? parseInt(nis.slice(-3)) || 9999 : 9999;
-      return getNo(a.nis) - getNo(b.nis);
+      const getNo = (s: any) => s.nomorUrut ? parseInt(s.nomorUrut) || 9999 : (s.nis ? parseInt(s.nis.slice(-3)) || 9999 : 9999);
+      return getNo(a) - getNo(b);
     });
   }
 

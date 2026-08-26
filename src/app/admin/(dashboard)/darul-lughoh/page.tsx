@@ -39,7 +39,10 @@ export default async function DarulLughohPage({ searchParams }: { searchParams: 
         ]
       }
     },
-    orderBy: { namaLengkap: 'asc' }
+    orderBy: [
+      { nomorUrut: 'asc' },
+      { namaLengkap: 'asc' }
+    ]
   }) : [];
 
   return (

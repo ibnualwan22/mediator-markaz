@@ -87,7 +87,10 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
       },
       darulLughoh: true
     },
-    orderBy: { namaLengkap: 'asc' }
+    orderBy: [
+      { nomorUrut: 'asc' },
+      { namaLengkap: 'asc' }
+    ]
   }) : [];
 
   // Sort by maximum Darul Lughoh level descending
@@ -98,6 +101,10 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
     if (maxA !== maxB) {
       return maxB - maxA; // descending
     }
+    const getNo = (s: any) => s.nomorUrut ? parseInt(s.nomorUrut) || 9999 : (s.nis ? parseInt(s.nis.slice(-3)) || 9999 : 9999);
+    const diff = getNo(a) - getNo(b);
+    if (diff !== 0) return diff;
+    
     return (a.namaLengkap || "").localeCompare(b.namaLengkap || "");
   });
 
