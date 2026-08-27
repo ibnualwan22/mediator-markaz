@@ -33,14 +33,14 @@ export default async function MasterPembayaranPage({ searchParams }: { searchPar
   });
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-4 md:space-y-6 pb-20">
       <div className="flex items-start gap-4 mb-8">
-        <Link href={`/admin/pembayaran${periodeId ? `?periodeId=${periodeId}` : ''}`} className="p-2 border border-primary-light/40 rounded-lg bg-white text-text-primary hover:bg-bg-cream transition-colors mt-1 shadow-sm">
+        <Link href={`/admin/pembayaran${periodeId ? `?periodeId=${periodeId}` : ''}`} className="p-2 border border-primary-light/40 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-primary dark:text-gray-100 hover:bg-bg-cream dark:bg-gray-800 transition-colors mt-1 shadow-sm">
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-heading font-bold text-text-primary">Master Paket Pembayaran</h1>
-          <p className="text-text-secondary mt-1">Kelola master paket periode <span className="font-bold text-primary">{activePeriode?.nama}</span></p>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Master Paket Pembayaran</h1>
+          <p className="text-text-secondary dark:text-gray-400 mt-1">Kelola master paket periode <span className="font-bold text-primary">{activePeriode?.nama}</span></p>
         </div>
       </div>
 

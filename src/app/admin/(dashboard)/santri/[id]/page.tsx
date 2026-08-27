@@ -30,10 +30,10 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
   });
 
   const DataGroup = ({ title, icon, children }: any) => (
-    <div className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden mb-6">
-      <div className="bg-bg-cream border-b border-primary-light/20 px-6 py-4 flex items-center gap-3">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-primary-light/20 dark:border-gray-700 shadow-sm overflow-hidden mb-6">
+      <div className="bg-bg-cream dark:bg-gray-800 border-b border-primary-light/20 dark:border-gray-700 px-6 py-4 flex items-center gap-3">
         <div className="text-primary">{icon}</div>
-        <h3 className="font-heading font-bold text-text-primary text-lg">{title}</h3>
+        <h3 className="font-heading font-bold text-text-primary dark:text-gray-100 text-lg">{title}</h3>
       </div>
       <div className="p-6">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
@@ -45,26 +45,26 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
 
   const DataItem = ({ label, value, isFile = false }: any) => (
     <div className="sm:col-span-1">
-      <dt className="text-sm font-medium text-text-secondary">{label}</dt>
-      <dd className="mt-1 text-sm text-text-primary font-semibold">
+      <dt className="text-sm font-medium text-text-secondary dark:text-gray-400">{label}</dt>
+      <dd className="mt-1 text-sm text-text-primary dark:text-gray-100 font-semibold">
         {isFile && value ? (
           <DocumentViewer url={value} label={label} />
         ) : (
-          value || <span className="text-text-secondary/50 italic">Kosong</span>
+          value || <span className="text-text-secondary dark:text-gray-400/50 italic">Kosong</span>
         )}
       </dd>
     </div>
   );
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-4 md:space-y-6 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-start gap-4">
-          <Link href="/admin/santri" className="p-2 border border-primary-light/40 rounded-lg bg-white text-text-primary hover:bg-bg-cream transition-colors mt-1">
+          <Link href="/admin/santri" className="p-2 border border-primary-light/40 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-primary dark:text-gray-100 hover:bg-bg-cream dark:bg-gray-800 transition-colors mt-1">
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-2xl font-heading font-bold text-text-primary flex items-center gap-3">
+            <h1 className="text-2xl font-heading font-bold text-text-primary dark:text-gray-100 flex items-center gap-3">
               Detail Santri
               {santri.isWithdrawn ? (
                 <span className="px-3 py-1 bg-danger/10 text-danger text-sm font-bold rounded-full">
@@ -80,7 +80,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
                 </span>
               )}
             </h1>
-            <p className="text-text-secondary mt-1">Nomor Pendaftaran: {santri.noPendaftaran}</p>
+            <p className="text-text-secondary dark:text-gray-400 mt-1">Nomor Pendaftaran: {santri.noPendaftaran}</p>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 pt-4">
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 space-y-4 md:space-y-6">
           <DataGroup title="1. Data Pribadi" icon={<User size={20} />}>
             <DataItem label="Nama Lengkap" value={santri.namaLengkap} />
             <DataItem label="Nama Arab" value={santri.namaArab} />
@@ -120,8 +120,8 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <DataItem label="Tanggal Kadaluarsa" value={santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toLocaleDateString() : null} />
             <DataItem label="File Paspor" value={santri.filePaspor} isFile />
             <div className="sm:col-span-2 mt-4">
-              <dt className="text-sm font-medium text-text-secondary">Persetujuan Investasi</dt>
-              <dd className="mt-1 flex items-center gap-2 text-sm text-text-primary font-semibold">
+              <dt className="text-sm font-medium text-text-secondary dark:text-gray-400">Persetujuan Investasi</dt>
+              <dd className="mt-1 flex items-center gap-2 text-sm text-text-primary dark:text-gray-100 font-semibold">
                 <CheckCircle2 size={18} className={santri.setujuInvestasi ? "text-success" : "text-danger"} />
                 {santri.setujuInvestasi ? "Telah Disetujui" : "Belum Disetujui"}
               </dd>
@@ -139,16 +139,16 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           )}
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden p-6 text-center">
+        <div className="space-y-4 md:space-y-6">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-primary-light/20 dark:border-gray-700 shadow-sm overflow-hidden p-6 text-center">
             {santri.filePasFoto && (
-              <div className="w-32 h-40 bg-gray-100 rounded-lg border border-primary-light/30 mx-auto mb-4 overflow-hidden shadow-sm">
+              <div className="w-32 h-40 bg-gray-100 dark:bg-gray-800 rounded-lg border border-primary-light/30 dark:border-gray-700 mx-auto mb-4 overflow-hidden shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={santri.filePasFoto} alt="Pas Foto" className="w-full h-full object-cover" />
               </div>
             )}
-            <h3 className="font-bold text-lg text-text-primary">{santri.namaLengkap}</h3>
-            <p className="text-sm font-medium text-text-secondary mt-1">{santri.gelombang.periode.nama} - {santri.gelombang.nama}</p>
+            <h3 className="font-bold text-lg text-text-primary dark:text-gray-100">{santri.namaLengkap}</h3>
+            <p className="text-sm font-medium text-text-secondary dark:text-gray-400 mt-1">{santri.gelombang.periode.nama} - {santri.gelombang.nama}</p>
           </div>
 
           <DataGroup title="2. Dokumen Pribadi" icon={<FileText size={20} />}>

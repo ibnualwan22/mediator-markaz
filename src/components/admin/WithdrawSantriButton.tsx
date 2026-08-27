@@ -127,7 +127,7 @@ export default function WithdrawSantriButton({
 
       {isTransferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col my-auto mt-20">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col my-auto mt-20">
 
             <div className="flex flex-shrink-0 items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center gap-3">
@@ -139,7 +139,7 @@ export default function WithdrawSantriButton({
                   <p className="text-sm text-gray-500 mt-0.5">Pemindahan otomatis akumulasi pembayaran</p>
                 </div>
               </div>
-              <button disabled={isLoading} onClick={() => setIsTransferModalOpen(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left flex-shrink-0">
+              <button disabled={isLoading} onClick={() => setIsTransferModalOpen(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:bg-gray-800 rounded-lg transition-colors text-left flex-shrink-0">
                 <X size={20} />
               </button>
             </div>
@@ -162,7 +162,7 @@ export default function WithdrawSantriButton({
                     setTargetPeriodeId(e.target.value);
                     setTargetGelombangId("");
                   }}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all"
                 >
                   <option value="" disabled>-- Pilih --</option>
                   {periodes.map((p: any) => (
@@ -177,7 +177,7 @@ export default function WithdrawSantriButton({
                   value={targetGelombangId}
                   onChange={(e) => setTargetGelombangId(e.target.value)}
                   disabled={!targetPeriodeId}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all disabled:opacity-50"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all disabled:opacity-50"
                 >
                   <option value="" disabled>-- Pilih --</option>
                   {filteredGelombang.map((g: any) => (
@@ -188,12 +188,12 @@ export default function WithdrawSantriButton({
 
             </div>
 
-            <div className="p-5 border-t border-gray-100 bg-gray-50 flex gap-3 flex-shrink-0 text-left">
+            <div className="p-5 border-t border-gray-100 bg-gray-50 dark:bg-gray-800 flex gap-3 flex-shrink-0 text-left">
               <button
                 type="button"
                 onClick={() => setIsTransferModalOpen(false)}
                 disabled={isLoading}
-                className="w-28 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50 text-sm"
+                className="w-28 py-3 bg-white dark:bg-gray-900 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 dark:bg-gray-800 transition-colors disabled:opacity-50 text-sm"
               >
                 Batal
               </button>

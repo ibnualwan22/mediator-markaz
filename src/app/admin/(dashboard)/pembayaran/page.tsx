@@ -109,15 +109,15 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
   });
 
   return (
-    <div className="space-y-6 min-w-0">
+    <div className="space-y-4 md:space-y-6 min-w-0">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-text-primary">Spreadsheet Pembayaran</h1>
-          <p className="text-text-secondary mt-1">Lacak dan input pembayaran cicilan santri secara horizontal.</p>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Spreadsheet Pembayaran</h1>
+          <p className="text-text-secondary dark:text-gray-400 mt-1">Lacak dan input pembayaran cicilan santri secara horizontal.</p>
         </div>
         <Link 
           href={`/admin/pembayaran/master${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`}
-          className="flex items-center gap-2 px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-white transition-colors shadow-sm"
         >
           <Settings size={16} /> Master Paket
         </Link>

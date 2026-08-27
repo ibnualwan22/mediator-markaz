@@ -85,15 +85,15 @@ export default async function AdminPemberkasanPage({ searchParams }: { searchPar
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-text-primary">Spreadsheet Pemberkasan</h1>
-          <p className="text-text-secondary mt-1">Lacak kelengkapan berkas pendaftaran santri secara horizontal.</p>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Spreadsheet Pemberkasan</h1>
+          <p className="text-text-secondary dark:text-gray-400 mt-1">Lacak kelengkapan berkas pendaftaran santri secara horizontal.</p>
         </div>
         <Link 
           href={`/admin/pemberkasan/master${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`} 
-          className="px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors shadow-sm flex items-center gap-2"
+          className="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-white dark:hover:bg-white transition-colors shadow-sm flex items-center gap-2"
         >
           <Settings size={16} /> Master Item Berkas
         </Link>

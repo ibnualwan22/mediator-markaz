@@ -96,29 +96,29 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
   const mesirItems = items.filter(i => i.kategori === "MESIR");
 
   const renderTable = (data: any[], title: string) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 overflow-hidden mb-6">
-      <div className="bg-primary/5 px-6 py-3 border-b border-primary-light/20">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 overflow-hidden mb-6">
+      <div className="bg-primary/5 px-6 py-3 border-b border-primary-light/20 dark:border-gray-700">
         <h3 className="font-bold text-primary">{title} ({data.length} Item)</h3>
       </div>
       <table className="w-full text-left border-collapse text-sm">
         <thead>
-          <tr className="bg-bg-cream/50 text-text-primary">
-            <th className="p-4 font-semibold border-b border-primary-light/10 w-16 text-center">Urutan</th>
-            <th className="p-4 font-semibold border-b border-primary-light/10">Nama Berkas</th>
-            <th className="p-4 font-semibold border-b border-primary-light/10 w-32 text-center">Wajib?</th>
-            <th className="p-4 font-semibold border-b border-primary-light/10 w-24 text-center">Aksi</th>
+          <tr className="bg-bg-cream dark:bg-gray-800/50 text-text-primary dark:text-gray-100">
+            <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700 w-16 text-center">Urutan</th>
+            <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700">Nama Berkas</th>
+            <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700 w-32 text-center">Wajib?</th>
+            <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700 w-24 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody>
           {data.length > 0 ? data.map(i => (
-            <tr key={i.id} className={`border-b border-primary-light/10 ${editingId === i.id ? 'bg-primary/5' : 'hover:bg-bg-cream/50'}`}>
+            <tr key={i.id} className={`border-b border-primary-light/10 dark:border-gray-700 ${editingId === i.id ? 'bg-primary/5' : 'hover:bg-bg-cream dark:bg-gray-800/50'}`}>
               {editingId === i.id ? (
                 <>
                   <td className="p-2">
-                    <input type="number" className="w-full px-2 py-1 text-center border rounded bg-white" value={editFormData.urutan} onChange={e => setEditFormData(f => ({ ...f, urutan: parseInt(e.target.value) || 0 }))} />
+                    <input type="number" className="w-full px-2 py-1 text-center border rounded bg-white dark:bg-gray-900" value={editFormData.urutan} onChange={e => setEditFormData(f => ({ ...f, urutan: parseInt(e.target.value) || 0 }))} />
                   </td>
                   <td className="p-2">
-                    <input type="text" className="w-full px-2 py-1 border rounded bg-white" value={editFormData.nama} onChange={e => setEditFormData(f => ({ ...f, nama: e.target.value }))} />
+                    <input type="text" className="w-full px-2 py-1 border rounded bg-white dark:bg-gray-900" value={editFormData.nama} onChange={e => setEditFormData(f => ({ ...f, nama: e.target.value }))} />
                   </td>
                   <td className="p-2 text-center">
                     <input type="checkbox" className="rounded" checked={editFormData.isWajib} onChange={e => setEditFormData(f => ({ ...f, isWajib: e.target.checked }))} />
@@ -131,12 +131,12 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
               ) : (
                 <>
                   <td className="p-4 text-center font-mono">{i.urutan}</td>
-                  <td className="p-4 font-medium text-text-primary">{i.nama}</td>
+                  <td className="p-4 font-medium text-text-primary dark:text-gray-100">{i.nama}</td>
                   <td className="p-4 text-center">
                     {i.isActive ? (
                       <span className="px-2 py-1 bg-danger/10 text-danger text-xs font-bold rounded">Wajib</span>
                     ) : (
-                      <span className="px-2 py-1 bg-text-secondary/10 text-text-secondary text-xs rounded">Opsional</span>
+                      <span className="px-2 py-1 bg-text-secondary/10 text-text-secondary dark:text-gray-400 text-xs rounded">Opsional</span>
                     )}
                   </td>
                   <td className="p-4 text-center flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
@@ -147,7 +147,7 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
               )}
             </tr>
           )) : (
-            <tr><td colSpan={4} className="p-4 text-center text-text-secondary italic">Belum ada item</td></tr>
+            <tr><td colSpan={4} className="p-4 text-center text-text-secondary dark:text-gray-400 italic">Belum ada item</td></tr>
           )}
         </tbody>
       </table>
@@ -157,24 +157,24 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-1">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-primary-light/20 top-24 sticky">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 top-24 sticky">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Plus size={18} className="text-primary" /> Tambah Item
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm text-text-secondary">Tipe Berkas</label>
+              <label className="text-sm text-text-secondary dark:text-gray-400">Tipe Berkas</label>
               <select 
                 value={formData.tipe} 
                 onChange={e => setFormData(f => ({ ...f, tipe: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border outline-none focus:border-primary mt-1 text-sm bg-bg-cream"
+                className="w-full px-3 py-2 rounded-lg border outline-none focus:border-primary mt-1 text-sm bg-bg-cream dark:bg-gray-800"
               >
                 <option value="INDO">Dalam Negeri (INDO)</option>
                 <option value="MESIR">Luar Negeri (MESIR)</option>
               </select>
             </div>
             <div>
-              <label className="text-sm text-text-secondary">Nama Berkas</label>
+              <label className="text-sm text-text-secondary dark:text-gray-400">Nama Berkas</label>
               <input 
                 type="text" 
                 required 
@@ -186,7 +186,7 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-text-secondary">Urutan</label>
+                <label className="text-sm text-text-secondary dark:text-gray-400">Urutan</label>
                 <input 
                   type="number" 
                   required 
@@ -221,12 +221,12 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
 
       <div className="md:col-span-2">
         {items.length === 0 && (
-           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center text-text-secondary flex flex-col items-center gap-4 mb-6">
+           <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-primary-light/20 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400 flex flex-col items-center gap-4 mb-6">
              <div className="italic">Belum ada berkas pembayaran. Silakan buat di form, atau duplikat dari periode lalu.</div>
              <button 
                 onClick={handleDuplicate}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-text-primary text-white hover:bg-black rounded-lg transition-colors font-medium shadow-sm"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-black dark:hover:bg-white rounded-lg transition-colors font-medium shadow-sm"
              >
                 <Copy size={16} /> Duplikat dari Periode Lain 
              </button>
@@ -238,7 +238,7 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
              <button 
                 onClick={handleDuplicate}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-primary-light/40 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/40 dark:border-gray-700 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
              >
                 <Copy size={16} /> Salin Berkas Periode Lain
              </button>

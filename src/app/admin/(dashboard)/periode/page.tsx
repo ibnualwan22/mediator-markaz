@@ -14,10 +14,10 @@ export default async function AdminPeriodePage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-text-primary">Manajemen Periode & Gelombang</h1>
-        <p className="text-text-secondary mt-1">Atur tahun ajaran dan gelombang pendaftaran yang aktif.</p>
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Manajemen Periode & Gelombang</h1>
+        <p className="text-text-secondary dark:text-gray-400 mt-1">Atur tahun ajaran dan gelombang pendaftaran yang aktif.</p>
       </div>
       
       <PeriodeManager periodes={periodes} />

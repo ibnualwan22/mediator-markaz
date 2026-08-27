@@ -27,14 +27,14 @@ export default async function MasterPemberkasanPage({ searchParams }: { searchPa
   });
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-4 md:space-y-6 pb-20">
       <div className="flex items-start gap-4 mb-4">
-        <Link href="/admin/pemberkasan" className="p-2 border border-primary-light/40 rounded-lg bg-white text-text-primary hover:bg-bg-cream transition-colors mt-1 shadow-sm">
+        <Link href="/admin/pemberkasan" className="p-2 border border-primary-light/40 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-primary dark:text-gray-100 hover:bg-bg-cream dark:bg-gray-800 transition-colors mt-1 shadow-sm">
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-heading font-bold text-text-primary">Master Item Berkas</h1>
-          <p className="text-text-secondary mt-1">Kelola master berkas periode <span className="font-bold text-primary">{activePeriode?.nama}</span></p>
+          <h1 className="text-2xl font-heading font-bold text-text-primary dark:text-gray-100">Master Item Berkas</h1>
+          <p className="text-text-secondary dark:text-gray-400 mt-1">Kelola master berkas periode <span className="font-bold text-primary">{activePeriode?.nama}</span></p>
         </div>
       </div>
 

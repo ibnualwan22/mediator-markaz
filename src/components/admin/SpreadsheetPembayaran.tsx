@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { upsertCicilanPembayaran, changePaketSantri, bulkUpsertCicilanPembayaran, updatePembayaranSantriMeta } from "@/app/admin/(dashboard)/pembayaran/actions";
 import { updatePembayaranDL, bulkUpdatePembayaranDL, updateDarulLughohMeta } from "@/app/admin/(dashboard)/darul-lughoh/actions";
-import { CheckCircle2, AlertCircle, CalendarRange, X, Save } from "lucide-react";
+import { CheckCircle2, AlertCircle, CalendarRange, X, Save, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
+import ImportExcelModal from "@/components/admin/ImportExcelModal";
 
 // Utility formatting
 const fmt = (num: number) => `Rp ${num.toLocaleString('id-ID')}`;
@@ -32,6 +33,7 @@ export default function SpreadsheetPembayaran({
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [localCicilan, setLocalCicilan] = useState<{ [key: string]: number }>({});
 
   // Meta Modal State
@@ -70,7 +72,7 @@ export default function SpreadsheetPembayaran({
 
   if (!targetPakets || targetPakets.length === 0) {
     return (
-      <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center italic text-text-secondary">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-primary-light/20 dark:border-gray-700 text-center italic text-text-secondary dark:text-gray-400">
         Belum ada Paket Pembayaran default. Silakan atur di Master Paket.
       </div>
     );
@@ -195,7 +197,7 @@ export default function SpreadsheetPembayaran({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-primary-light/20 flex flex-col h-[calc(100vh-140px)] w-full max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-140px)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
       {/* Overdue Alert */}
       {overdueItems.length > 0 && !overdueAlertClosed && (
         <div className="bg-danger/10 border-l-4 border-danger p-3 m-4 mb-0 rounded-r shadow-sm flex items-start justify-between flex-shrink-0 animate-in fade-in slide-in-from-top-2">
@@ -215,29 +217,29 @@ export default function SpreadsheetPembayaran({
       {/* Meta Modal */}
       {metaModal?.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col animate-in zoom-in-95">
-            <div className="p-4 border-b border-primary-light/20 flex justify-between items-center bg-bg-cream/30">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col animate-in zoom-in-95">
+            <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex justify-between items-center bg-bg-cream dark:bg-gray-800/30">
               <h2 className="font-bold text-primary">Target & Catatan Global</h2>
-              <button disabled={isLoading} onClick={() => setMetaModal(null)} className="text-text-secondary hover:text-danger"><X size={18} /></button>
+              <button disabled={isLoading} onClick={() => setMetaModal(null)} className="text-text-secondary dark:text-gray-400 hover:text-danger"><X size={18} /></button>
             </div>
             <div className="p-4 space-y-4">
-              <p className="text-xs text-text-secondary">Poin Tagihan: <span className="font-bold text-text-primary">{metaModal.nama}</span></p>
+              <p className="text-xs text-text-secondary dark:text-gray-400">Poin Tagihan: <span className="font-bold text-text-primary dark:text-gray-100">{metaModal.nama}</span></p>
               <div>
-                <label className="block text-xs font-bold text-text-primary mb-1">Tanggal Jatuh Tempo</label>
+                <label className="block text-xs font-bold text-text-primary dark:text-gray-100 mb-1">Tanggal Jatuh Tempo</label>
                 <input
                   type="date"
                   value={metaModal.tanggal}
                   onChange={e => setMetaModal({ ...metaModal, tanggal: e.target.value })}
-                  className="w-full px-3 py-2 border border-primary-light/30 rounded-lg text-sm bg-white outline-none focus:border-primary"
+                  className="w-full px-3 py-2 border border-primary-light/30 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 outline-none focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-text-primary mb-1">Catatan Tambahan</label>
+                <label className="block text-xs font-bold text-text-primary dark:text-gray-100 mb-1">Catatan Tambahan</label>
                 <textarea
                   rows={3}
                   value={metaModal.catatan}
                   onChange={e => setMetaModal({ ...metaModal, catatan: e.target.value })}
-                  className="w-full px-3 py-2 border border-primary-light/30 rounded-lg text-sm bg-white outline-none focus:border-primary resize-none"
+                  className="w-full px-3 py-2 border border-primary-light/30 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 outline-none focus:border-primary resize-none"
                   placeholder="Keterangan opsional yang berlaku untuk poin tagihan ini..."
                 />
               </div>
@@ -263,11 +265,11 @@ export default function SpreadsheetPembayaran({
       )}
 
       {/* Filter and Search Bar */}
-      <div className="p-4 border-b border-primary-light/20 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream/30">
+      <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream dark:bg-gray-800/30">
         <div className="flex gap-2">
           {/* PERIODE FILTER */}
           <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary max-w-[200px]"
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-[200px]"
             value={selectedPeriodeId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
@@ -285,7 +287,7 @@ export default function SpreadsheetPembayaran({
           </select>
 
           <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary"
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary"
             value={selectedGelombangId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
@@ -299,7 +301,7 @@ export default function SpreadsheetPembayaran({
           </select>
 
           <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 text-sm outline-none bg-white font-medium text-text-secondary focus:border-primary"
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary"
             value={selectedPaketId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
@@ -319,10 +321,24 @@ export default function SpreadsheetPembayaran({
             name="q"
             defaultValue={query}
             placeholder="Cari NIS atau Nama..."
-            className="w-full px-4 py-2 bg-white border border-primary-light/30 rounded-lg outline-none focus:border-primary text-sm"
+            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
           />
           <input type="hidden" name="gelombangId" value={selectedGelombangId} />
         </form>
+
+        <button 
+          onClick={async () => {
+            if (selectedPaketId === "all" || !selectedPaketId) {
+              const Swal = (await import('sweetalert2')).default;
+              Swal.fire({ icon: 'info', title: 'Pilih Paket Dulu', text: 'Silakan pilih/filter ke sebuah spesifik Paket Pembayaran terlebih dahulu sebelum mengimpor.' });
+              return;
+            }
+            setIsImportModalOpen(true);
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-success/10 text-success hover:bg-success hover:text-white rounded-lg text-sm font-medium transition-colors shadow-sm ml-auto"
+        >
+          <Upload size={16} /> Import Excel
+        </button>
       </div>
 
       {/* Spreadsheet Container */}
@@ -336,55 +352,55 @@ export default function SpreadsheetPembayaran({
 
             return (
               <div key={pkt.id} className="mb-12 last:mb-0">
-                <h2 className="text-lg font-bold text-primary mb-3 mx-2 px-3 border-l-4 border-primary bg-white py-1 inline-block shadow-sm rounded-r">
+                <h2 className="text-lg font-bold text-primary mb-3 mx-2 px-3 border-l-4 border-primary bg-white dark:bg-gray-900 py-1 inline-block shadow-sm rounded-r">
                   Paket: {pkt.nama}
                 </h2>
 
                 {pktSantris.length === 0 ? (
-                  <div className="p-6 bg-white rounded-lg border border-primary-light/20 text-center text-text-secondary italic text-sm shadow-sm inline-block min-w-full">
+                  <div className="p-6 bg-white dark:bg-gray-900 rounded-lg border border-primary-light/20 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400 italic text-sm shadow-sm inline-block min-w-full">
                     Belum ada data santri di paket ini untuk gelombang yang dipilih.
                   </div>
                 ) : (
-                  <div className="relative border border-primary-light/20 rounded-lg bg-white shadow-sm inline-block min-w-full">
+                  <div className="relative border border-primary-light/20 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 shadow-sm inline-block min-w-full">
                     <table className="text-left border-collapse w-max">
-                      <thead className="sticky top-0 z-20 shadow-sm bg-[#faf9f5]">
+                      <thead className="sticky top-0 z-20 shadow-sm bg-[#faf9f5] dark:bg-gray-800">
                         {/* Header Row 1: Groups */}
-                        <tr className="text-text-primary text-xs border-b border-primary-light/20">
-                          <th colSpan={2} className="p-2 border-r border-primary-light/20 bg-[#f4f2eb] text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
+                        <tr className="text-text-primary dark:text-gray-100 text-sm border-b border-primary-light/20 dark:border-gray-700">
+                          <th colSpan={2} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
 
                           {tahap1 && tahap1.poinTahap.length > 0 && (
-                            <th colSpan={tahap1.poinTahap.length} className="p-2 border-r border-primary-light/20 text-center font-bold">{tahap1.nama}</th>
+                            <th colSpan={tahap1.poinTahap.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold">{tahap1.nama}</th>
                           )}
 
-                          <th colSpan={6} className="p-2 border-r border-primary-light/20 text-center font-bold bg-amber-50 text-amber-700">Darul Lughoh (DL)</th>
+                          <th colSpan={6} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-amber-50 text-amber-700">Darul Lughoh (DL)</th>
 
                           {remainingTahaps.map((t: any) => t.poinTahap.length > 0 && (
-                            <th key={t.id} colSpan={t.poinTahap.length} className="p-2 border-r border-primary-light/20 text-center font-bold">{t.nama}</th>
+                            <th key={t.id} colSpan={t.poinTahap.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold">{t.nama}</th>
                           ))}
 
-                          <th className="p-2 text-center font-bold bg-[#f4f2eb] border-l border-primary-light/20">Summary</th>
+                          <th className="p-2 text-center font-bold bg-[#f4f2eb] dark:bg-gray-800 border-l border-primary-light/20 dark:border-gray-700">Summary</th>
                         </tr>
 
                         {/* Header Row 2: Sub-columns */}
-                        <tr className="text-text-secondary text-[11px] border-b border-primary-light/20">
-                          <th className="p-2 border-r border-primary-light/10 bg-white min-w-[80px]">NIS</th>
-                          <th className="p-2 border-r border-primary-light/20 bg-white min-w-[150px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+                        <tr className="text-text-secondary dark:text-gray-400 text-xs border-b border-primary-light/20 dark:border-gray-700">
+                          <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[90px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIS</th>
+                          <th className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[170px] sticky left-[90px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
 
                           {tahap1 && tahap1.poinTahap.map((poin: any) => (
-                            <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px] group" title={poin.nama}>
+                            <th key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 min-w-[160px] group" title={poin.nama}>
                               <div className="truncate w-full font-medium flex items-center justify-between">
                                 <div className="flex justify-between w-full">
                                   <span className="truncate">{poin.nama}</span>
                                 </div>
-                                {tahap1.isIjazahBased && <span className="bg-warning text-white text-[8px] px-1 rounded shrink-0">Ijazah</span>}
+                                {tahap1.isIjazahBased && <span className="bg-warning text-white text-xs px-1.5 py-0.5 rounded shrink-0">Ijazah</span>}
                               </div>
-                              <div className="text-[9px] text-text-secondary font-normal mt-0.5">
+                              <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
                                 {tahap1.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
                               </div>
                               <button
                                 onClick={() => handleSetLunasAllTahap(poin, tahap1.isIjazahBased, pktSantris)}
                                 disabled={isLoading || pktSantris.length === 0}
-                                className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                                className="mt-1.5 w-full text-xs bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
                               >
                                 SET LUNAS ALL
                               </button>
@@ -392,12 +408,12 @@ export default function SpreadsheetPembayaran({
                           ))}
 
                           {dlLevels.map((lvl) => (
-                            <th key={lvl} className="p-2 border-r border-primary-light/10 min-w-[120px] bg-amber-50 text-amber-600 font-bold group">
+                            <th key={lvl} className="p-2 border-r border-primary-light/10 dark:border-gray-700 min-w-[140px] bg-amber-50 text-amber-600 font-bold group">
                               <div className="text-center w-full">Level {lvl}</div>
                               <button
                                 onClick={() => handleSetLunasAllDL(lvl, pktSantris)}
                                 disabled={isLoading || pktSantris.length === 0}
-                                className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                                className="mt-1.5 w-full text-xs bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
                               >
                                 SET LUNAS ALL
                               </button>
@@ -406,27 +422,27 @@ export default function SpreadsheetPembayaran({
 
                           {remainingTahaps.map((t: any) =>
                             t.poinTahap.map((poin: any) => (
-                              <th key={poin.id} className="p-2 border-r border-primary-light/10 min-w-[140px] group" title={poin.nama}>
+                              <th key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 min-w-[160px] group" title={poin.nama}>
                                 <div className="truncate w-full font-medium flex items-center justify-between">
                                   <div className="flex justify-between w-full">
                                     <span className="truncate">{poin.nama}</span>
                                   </div>
-                                  {t.isIjazahBased && <span className="bg-warning text-white text-[8px] px-1 rounded shrink-0">Ijazah</span>}
+                                  {t.isIjazahBased && <span className="bg-warning text-white text-xs px-1.5 py-0.5 rounded shrink-0">Ijazah</span>}
                                 </div>
-                                <div className="text-[9px] text-text-secondary font-normal mt-0.5">
+                                <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
                                   {t.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
                                 </div>
                                 <button
                                   onClick={() => handleSetLunasAllTahap(poin, t.isIjazahBased, pktSantris)}
                                   disabled={isLoading || pktSantris.length === 0}
-                                  className="mt-1.5 w-full text-[8px] bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
+                                  className="mt-1.5 w-full text-xs bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
                                 >
                                   SET LUNAS ALL
                                 </button>
                               </th>
                             ))
                           )}
-                          <th className="p-2 bg-white border-l border-primary-light/20 min-w-[100px] text-center">Status</th>
+                          <th className="p-2 bg-white dark:bg-gray-900 border-l border-primary-light/20 dark:border-gray-700 min-w-[100px] text-center">Status</th>
                         </tr>
                       </thead>
 
@@ -461,13 +477,13 @@ export default function SpreadsheetPembayaran({
                           });
 
                           return (
-                            <tr key={santri.id} className="border-b border-primary-light/10 hover:bg-[#faf9f5] transition-colors group">
+                            <tr key={santri.id} className="border-b border-primary-light/10 dark:border-gray-700 hover:bg-[#faf9f5] dark:bg-gray-800 transition-colors group">
                               {/* Fixed Left Info */}
-                              <td className="p-2 border-r border-primary-light/10 bg-white group-hover:bg-[#faf9f5] font-mono text-[11px] text-primary align-top whitespace-nowrap">{santri.nis}</td>
-                              <td className="p-2 border-r border-primary-light/20 sticky left-0 z-10 bg-white group-hover:bg-[#faf9f5] min-w-[150px] max-w-[180px] align-top shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
-                                <div className="font-bold text-text-primary text-xs truncate" title={santri.namaLengkap}>{santri.namaLengkap}</div>
+                              <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono text-xs text-primary align-top whitespace-nowrap sticky left-0 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.nis}</td>
+                              <td className="p-2 border-r border-primary-light/20 dark:border-gray-700 sticky left-[90px] z-10 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 min-w-[170px] max-w-[180px] align-top shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
+                                <div className="font-bold text-text-primary dark:text-gray-100 text-sm truncate" title={santri.namaLengkap}>{santri.namaLengkap}</div>
                                 <select
-                                  className="text-[9px] mt-1 w-full border border-primary-light/30 rounded px-1 py-0.5 bg-gray-50 outline-none text-text-secondary cursor-pointer hover:border-primary/50"
+                                  className="text-sm mt-1 w-full border border-primary-light/30 dark:border-gray-700 rounded px-1 py-0.5 bg-gray-50 dark:bg-gray-800 outline-none text-text-secondary dark:text-gray-400 cursor-pointer hover:border-primary/50"
                                   value={santri.paketPembayaranId || ""}
                                   onChange={(e) => changePaketSantri(santri.id, e.target.value)}
                                 >
@@ -491,10 +507,10 @@ export default function SpreadsheetPembayaran({
                                 const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
                                 const borderClass = isInputLunas ? 'border-success/30 focus:border-success text-success' : isOverdue ? 'border-danger focus:border-danger text-danger bg-danger/5 ring-1 ring-danger/30' : 'border-warning/30 focus:border-warning text-warning-dark';
 
-                                if (harus === 0) return <td key={poin.id} className="p-2 border-r border-primary-light/10 text-center text-text-secondary/30 align-top">-</td>
+                                if (harus === 0) return <td key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>
 
                                 return (
-                                  <td key={poin.id} className={`p-1.5 border-r border-primary-light/10 align-top ${isInputLunas ? 'bg-success/5' : isOverdue ? 'bg-danger/10' : 'bg-warning/5'}`}>
+                                  <td key={poin.id} className={`p-1.5 border-r border-primary-light/10 dark:border-gray-700 align-top ${isInputLunas ? 'bg-success/5' : isOverdue ? 'bg-danger/10' : 'bg-warning/5'}`}>
                                     <div className="flex flex-col gap-1 relative group/cell">
                                       <input
                                         title={poin.nama}
@@ -507,7 +523,7 @@ export default function SpreadsheetPembayaran({
                                           if (e.key === 'Enter') e.currentTarget.blur();
                                         }}
                                         disabled={isLoading}
-                                        className={`w-full px-2 py-1 text-xs outline-none border rounded bg-white font-medium ${borderClass}`}
+                                        className={`w-full px-2.5 py-1.5 text-sm outline-none border rounded bg-white dark:bg-gray-900 font-medium ${borderClass}`}
                                       />
                                       <div className="flex justify-between items-center px-1">
                                         <div className="flex items-center gap-1">
@@ -518,7 +534,7 @@ export default function SpreadsheetPembayaran({
                                                 handleCicilanChange(k, String(harus));
                                                 handleBlur(santri.id, poin.id, harus, dibayar, harus);
                                               }}
-                                              className="text-[8px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
+                                              className="text-xs bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
                                             >
                                               SET LUNAS
                                             </button>
@@ -530,7 +546,7 @@ export default function SpreadsheetPembayaran({
                                             className="text-primary/50 hover:text-primary outline-none"
                                           ><CalendarRange size={10} /></button>
                                         </div>
-                                        <div className="text-[9px] text-text-secondary text-right font-medium">
+                                        <div className="text-xs text-text-secondary dark:text-gray-400 text-right font-medium">
                                           / {fmt(harus)}
                                         </div>
                                       </div>
@@ -547,39 +563,39 @@ export default function SpreadsheetPembayaran({
                                 if (!attempts) {
                                   if (lvl < maxAssignedLevel) {
                                     return (
-                                      <td key={lvl} className="p-2 border-r border-primary-light/10 text-center bg-gray-50/50 text-text-secondary align-top">
-                                        <div className="text-[10px] font-bold text-success flex items-center justify-center gap-1"><CheckCircle2 size={12} /> LULUS</div>
-                                        <div className="text-[8px] opacity-70 mt-0.5">TERLEWATI</div>
+                                      <td key={lvl} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center bg-gray-50/50 text-text-secondary dark:text-gray-400 align-top">
+                                        <div className="text-xs font-bold text-success flex items-center justify-center gap-1"><CheckCircle2 size={12} /> LULUS</div>
+                                        <div className="text-xs opacity-70 mt-0.5">TERLEWATI</div>
                                       </td>
                                     );
                                   }
-                                  return <td key={lvl} className="p-2 border-r border-primary-light/10 text-center text-text-secondary/30 align-top">-</td>;
+                                  return <td key={lvl} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>;
                                 }
 
                                 return (
-                                  <td key={lvl} className="border-r border-primary-light/10 p-0 align-top max-w-[150px]">
+                                  <td key={lvl} className="border-r border-primary-light/10 dark:border-gray-700 p-0 align-top max-w-[150px]">
                                     <div className="flex flex-col h-full">
                                       {attempts.map((dl: any, idx: number) => {
                                         const isFree = dl.nominalHarus === 0;
 
                                         if (isFree && dl.statusUjian === 'LULUS') {
                                           return (
-                                            <div key={dl.id} className={`p-2 text-center bg-gray-50/50 text-text-secondary ${idx > 0 ? 'border-t border-primary-light/10' : ''}`}>
-                                              <div className="text-[10px] font-bold text-success flex items-center justify-center gap-1"><CheckCircle2 size={12} /> LULUS</div>
-                                              <div className="text-[8px] opacity-70 mt-0.5">TERLEWATI</div>
+                                            <div key={dl.id} className={`p-2 text-center bg-gray-50/50 text-text-secondary dark:text-gray-400 ${idx > 0 ? 'border-t border-primary-light/10 dark:border-gray-700' : ''}`}>
+                                              <div className="text-xs font-bold text-success flex items-center justify-center gap-1"><CheckCircle2 size={12} /> LULUS</div>
+                                              <div className="text-xs opacity-70 mt-0.5">TERLEWATI</div>
                                             </div>
                                           );
                                         }
 
                                         if ((dl.statusUjian === 'LULUS' || dl.statusUjian === 'REMIDI') && dl.nominalDibayar >= dl.nominalHarus) {
                                           return (
-                                            <div key={dl.id} className={`p-1.5 text-center bg-success/5 ${idx > 0 ? 'border-t border-primary-light/10' : ''}`}>
-                                              <div className="flex justify-between items-center text-[9px] font-bold px-1 mb-1">
-                                                <span className="text-text-secondary text-[8px]">Tes Ke- {dl.percobaan}</span>
+                                            <div key={dl.id} className={`p-1.5 text-center bg-success/5 ${idx > 0 ? 'border-t border-primary-light/10 dark:border-gray-700' : ''}`}>
+                                              <div className="flex justify-between items-center text-xs font-bold px-1 mb-1">
+                                                <span className="text-text-secondary dark:text-gray-400 text-xs">Tes Ke- {dl.percobaan}</span>
                                                 <span>{dl.statusUjian === 'LULUS' ? '✅' : '🔄'}</span>
                                               </div>
                                               <div className="flex items-center justify-between px-1">
-                                                <div className="text-[10px] font-bold text-success flex items-center gap-1">LUNAS</div>
+                                                <div className="text-xs font-bold text-success flex items-center gap-1">LUNAS</div>
                                                 <button
                                                   type="button"
                                                   onClick={async () => {
@@ -598,7 +614,7 @@ export default function SpreadsheetPembayaran({
                                                     }
                                                   }}
                                                   disabled={isLoading}
-                                                  className="text-[8px] text-danger/70 hover:text-danger underline outline-none disabled:opacity-50"
+                                                  className="text-xs text-danger/70 hover:text-danger underline outline-none disabled:opacity-50"
                                                   title="Batalkan pembayaran"
                                                 >
                                                   Batal
@@ -616,10 +632,10 @@ export default function SpreadsheetPembayaran({
                                         const borderClassDL = isInputLunas ? 'border-success/30 focus:border-success text-success' : isOverdueDL ? 'border-danger focus:border-danger text-danger bg-danger/5 ring-1 ring-danger/30' : 'border-warning/30 focus:border-warning text-danger';
 
                                         return (
-                                          <div key={dl.id} className={`p-1.5 ${idx > 0 ? 'border-t border-primary-light/10' : ''} ${isInputLunas ? 'bg-success/5' : isOverdueDL ? 'bg-danger/10' : 'bg-warning/5'}`}>
+                                          <div key={dl.id} className={`p-1.5 ${idx > 0 ? 'border-t border-primary-light/10 dark:border-gray-700' : ''} ${isInputLunas ? 'bg-success/5' : isOverdueDL ? 'bg-danger/10' : 'bg-warning/5'}`}>
                                             <div className="flex flex-col gap-1 relative group/cell">
-                                              <div className="flex justify-between items-center px-1 text-[9px] font-bold">
-                                                <span className="text-text-secondary text-[8px] whitespace-nowrap">Tes Ke- {dl.percobaan}</span>
+                                              <div className="flex justify-between items-center px-1 text-xs font-bold">
+                                                <span className="text-text-secondary dark:text-gray-400 text-xs whitespace-nowrap">Tes Ke- {dl.percobaan}</span>
                                                 {dl.statusUjian === 'LULUS' ? '✅' : dl.statusUjian === 'REMIDI' ? '🔄' : '⏳'}
                                               </div>
                                               <input
@@ -633,7 +649,7 @@ export default function SpreadsheetPembayaran({
                                                   if (e.key === 'Enter') e.currentTarget.blur();
                                                 }}
                                                 disabled={isLoading}
-                                                className={`w-full px-2 py-1 text-xs outline-none border rounded bg-white font-medium ${isInputLunas ? 'border-success/30 focus:border-success text-success' : 'border-warning/30 focus:border-warning text-danger'}`}
+                                                className={`w-full px-2.5 py-1.5 text-sm outline-none border rounded bg-white dark:bg-gray-900 font-medium ${isInputLunas ? 'border-success/30 focus:border-success text-success' : 'border-warning/30 focus:border-warning text-danger'}`}
                                               />
                                               <div className="flex justify-between items-center px-1">
                                                 <div className="flex items-center gap-1">
@@ -644,7 +660,7 @@ export default function SpreadsheetPembayaran({
                                                         handleCicilanChange(k, String(dl.nominalHarus));
                                                         handleBlurDL(dl.id, dl.nominalHarus, dl.nominalDibayar, dl.nominalHarus);
                                                       }}
-                                                      className="text-[8px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
+                                                      className="text-xs bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
                                                     >
                                                       SET LUNAS
                                                     </button>
@@ -656,7 +672,7 @@ export default function SpreadsheetPembayaran({
                                                     className="text-primary/50 hover:text-primary outline-none"
                                                   ><CalendarRange size={10} /></button>
                                                 </div>
-                                                <div className="text-[9px] text-text-secondary text-right font-medium">
+                                                <div className="text-xs text-text-secondary dark:text-gray-400 text-right font-medium">
                                                   / {fmt(dl.nominalHarus)}
                                                 </div>
                                               </div>
@@ -683,10 +699,10 @@ export default function SpreadsheetPembayaran({
                                   const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
                                   const borderClass = isInputLunas ? 'border-success/30 focus:border-success text-success' : isOverdue ? 'border-danger focus:border-danger text-danger bg-danger/5 ring-1 ring-danger/30' : 'border-warning/30 focus:border-warning text-warning-dark';
 
-                                  if (harus === 0) return <td key={poin.id} className="p-2 border-r border-primary-light/10 text-center text-text-secondary/30 align-top">-</td>
+                                  if (harus === 0) return <td key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>
 
                                   return (
-                                    <td key={poin.id} className={`p-1.5 border-r border-primary-light/10 align-top ${isInputLunas ? 'bg-success/5' : isOverdue ? 'bg-danger/10' : 'bg-warning/5'}`}>
+                                    <td key={poin.id} className={`p-1.5 border-r border-primary-light/10 dark:border-gray-700 align-top ${isInputLunas ? 'bg-success/5' : isOverdue ? 'bg-danger/10' : 'bg-warning/5'}`}>
                                       <div className="flex flex-col gap-1 relative group/cell">
                                         <input
                                           type="text"
@@ -695,7 +711,7 @@ export default function SpreadsheetPembayaran({
                                           onChange={(e) => handleCicilanChange(k, e.target.value)}
                                           onBlur={() => handleBlur(santri.id, poin.id, displayVal, dibayar, harus)}
                                           disabled={isLoading}
-                                          className={`w-full px-2 py-1 text-xs outline-none border rounded bg-white font-medium ${borderClass}`}
+                                          className={`w-full px-2.5 py-1.5 text-sm outline-none border rounded bg-white dark:bg-gray-900 font-medium ${borderClass}`}
                                         />
                                         <div className="flex justify-between items-center px-1">
                                           <div className="flex items-center gap-1">
@@ -706,7 +722,7 @@ export default function SpreadsheetPembayaran({
                                                   handleCicilanChange(k, String(harus));
                                                   handleBlur(santri.id, poin.id, harus, dibayar, harus);
                                                 }}
-                                                className="text-[8px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
+                                                className="text-xs bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
                                               >
                                                 SET LUNAS
                                               </button>
@@ -718,7 +734,7 @@ export default function SpreadsheetPembayaran({
                                               className="text-primary/50 hover:text-primary outline-none"
                                             ><CalendarRange size={10} /></button>
                                           </div>
-                                          <div className="text-[9px] text-text-secondary text-right font-medium">
+                                          <div className="text-xs text-text-secondary dark:text-gray-400 text-right font-medium">
                                             / {fmt(harus)}
                                           </div>
                                         </div>
@@ -728,13 +744,13 @@ export default function SpreadsheetPembayaran({
                                 })
                               )}
 
-                              <td className="p-2 bg-white group-hover:bg-[#faf9f5] border-l border-primary-light/20 text-center align-top">
+                              <td className="p-2 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 border-l border-primary-light/20 dark:border-gray-700 text-center align-top">
                                 {globalKekurangan === 0 ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success text-[10px] font-bold rounded">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success text-xs font-bold rounded">
                                     <CheckCircle2 size={12} /> LUNAS
                                   </span>
                                 ) : (
-                                  <div className="text-[10px] font-bold text-danger text-center w-full whitespace-nowrap flex flex-col justify-center gap-0.5">
+                                  <div className="text-xs font-bold text-danger text-center w-full whitespace-nowrap flex flex-col justify-center gap-0.5">
                                     <span>KURANG</span>
                                     <span>Rp {globalKekurangan.toLocaleString('id-ID')}</span>
                                   </div>
@@ -752,6 +768,19 @@ export default function SpreadsheetPembayaran({
           })}
         </div>
       </div>
+
+      <ImportExcelModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        gelombangList={gelombangs}
+        showGelombang={false}
+        uploadUrl={`/api/admin/pembayaran/import`}
+        templateUrl={`/api/admin/pembayaran/template?paketId=${selectedPaketId}`}
+        onSuccess={() => {
+          setIsImportModalOpen(false);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

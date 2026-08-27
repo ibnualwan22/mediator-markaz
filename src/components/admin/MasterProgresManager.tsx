@@ -95,13 +95,13 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-1">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-primary-light/20 top-24 sticky">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 top-24 sticky">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Plus size={18} className="text-primary" /> Tambah Tahap
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm text-text-secondary">Nama Tahap Makro</label>
+              <label className="text-sm text-text-secondary dark:text-gray-400">Nama Tahap Makro</label>
               <input 
                 type="text" 
                 required 
@@ -112,7 +112,7 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
               />
             </div>
             <div>
-              <label className="text-sm text-text-secondary">Urutan</label>
+              <label className="text-sm text-text-secondary dark:text-gray-400">Urutan</label>
               <input 
                 type="number" 
                 required 
@@ -135,12 +135,12 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
 
       <div className="md:col-span-2 space-y-4">
         {tahaps.length === 0 && (
-           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center text-text-secondary flex flex-col items-center gap-4">
+           <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-primary-light/20 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400 flex flex-col items-center gap-4">
              <div className="italic">Belum ada tahap progres. Silakan buat di form, atau duplikat dari periode lalu agar lebih cepat.</div>
              <button 
                 onClick={handleDuplicate}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-text-primary text-white hover:bg-black rounded-lg transition-colors font-medium shadow-sm"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-black dark:hover:bg-white rounded-lg transition-colors font-medium shadow-sm"
              >
                 <Copy size={16} /> Duplikat dari Periode Lain 
              </button>
@@ -152,36 +152,36 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
              <button 
                 onClick={handleDuplicate}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-primary-light/40 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/40 dark:border-gray-700 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
              >
                 <Copy size={16} /> Salin Progres Periode Lain
              </button>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border border-primary-light/20 overflow-hidden mb-6">
-          <div className="bg-primary/5 px-6 py-3 border-b border-primary-light/20">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 overflow-hidden mb-6">
+          <div className="bg-primary/5 px-6 py-3 border-b border-primary-light/20 dark:border-gray-700">
             <h3 className="font-bold text-primary">Tahap Progres Studi ({tahaps.length} Tahap)</h3>
           </div>
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-bg-cream/50 text-text-primary">
-                <th className="p-4 font-semibold border-b border-primary-light/10 w-16 text-center">Urutan</th>
-                <th className="p-4 font-semibold border-b border-primary-light/10">Nama Makro Tahap</th>
-                <th className="p-4 font-semibold border-b border-primary-light/10 w-24 text-center">Aktif?</th>
-                <th className="p-4 font-semibold border-b border-primary-light/10 w-24 text-center">Aksi</th>
+              <tr className="bg-bg-cream dark:bg-gray-800/50 text-text-primary dark:text-gray-100">
+                <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700 w-16 text-center">Urutan</th>
+                <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700">Nama Makro Tahap</th>
+                <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700 w-24 text-center">Aktif?</th>
+                <th className="p-4 font-semibold border-b border-primary-light/10 dark:border-gray-700 w-24 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {tahaps.length > 0 ? tahaps.map(t => (
-                <tr key={t.id} className={`border-b border-primary-light/10 ${editingId === t.id ? 'bg-primary/5' : 'hover:bg-bg-cream/50'}`}>
+                <tr key={t.id} className={`border-b border-primary-light/10 dark:border-gray-700 ${editingId === t.id ? 'bg-primary/5' : 'hover:bg-bg-cream dark:bg-gray-800/50'}`}>
                   {editingId === t.id ? (
                     <>
                       <td className="p-2">
-                        <input type="number" className="w-full px-2 py-1 text-center border rounded bg-white" value={editFormData.urutan} onChange={e => setEditFormData(f => ({ ...f, urutan: parseInt(e.target.value) || 0 }))} />
+                        <input type="number" className="w-full px-2 py-1 text-center border rounded bg-white dark:bg-gray-900" value={editFormData.urutan} onChange={e => setEditFormData(f => ({ ...f, urutan: parseInt(e.target.value) || 0 }))} />
                       </td>
                       <td className="p-2">
-                        <input type="text" className="w-full px-2 py-1 border rounded bg-white" value={editFormData.nama} onChange={e => setEditFormData(f => ({ ...f, nama: e.target.value }))} />
+                        <input type="text" className="w-full px-2 py-1 border rounded bg-white dark:bg-gray-900" value={editFormData.nama} onChange={e => setEditFormData(f => ({ ...f, nama: e.target.value }))} />
                       </td>
                       <td className="p-2 text-center">
                         <input type="checkbox" className="rounded" checked={editFormData.isActive} onChange={e => setEditFormData(f => ({ ...f, isActive: e.target.checked }))} />
@@ -194,12 +194,12 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
                   ) : (
                     <>
                       <td className="p-4 text-center font-mono font-bold text-primary">{t.urutan}</td>
-                      <td className="p-4 font-medium text-text-primary text-lg">{t.nama}</td>
+                      <td className="p-4 font-medium text-text-primary dark:text-gray-100 text-lg">{t.nama}</td>
                       <td className="p-4 text-center">
                         {t.isActive ? (
                           <span className="px-2 py-1 bg-success/10 text-success text-xs font-bold rounded">Aktif</span>
                         ) : (
-                          <span className="px-2 py-1 bg-text-secondary/10 text-text-secondary text-xs rounded">Non-Aktif</span>
+                          <span className="px-2 py-1 bg-text-secondary/10 text-text-secondary dark:text-gray-400 text-xs rounded">Non-Aktif</span>
                         )}
                       </td>
                       <td className="p-4 text-center flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
@@ -210,7 +210,7 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
                   )}
                 </tr>
               )) : (
-                <tr><td colSpan={4} className="p-4 text-center text-text-secondary italic">Belum ada urutan tahap pada periode ini</td></tr>
+                <tr><td colSpan={4} className="p-4 text-center text-text-secondary dark:text-gray-400 italic">Belum ada urutan tahap pada periode ini</td></tr>
               )}
             </tbody>
           </table>

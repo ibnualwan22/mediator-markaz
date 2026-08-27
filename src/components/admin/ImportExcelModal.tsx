@@ -117,7 +117,7 @@ export default function ImportExcelModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 text-primary rounded-xl">
@@ -128,7 +128,7 @@ export default function ImportExcelModal({
               <p className="text-sm text-gray-500 mt-0.5">Tambah data massal dari file Excel</p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:bg-gray-800 rounded-lg transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -140,7 +140,7 @@ export default function ImportExcelModal({
                 <div className="text-sm text-primary font-medium">1. Unduh Template Excel</div>
                 <button 
                   onClick={downloadTemplate}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-primary/20 hover:border-primary text-primary rounded-lg text-xs font-semibold shadow-sm transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-900 border border-primary/20 hover:border-primary text-primary rounded-lg text-xs font-semibold shadow-sm transition-all"
                 >
                   <Download size={14} /> Download
                 </button>
@@ -152,7 +152,7 @@ export default function ImportExcelModal({
                   <select 
                     value={selectedGelombang}
                     onChange={(e) => setSelectedGelombang(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-sm"
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-sm"
                   >
                     <option value="">-- Pilih Gelombang Penempatan --</option>
                     {gelombangList.map(g => (
@@ -167,7 +167,7 @@ export default function ImportExcelModal({
                 <div 
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
-                  className="relative flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 hover:border-primary/50 bg-gray-50 hover:bg-primary/5 rounded-2xl transition-all group group-hover:cursor-pointer"
+                  className="relative flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary/50 bg-gray-50 dark:bg-gray-800 hover:bg-primary/5 rounded-2xl transition-all group group-hover:cursor-pointer"
                 >
                   <input 
                     type="file" 
@@ -210,7 +210,7 @@ export default function ImportExcelModal({
                   id="overwriteCheckbox"
                   checked={overwriteExisting}
                   onChange={(e) => setOverwriteExisting(e.target.checked)}
-                  className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary accent-primary"
+                  className="w-4 h-4 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary accent-primary"
                 />
                 <label htmlFor="overwriteCheckbox" className="text-sm text-gray-700 cursor-pointer select-none">
                   Timpa data santri dengan Nama Lengkap yang sama (jika ada)
@@ -246,12 +246,12 @@ export default function ImportExcelModal({
 
                {result.summary?.errors?.length > 0 && (
                  <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
-                   <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                   <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200">
                      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                        <AlertCircle size={14} className="text-warning"/> Log Error
                      </h4>
                    </div>
-                   <div className="p-4 max-h-40 overflow-y-auto bg-white">
+                   <div className="p-4 max-h-40 overflow-y-auto bg-white dark:bg-gray-900">
                      <ul className="text-xs text-danger space-y-1.5 font-mono">
                        {result.summary.errors.map((err: string, i: number) => (
                          <li key={i}>• {err}</li>
@@ -263,7 +263,7 @@ export default function ImportExcelModal({
 
                <button 
                  onClick={result.success ? handleClose : resetForm}
-                 className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors mt-6"
+                 className="w-full py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors mt-6"
                >
                  {result.success ? "Tutup & Refresh Tabel" : "Coba Lagi"}
                </button>
@@ -272,11 +272,11 @@ export default function ImportExcelModal({
         </div>
 
         {!result && (
-          <div className="p-4 border-t border-gray-100 bg-gray-50 flex gap-3">
+          <div className="p-4 border-t border-gray-100 bg-gray-50 dark:bg-gray-800 flex gap-3">
             <button 
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 dark:bg-gray-800 transition-colors disabled:opacity-50"
             >
               Batal
             </button>

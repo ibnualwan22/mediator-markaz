@@ -39,7 +39,7 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-danger/5">
               <div className="flex items-center gap-3 text-danger">
                 <AlertTriangle size={24} />
@@ -59,7 +59,7 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
                 Tindakan ini <strong>SANGAT FATAL</strong> dan tidak dapat dibatalkan. Semua data terkait pendaftaran, pembayaran, pemberkasan, dan progres santri ini akan dihapus secara permanen dari sistem.
               </p>
 
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Ketik nama lengkap <span className="font-bold text-danger">"{namaLengkap}"</span> untuk mengonfirmasi:
                 </label>
@@ -68,16 +68,16 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
                   value={confirmName}
                   onChange={(e) => setConfirmName(e.target.value)}
                   placeholder="Ketik persis nama lengkap di atas"
-                  className="w-full px-4 py-2.5 outline-none border border-gray-300 focus:border-danger rounded-lg transition-colors text-sm"
+                  className="w-full px-4 py-2.5 outline-none border border-gray-300 dark:border-gray-600 focus:border-danger rounded-lg transition-colors text-sm"
                   disabled={isLoading}
                 />
               </div>
             </div>
 
-            <div className="p-5 border-t border-gray-100 bg-gray-50 flex gap-3">
+            <div className="p-5 border-t border-gray-100 bg-gray-50 dark:bg-gray-800 flex gap-3">
               <button 
                 onClick={() => setIsOpen(false)}
-                className="flex-1 py-2.5 bg-white border border-gray-200 font-semibold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 font-semibold rounded-xl text-gray-700 hover:bg-gray-50 dark:bg-gray-800 transition-colors"
                 disabled={isLoading}
               >
                 Batal

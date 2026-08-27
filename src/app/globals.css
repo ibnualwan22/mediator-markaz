@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-primary: #8B6914;
   --color-primary-light: #C4A35A;
@@ -23,6 +25,16 @@
   --foreground: var(--color-text-primary);
 }
 
+.dark {
+  --color-primary-bg: #1F2937; /* gray-800 */
+  --color-bg-white: #111827; /* gray-900 */
+  --color-bg-cream: #1F2937; /* gray-800 */
+  --color-text-primary: #F9FAFB; /* gray-50 */
+  --color-text-secondary: #9CA3AF; /* gray-400 */
+  --background: var(--color-bg-white);
+  --foreground: var(--color-text-primary);
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -38,4 +50,26 @@ h1, h2, h3, h4, h5, h6 {
 /* Custom utility classes if needed */
 .text-balance {
   text-wrap: balance;
+}
+
+/* Enhanced scrollbar for both themes */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 105, 20, 0.2);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 105, 20, 0.5);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

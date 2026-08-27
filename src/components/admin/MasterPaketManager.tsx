@@ -92,18 +92,18 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
     <div className="grid md:grid-cols-3 gap-8">
       {/* KIRI - Form Tambah Paket */}
       <div className="md:col-span-1 space-y-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-primary-light/20 sticky top-24">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 sticky top-24">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <Plus size={18} className="text-primary" /> Tambah Paket Baru
           </h3>
           <form onSubmit={handleCreatePaket} className="space-y-4">
             <div>
-              <label className="text-sm text-text-secondary">Nama Paket</label>
+              <label className="text-sm text-text-secondary dark:text-gray-400">Nama Paket</label>
               <input type="text" required value={paketForm.nama} onChange={e => setPaketForm(f => ({ ...f, nama: e.target.value }))} className="w-full px-3 py-2 rounded-lg border outline-none focus:border-primary mt-1 text-sm" placeholder="Contoh: Paket Reguler" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-text-secondary">Urutan</label>
+                <label className="text-sm text-text-secondary dark:text-gray-400">Urutan</label>
                 <input type="number" required value={paketForm.urutan} onChange={e => setPaketForm(f => ({ ...f, urutan: parseInt(e.target.value) }))} className="w-full px-3 py-2 rounded-lg border outline-none focus:border-primary mt-1 text-sm text-center" />
               </div>
               <div className="flex items-end pb-2">
@@ -123,12 +123,12 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
       {/* KANAN - List Paket */}
       <div className="md:col-span-2 space-y-4">
         {pakets.length === 0 && (
-           <div className="bg-white p-8 rounded-2xl border border-primary-light/20 text-center text-text-secondary flex flex-col items-center gap-4">
+           <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-primary-light/20 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400 flex flex-col items-center gap-4">
              <div className="italic">Belum ada paket pembayaran. Silakan buat di form, atau duplikat dari periode lalu agar lebih cepat.</div>
              <button 
                 onClick={handleDuplicate}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-text-primary text-white hover:bg-black rounded-lg transition-colors font-medium shadow-sm"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-black dark:hover:bg-white rounded-lg transition-colors font-medium shadow-sm"
              >
                 <Copy size={16} /> Duplikat dari Periode Lain 
              </button>
@@ -140,7 +140,7 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
              <button 
                 onClick={handleDuplicate}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-primary-light/40 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/40 dark:border-gray-700 text-primary hover:bg-primary-light/10 hover:border-primary rounded-lg transition-all text-sm font-semibold shadow-sm"
              >
                 <Copy size={16} /> Salin Paket Periode Lain
              </button>
@@ -148,16 +148,16 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
         )}
 
         {pakets.map(paket => (
-          <div key={paket.id} className="bg-white rounded-2xl shadow-sm border border-primary-light/20 overflow-hidden">
+          <div key={paket.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 overflow-hidden">
             {/* Header Paket */}
             <div 
-              className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${expandedPaket === paket.id ? 'bg-primary/5 border-b border-primary-light/20' : 'hover:bg-bg-cream'}`}
+              className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${expandedPaket === paket.id ? 'bg-primary/5 border-b border-primary-light/20 dark:border-gray-700' : 'hover:bg-bg-cream dark:bg-gray-800'}`}
               onClick={() => setExpandedPaket(p => p === paket.id ? null : paket.id)}
             >
               <div className="flex items-center gap-3">
-                {expandedPaket === paket.id ? <ChevronDown size={20} className="text-primary" /> : <ChevronRight size={20} className="text-text-secondary" />}
+                {expandedPaket === paket.id ? <ChevronDown size={20} className="text-primary" /> : <ChevronRight size={20} className="text-text-secondary dark:text-gray-400" />}
                 <div>
-                  <h3 className="font-bold text-text-primary text-lg flex items-center gap-2">
+                  <h3 className="font-bold text-text-primary dark:text-gray-100 text-lg flex items-center gap-2">
                     {paket.nama} 
                     {paket.isDefault && <span className="px-2 py-0.5 bg-success/10 text-success text-[10px] uppercase font-bold rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Default</span>}
                   </h3>
@@ -165,11 +165,11 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
               </div>
               <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                 {!paket.isDefault && (
-                  <button onClick={() => setPaketDefault(paket.id)} className="p-2 text-text-secondary hover:text-success rounded-lg hover:bg-success/10 transition-colors" title="Set Default">
+                  <button onClick={() => setPaketDefault(paket.id)} className="p-2 text-text-secondary dark:text-gray-400 hover:text-success rounded-lg hover:bg-success/10 transition-colors" title="Set Default">
                     <Bookmark size={16} />
                   </button>
                 )}
-                <button onClick={() => deletePaket(paket.id)} className="p-2 text-text-secondary hover:text-danger rounded-lg hover:bg-danger/10 transition-colors">
+                <button onClick={() => deletePaket(paket.id)} className="p-2 text-text-secondary dark:text-gray-400 hover:text-danger rounded-lg hover:bg-danger/10 transition-colors">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -177,12 +177,12 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
 
             {/* Konten Tahap */}
             {expandedPaket === paket.id && (
-              <div className="p-4 bg-bg-cream/30 space-y-4">
+              <div className="p-4 bg-bg-cream dark:bg-gray-800/30 space-y-4">
                 {/* List Tahap */}
                 {paket.tahapPaket.map((tahap: any) => (
-                  <div key={tahap.id} className="bg-white border text-sm border-primary-light/20 rounded-xl overflow-hidden shadow-sm">
-                    <div className="bg-bg-cream/50 p-3 border-b border-primary-light/10 flex justify-between items-center">
-                      <div className="font-semibold text-text-primary flex items-center gap-2">
+                  <div key={tahap.id} className="bg-white dark:bg-gray-900 border text-sm border-primary-light/20 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-bg-cream dark:bg-gray-800/50 p-3 border-b border-primary-light/10 dark:border-gray-700 flex justify-between items-center">
+                      <div className="font-semibold text-text-primary dark:text-gray-100 flex items-center gap-2">
                         <span className="w-5 h-5 bg-primary/10 text-primary flex items-center justify-center rounded-full text-xs">{tahap.urutan}</span>
                         {tahap.nama}
                         {tahap.isIjazahBased && <span className="px-1.5 py-0.5 bg-warning/10 text-warning text-[10px] font-bold rounded">Ijazah Based</span>}
@@ -196,11 +196,11 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                     {/* List Poin */}
                     <div className="p-3">
                       {tahap.poinTahap.length === 0 ? (
-                        <p className="text-xs text-text-secondary italic">Belum ada poin pembayaran.</p>
+                        <p className="text-xs text-text-secondary dark:text-gray-400 italic">Belum ada poin pembayaran.</p>
                       ) : (
                         <table className="w-full text-xs text-left">
                           <thead>
-                            <tr className="text-text-secondary">
+                            <tr className="text-text-secondary dark:text-gray-400">
                               <th className="pb-2 font-medium w-8">No</th>
                               <th className="pb-2 font-medium">Nama Poin</th>
                               <th className="pb-2 font-medium">Nominal</th>
@@ -210,9 +210,9 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                           </thead>
                           <tbody>
                             {tahap.poinTahap.map((poin: any) => (
-                              <tr key={poin.id} className="border-t border-primary-light/10">
+                              <tr key={poin.id} className="border-t border-primary-light/10 dark:border-gray-700">
                                 <td className="py-2">{poin.urutan}</td>
-                                <td className="py-2 font-medium text-text-primary">{poin.nama}</td>
+                                <td className="py-2 font-medium text-text-primary dark:text-gray-100">{poin.nama}</td>
                                 <td className="py-2">Rp {poin.nominal.toLocaleString('id-ID')}</td>
                                 {tahap.isIjazahBased && <td className="py-2 text-warning font-medium">Rp {poin.nominalIjazah?.toLocaleString('id-ID')}</td>}
                                 <td className="py-2 text-right">
@@ -227,23 +227,23 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
 
                     {/* Form Tambah Poin (Inline) */}
                     {activeFormTarget?.type === 'poin' && activeFormTarget.id === tahap.id && (
-                      <div className="bg-primary/5 p-4 border-t border-primary-light/20">
+                      <div className="bg-primary/5 p-4 border-t border-primary-light/20 dark:border-gray-700">
                         <form onSubmit={(e) => handleCreatePoin(tahap.id, tahap.isIjazahBased, e)} className="flex items-end gap-3">
                            <div className="flex-1">
-                             <label className="text-[10px] text-text-secondary">Nama Poin</label>
+                             <label className="text-[10px] text-text-secondary dark:text-gray-400">Nama Poin</label>
                              <input type="text" required value={poinForm.nama} onChange={e => setPoinForm(f => ({ ...f, nama: e.target.value }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none" />
                            </div>
                            <div className="w-16">
-                             <label className="text-[10px] text-text-secondary">Urutan</label>
+                             <label className="text-[10px] text-text-secondary dark:text-gray-400">Urutan</label>
                              <input type="number" required value={poinForm.urutan} onChange={e => setPoinForm(f => ({ ...f, urutan: parseInt(e.target.value) }))} className="w-full px-2 py-1.5 rounded border text-xs text-center outline-none" />
                            </div>
                            <div className="w-32">
-                             <label className="text-[10px] text-text-secondary">Nominal {tahap.isIjazahBased ? '(Umum)' : ''}</label>
+                             <label className="text-[10px] text-text-secondary dark:text-gray-400">Nominal {tahap.isIjazahBased ? '(Umum)' : ''}</label>
                              <input type="number" required value={poinForm.nominal || ''} onChange={e => setPoinForm(f => ({ ...f, nominal: parseInt(e.target.value) || 0 }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none" />
                            </div>
                            {tahap.isIjazahBased && (
                              <div className="w-32">
-                               <label className="text-[10px] text-text-secondary">Nominal (MA/P)</label>
+                               <label className="text-[10px] text-text-secondary dark:text-gray-400">Nominal (MA/P)</label>
                                <input type="number" required value={poinForm.nominalIjazah || ''} onChange={e => setPoinForm(f => ({ ...f, nominalIjazah: parseInt(e.target.value) || 0 }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none bg-warning/5 border-warning/30" />
                              </div>
                            )}
@@ -257,15 +257,15 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
 
                 {/* Form Tambah Tahap */}
                 {activeFormTarget?.type === 'tahap' && activeFormTarget.id === paket.id ? (
-                  <div className="bg-white p-4 rounded-xl border border-primary text-sm shadow-sm">
+                  <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-primary text-sm shadow-sm">
                     <h4 className="font-bold mb-3">Tambah Tahap Baru</h4>
                     <form onSubmit={(e) => handleCreateTahap(paket.id, e)} className="grid grid-cols-4 gap-4 items-end">
                       <div className="col-span-2">
-                        <label className="text-xs text-text-secondary">Nama Tahap</label>
+                        <label className="text-xs text-text-secondary dark:text-gray-400">Nama Tahap</label>
                         <input type="text" required value={tahapForm.nama} onChange={e => setTahapForm(f => ({ ...f, nama: e.target.value }))} className="w-full px-2 py-1.5 rounded border text-sm outline-none mt-1" />
                       </div>
                       <div>
-                        <label className="text-xs text-text-secondary">Urutan</label>
+                        <label className="text-xs text-text-secondary dark:text-gray-400">Urutan</label>
                         <input type="number" required value={tahapForm.urutan} onChange={e => setTahapForm(f => ({ ...f, urutan: parseInt(e.target.value) }))} className="w-full px-2 py-1.5 rounded border text-sm text-center outline-none mt-1" />
                       </div>
                       <div className="pb-1.5">
@@ -275,7 +275,7 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                         </label>
                       </div>
                       <div className="col-span-4 flex justify-end gap-2 mt-2">
-                        <button type="button" onClick={() => setActiveFormTarget(null)} className="px-3 py-1.5 text-xs text-text-secondary hover:bg-gray-100 rounded font-medium">Batal</button>
+                        <button type="button" onClick={() => setActiveFormTarget(null)} className="px-3 py-1.5 text-xs text-text-secondary dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 rounded font-medium">Batal</button>
                         <button type="submit" disabled={isLoading} className="px-4 py-1.5 text-xs bg-primary text-white rounded font-medium disabled:opacity-50 shadow-sm">Simpan Tahap</button>
                       </div>
                     </form>
@@ -283,7 +283,7 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                 ) : (
                   <button 
                     onClick={() => setActiveFormTarget({type: 'tahap', id: paket.id})}
-                    className="w-full py-3 border-2 border-dashed border-primary-light/40 rounded-xl text-primary font-medium hover:bg-primary-light/10 hover:border-primary-light transition-colors text-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 border-2 border-dashed border-primary-light/40 dark:border-gray-700 rounded-xl text-primary font-medium hover:bg-primary-light/10 hover:border-primary-light transition-colors text-sm flex items-center justify-center gap-2"
                   >
                     <Plus size={16} /> Tambah Tahap Baru
                   </button>

@@ -86,15 +86,15 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex justify-between items-start flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-text-primary">Manajemen Progres Studi</h1>
-          <p className="text-text-secondary mt-1">Pantau kesiapan dan keberangkatan santri secara makro.</p>
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Manajemen Progres Studi</h1>
+          <p className="text-text-secondary dark:text-gray-400 mt-1">Pantau kesiapan dan keberangkatan santri secara makro.</p>
         </div>
         <Link 
           href={`/admin/progres/master${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`} 
-          className="flex items-center gap-2 px-4 py-2 bg-text-primary text-white rounded-lg text-sm font-medium hover:bg-black transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-white transition-colors"
         >
           <Settings size={16} /> Pengaturan Tahap
         </Link>

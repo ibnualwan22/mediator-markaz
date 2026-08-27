@@ -20,9 +20,9 @@ export default function DocumentViewer({ url, label = "Dokumen" }: { url: string
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm shadow-2xl">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-primary-light/20 bg-bg-cream rounded-t-2xl">
-              <h3 className="font-bold text-text-primary text-lg flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-primary-light/20 dark:border-gray-700 bg-bg-cream dark:bg-gray-800 rounded-t-2xl">
+              <h3 className="font-bold text-text-primary dark:text-gray-100 text-lg flex items-center gap-2">
                 <FileText size={20} className="text-primary" /> Preview {label}
               </h3>
               <div className="flex items-center gap-2">
@@ -30,13 +30,13 @@ export default function DocumentViewer({ url, label = "Dokumen" }: { url: string
                   href={url} 
                   download={`File_Santri_${label.replace(/\s+/g, "_")}`}
                   title="Unduh Dokumen"
-                  className="p-1.5 hover:bg-black/10 rounded-full transition-colors text-primary"
+                  className="p-1.5 hover:bg-black dark:hover:bg-white/10 rounded-full transition-colors text-primary"
                 >
                   <Download size={20} />
                 </a>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 hover:bg-black/10 rounded-full transition-colors text-text-secondary"
+                  className="p-1.5 hover:bg-black dark:hover:bg-white/10 rounded-full transition-colors text-text-secondary dark:text-gray-400"
                   title="Tutup"
                 >
                   <X size={24} />
@@ -44,14 +44,14 @@ export default function DocumentViewer({ url, label = "Dokumen" }: { url: string
               </div>
             </div>
             
-            <div className="p-4 flex-1 overflow-auto flex items-center justify-center bg-gray-100 border-x border-b border-primary-light/10 rounded-b-2xl min-h-[50vh]">
+            <div className="p-4 flex-1 overflow-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 border-x border-b border-primary-light/10 dark:border-gray-700 rounded-b-2xl min-h-[50vh]">
               {isImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={url} alt={label} className="max-w-full max-h-full object-contain rounded drop-shadow-md" />
               ) : (
                 <div className="text-center p-8">
                   <FileText size={64} className="mx-auto text-primary-light mb-4" />
-                  <p className="text-text-primary font-medium mb-4">File ini berupa Dokumen (Bukan Gambar).</p>
+                  <p className="text-text-primary dark:text-gray-100 font-medium mb-4">File ini berupa Dokumen (Bukan Gambar).</p>
                   <a 
                     href={url} 
                     download={`File_Santri_${label.replace(/\s+/g, "_")}`}

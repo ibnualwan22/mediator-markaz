@@ -46,10 +46,10 @@ export default async function DarulLughohPage({ searchParams }: { searchParams: 
   }) : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-text-primary">Daurah Lughoh Management</h1>
-        <p className="text-text-secondary mt-1">Atur Penempatan Level, Pembayaran, dan Hasil Ujian DL.</p>
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Daurah Lughoh Management</h1>
+        <p className="text-text-secondary dark:text-gray-400 mt-1">Atur Penempatan Level, Pembayaran, dan Hasil Ujian DL.</p>
       </div>
 
       <SpreadsheetDarulLughoh
