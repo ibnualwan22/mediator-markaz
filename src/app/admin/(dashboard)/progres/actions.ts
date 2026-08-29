@@ -21,6 +21,20 @@ export async function toggleCheckboxProgres(progresSantriId: string, status: boo
   }
 }
 
+export async function updateProgresFileUrl(id: string, fileUrl: string | null) {
+  try {
+    await prisma.progresSantri.update({
+      where: { id },
+      data: { fileUrl }
+    });
+    revalidatePath("/admin/progres");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating progres file url:", error);
+    return { success: false };
+  }
+}
+
 export async function createTahapProgres(data: { nama: string; urutan: number; periodeId: string }) {
   try {
     await prisma.tahapProgres.create({

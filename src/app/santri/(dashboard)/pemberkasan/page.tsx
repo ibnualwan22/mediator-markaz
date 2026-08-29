@@ -1,7 +1,7 @@
 import { getSantriSession } from "@/lib/santri-auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { FolderCheck, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { FolderCheck, CheckCircle2, Clock, AlertCircle, Download } from "lucide-react";
 
 export default async function PemberkasanSantriPage() {
   const session = await getSantriSession();
@@ -55,12 +55,13 @@ export default async function PemberkasanSantriPage() {
     const record = santri.pemberkasan.find(p => p.itemPemberkasanId === item.id);
     const sudahDikumpulkan = record?.sudahDikumpulkan ?? false;
     const catatan = record?.catatan ?? null;
+    const fileUrl = record?.fileUrl ?? null;
     
     if (sudahDikumpulkan) {
       totalTerkumpul++;
     }
 
-    return { ...item, sudahDikumpulkan, catatan };
+    return { ...item, sudahDikumpulkan, catatan, fileUrl };
   });
 
   const percent = totalItem > 0 ? Math.round((totalTerkumpul / totalItem) * 100) : 0;
@@ -162,6 +163,18 @@ export default async function PemberkasanSantriPage() {
                     <p className={`font-medium ${item.sudahDikumpulkan ? 'text-text-primary' : 'text-text-secondary'}`}>
                       {item.nama}
                     </p>
+                    {item.fileUrl && (
+                      <div className="mt-2">
+                        <a 
+                          href={item.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"
+                        >
+                          <Download size={14} /> Download Dokumen
+                        </a>
+                      </div>
+                    )}
                     {item.catatan && (
                       <div className="mt-2 bg-warning/10 border border-warning/30 rounded-lg p-3 text-sm flex gap-2 items-start">
                         <AlertCircle size={16} className="text-warning shrink-0 mt-0.5" />

@@ -1,7 +1,7 @@
 import { getSantriSession } from "@/lib/santri-auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { LineChart, CheckCircle2, Circle, AlertCircle, Calendar } from "lucide-react";
+import { LineChart, CheckCircle2, Circle, AlertCircle, Calendar, Download } from "lucide-react";
 
 export default async function ProgresSantriPage() {
   const session = await getSantriSession();
@@ -50,10 +50,11 @@ export default async function ProgresSantriPage() {
     const selesai = record?.selesai ?? false;
     const tanggalSelesai = record?.tanggalSelesai ?? null;
     const catatan = record?.catatan ?? null;
+    const fileUrl = record?.fileUrl ?? null;
     
     if (selesai) totalSelesai++;
 
-    return { ...tahap, selesai, tanggalSelesai, catatan };
+    return { ...tahap, selesai, tanggalSelesai, catatan, fileUrl };
   });
 
   const percent = tahaps.length > 0 ? Math.round((totalSelesai / tahaps.length) * 100) : 0;
@@ -184,6 +185,18 @@ export default async function ProgresSantriPage() {
                           <span className="font-bold text-primary-light text-xs uppercase tracking-wider block mb-1">Catatan Progress</span>
                           {tahap.catatan}
                         </div>
+                      </div>
+                    )}
+                    {tahap.fileUrl && (
+                      <div className="mt-4 pt-4 border-t border-primary-light/10">
+                        <a 
+                          href={tahap.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-sm hover:bg-primary-dark transition-colors"
+                        >
+                          <Download size={16} /> Download Dokumen
+                        </a>
                       </div>
                     )}
                   </div>

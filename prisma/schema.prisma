@@ -278,6 +278,7 @@ model ProgresSantri {
   selesai        Boolean      @default(false)
   tanggalSelesai DateTime?
   catatan        String?
+  fileUrl        String?
   updatedAt      DateTime     @updatedAt
 
   @@unique([santriId, tahapProgresId])

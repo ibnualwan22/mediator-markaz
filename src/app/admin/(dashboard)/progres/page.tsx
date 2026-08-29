@@ -61,6 +61,7 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
             selesai: false,
             tanggalSelesai: null,
             catatan: null,
+            fileUrl: null,
             updatedAt: new Date(),
           };
           
