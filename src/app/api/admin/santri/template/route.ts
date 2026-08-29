@@ -8,9 +8,18 @@ export async function GET() {
 
     // Data header template dan 1 contoh data
     const wsData = [
-      ["Nama Lengkap", "Nama Arab", "Gender"],
-      ["Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI"],
-      ["Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN"]
+      [
+        "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
+        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor"
+      ],
+      [
+        "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jawa Barat", "08123456789", 
+        "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", 2026, "A1234567"
+      ],
+      [
+        "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Jawa Tengah", "08129876543", 
+        "fulanah@example.com", "Bapak Fulan", "08987654321", "Ijazah Pesantren", 2026, ""
+      ]
     ];
 
     // Konversi array ke worksheet
@@ -20,7 +29,15 @@ export async function GET() {
     ws['!cols'] = [
       { wch: 30 }, // Nama Lengkap
       { wch: 30 }, // Nama Arab
-      { wch: 15 }  // Gender
+      { wch: 15 }, // Gender
+      { wch: 20 }, // Asal Provinsi
+      { wch: 15 }, // No. WA Santri
+      { wch: 25 }, // Email
+      { wch: 25 }, // Nama Wali
+      { wch: 15 }, // No. WA Wali
+      { wch: 20 }, // Riwayat Akademik
+      { wch: 15 }, // Tahun Kelulusan
+      { wch: 20 }  // Nomor Paspor
     ];
 
     // Tambahkan worksheet ke workbook

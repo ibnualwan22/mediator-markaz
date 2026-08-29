@@ -72,6 +72,30 @@ export async function POST(req: Request) {
       const namaArab = row["Nama Arab"] || "-";
       let genderStr = row["Gender"];
       
+      const asalProvinsi = row["Asal Provinsi"] || "-";
+      const noWaSantri = row["No. WA Santri"] ? String(row["No. WA Santri"]) : "-";
+      const email = row["Email"] || "-";
+      const namaWali = row["Nama Wali"] || "-";
+      const noWaWali = row["No. WA Wali"] ? String(row["No. WA Wali"]) : "-";
+      
+      let riwayatAkademikStr = row["Riwayat Akademik"] ? String(row["Riwayat Akademik"]).toUpperCase() : "LAINNYA";
+      let riwayatAkademik: "MA" | "IJAZAH_PESANTREN" | "SMA" | "SMK" | "PAKET_C" | "LAINNYA" = "LAINNYA";
+      
+      if (riwayatAkademikStr.includes("MA") || riwayatAkademikStr.includes("MADRASAH ALIYAH")) {
+        riwayatAkademik = "MA";
+      } else if (riwayatAkademikStr.includes("PESANTREN") || riwayatAkademikStr.includes("IJAZAH_PESANTREN")) {
+        riwayatAkademik = "IJAZAH_PESANTREN";
+      } else if (riwayatAkademikStr.includes("SMA")) {
+        riwayatAkademik = "SMA";
+      } else if (riwayatAkademikStr.includes("SMK")) {
+        riwayatAkademik = "SMK";
+      } else if (riwayatAkademikStr.includes("PAKET") || riwayatAkademikStr.includes("PAKET_C") || riwayatAkademikStr.includes("PAKET C")) {
+        riwayatAkademik = "PAKET_C";
+      }
+      
+      const tahunKelulusan = parseInt(row["Tahun Kelulusan"]) || currentYear;
+      const nomorPaspor = row["Nomor Paspor"] ? String(row["Nomor Paspor"]) : null;
+      
       const rowNum = i + 2; // +1 untuk header, +1 karena array 0-indexed
 
       // Validation
@@ -123,6 +147,14 @@ export async function POST(req: Request) {
             data: {
               namaArab: String(namaArab),
               gender: gender,
+              asalProvinsi,
+              noWaSantri,
+              email,
+              namaWali,
+              noWaWali,
+              riwayatAkademik,
+              tahunKelulusan,
+              nomorPaspor
             }
           });
           successCount++;
@@ -138,17 +170,17 @@ export async function POST(req: Request) {
               namaArab: String(namaArab),
               gender: gender,
               
-              // Placeholder wajib
-              asalProvinsi: "-",
-              noWaSantri: "-",
-              email: "-",
-              namaWali: "-",
-              noWaWali: "-",
+              asalProvinsi,
+              noWaSantri,
+              email,
+              namaWali,
+              noWaWali,
               fileAkteLahir: "-",
               filePasFoto: "-",
               fileIjazah: "-",
-              riwayatAkademik: "SMA",
-              tahunKelulusan: currentYear,
+              riwayatAkademik,
+              tahunKelulusan,
+              nomorPaspor,
               setujuInvestasi: false
             }
           });
