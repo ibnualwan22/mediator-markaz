@@ -6,24 +6,10 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const gelombangId = formData.get("gelombangId") as string;
-    const overwriteExisting = formData.get("overwriteExisting") === "true";
 
-    if (!file || !gelombangId) {
+    if (!file) {
       return NextResponse.json(
-        { error: "File Excel dan Gelombang harus dipilih" },
-        { status: 400 }
-      );
-    }
-
-    // Pastikan gelombang valid
-    const gelombang = await prisma.gelombang.findUnique({
-      where: { id: gelombangId }
-    });
-
-    if (!gelombang) {
-      return NextResponse.json(
-        { error: "Gelombang tidak ditemukan" },
+        { error: "File Excel harus dipilih" },
         { status: 400 }
       );
     }
@@ -51,19 +37,7 @@ export async function POST(req: Request) {
     let successCount = 0;
     let failedCount = 0;
 
-    // Get current last number for MA-YYYY-XXXX to ensure uniqueness within loop
-    let lastSantri = await prisma.santri.findFirst({
-      where: { noPendaftaran: { startsWith: `MA-${currentYear}-` } },
-      orderBy: { noPendaftaran: 'desc' }
-    });
-    
-    let currentNumber = 0;
-    if (lastSantri) {
-      const match = lastSantri.noPendaftaran.match(/MA-\d{4}-(\d{4})/);
-      if (match && match[1]) {
-        currentNumber = parseInt(match[1]);
-      }
-    }
+
 
     // Process each row
     for (let i = 0; i < rawData.length; i++) {
@@ -123,70 +97,37 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // Generate nomor pendaftaran
-      currentNumber++;
-      const paddingCount = String(currentNumber).padStart(4, '0');
-      const noPendaftaran = `MA-${currentYear}-${paddingCount}`;
-
       try {
-        let existingSantri = null;
+        let existingSantri = await prisma.santri.findFirst({
+          where: {
+            namaLengkap: String(namaLengkap)
+          }
+        });
 
-        if (overwriteExisting) {
-          existingSantri = await prisma.santri.findFirst({
-            where: {
-              namaLengkap: String(namaLengkap),
-              gelombangId: gelombangId
-            }
-          });
+        if (!existingSantri) {
+          errors.push(`Baris ${rowNum}: Santri dengan nama ${namaLengkap} tidak ditemukan`);
+          failedCount++;
+          continue;
         }
 
-        if (existingSantri) {
-          // Update data yang ada
-          const santri = await prisma.santri.update({
-            where: { id: existingSantri.id },
-            data: {
-              namaArab: String(namaArab),
-              gender: gender,
-              asalProvinsi,
-              noWaSantri,
-              email,
-              namaWali,
-              noWaWali,
-              riwayatAkademik,
-              tahunKelulusan,
-              nomorPaspor
-            }
-          });
-          successCount++;
-          newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
-        } else {
-          // Buat data baru
-          const santri = await prisma.santri.create({
-            data: {
-              noPendaftaran,
-              gelombangId: gelombangId,
-              
-              namaLengkap: String(namaLengkap),
-              namaArab: String(namaArab),
-              gender: gender,
-              
-              asalProvinsi,
-              noWaSantri,
-              email,
-              namaWali,
-              noWaWali,
-              fileAkteLahir: "-",
-              filePasFoto: "-",
-              fileIjazah: "-",
-              riwayatAkademik,
-              tahunKelulusan,
-              nomorPaspor,
-              setujuInvestasi: false
-            }
-          });
-          successCount++;
-          newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
-        }
+        // Update data yang ada
+        const santri = await prisma.santri.update({
+          where: { id: existingSantri.id },
+          data: {
+            namaArab: String(namaArab),
+            gender: gender,
+            asalProvinsi,
+            noWaSantri,
+            email,
+            namaWali,
+            noWaWali,
+            riwayatAkademik,
+            tahunKelulusan,
+            nomorPaspor
+          }
+        });
+        successCount++;
+        newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
       } catch (err: any) {
         console.error(`Gagal import baris ${rowNum}:`, err);
         errors.push(`Baris ${rowNum}: Gagal menyimpan data ${namaLengkap}`);

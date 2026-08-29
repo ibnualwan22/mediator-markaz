@@ -150,6 +150,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           setShowImportModal(false);
           router.refresh();
         }}
+        showGelombang={false}
       />
 
       <ImportExcelModal 
