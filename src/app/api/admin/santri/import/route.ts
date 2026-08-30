@@ -2,6 +2,23 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import * as xlsx from "xlsx";
 
+// Helper: Normalisasi nama untuk fuzzy matching
+// Menghapus simbol, tanda baca, spasi berlebih, dan lowercase
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/gi, '') // hapus simbol & tanda baca
+    .replace(/\s+/g, ' ')          // hapus spasi berlebih
+    .trim();
+}
+
+// Helper: Cek apakah value dari Excel terisi (bukan kosong / placeholder)
+function hasValue(val: any): boolean {
+  if (val === undefined || val === null) return false;
+  const str = String(val).trim();
+  return str !== '' && str !== '-';
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -37,38 +54,21 @@ export async function POST(req: Request) {
     let successCount = 0;
     let failedCount = 0;
 
+    // Ambil semua santri sekali untuk fuzzy matching (efisien)
+    const allSantri = await prisma.santri.findMany({
+      select: { id: true, namaLengkap: true, noPendaftaran: true }
+    });
 
+    // Buat lookup map: normalized name -> santri record
+    const santriMap = new Map<string, typeof allSantri[0]>();
+    for (const s of allSantri) {
+      santriMap.set(normalizeName(s.namaLengkap), s);
+    }
 
     // Process each row
     for (let i = 0; i < rawData.length; i++) {
       const row = rawData[i];
       const namaLengkap = row["Nama Lengkap"];
-      const namaArab = row["Nama Arab"] || "-";
-      let genderStr = row["Gender"];
-      
-      const asalProvinsi = row["Asal Provinsi"] || "-";
-      const noWaSantri = row["No. WA Santri"] ? String(row["No. WA Santri"]) : "-";
-      const email = row["Email"] || "-";
-      const namaWali = row["Nama Wali"] || "-";
-      const noWaWali = row["No. WA Wali"] ? String(row["No. WA Wali"]) : "-";
-      
-      let riwayatAkademikStr = row["Riwayat Akademik"] ? String(row["Riwayat Akademik"]).toUpperCase() : "LAINNYA";
-      let riwayatAkademik: "MA" | "IJAZAH_PESANTREN" | "SMA" | "SMK" | "PAKET_C" | "LAINNYA" = "LAINNYA";
-      
-      if (riwayatAkademikStr.includes("MA") || riwayatAkademikStr.includes("MADRASAH ALIYAH")) {
-        riwayatAkademik = "MA";
-      } else if (riwayatAkademikStr.includes("PESANTREN") || riwayatAkademikStr.includes("IJAZAH_PESANTREN")) {
-        riwayatAkademik = "IJAZAH_PESANTREN";
-      } else if (riwayatAkademikStr.includes("SMA")) {
-        riwayatAkademik = "SMA";
-      } else if (riwayatAkademikStr.includes("SMK")) {
-        riwayatAkademik = "SMK";
-      } else if (riwayatAkademikStr.includes("PAKET") || riwayatAkademikStr.includes("PAKET_C") || riwayatAkademikStr.includes("PAKET C")) {
-        riwayatAkademik = "PAKET_C";
-      }
-      
-      const tahunKelulusan = parseInt(row["Tahun Kelulusan"]) || currentYear;
-      const nomorPaspor = row["Nomor Paspor"] ? String(row["Nomor Paspor"]) : null;
       
       const rowNum = i + 2; // +1 untuk header, +1 karena array 0-indexed
 
@@ -78,53 +78,94 @@ export async function POST(req: Request) {
         failedCount++;
         continue;
       }
-      
-      let gender: "LAKI_LAKI" | "PEREMPUAN" = "LAKI_LAKI";
+
+      // Fuzzy match: cari santri berdasarkan nama yang sudah dinormalisasi
+      const normalizedInput = normalizeName(String(namaLengkap));
+      const matchedSantri = santriMap.get(normalizedInput);
+
+      if (!matchedSantri) {
+        errors.push(`Baris ${rowNum}: Santri dengan nama "${namaLengkap}" tidak ditemukan`);
+        failedCount++;
+        continue;
+      }
+
+      // Build update data — hanya field yang TERISI di Excel yang akan di-update
+      const updateData: any = {};
+
+      if (hasValue(row["Nama Arab"])) {
+        updateData.namaArab = String(row["Nama Arab"]);
+      }
+
+      // Gender
+      let genderStr = row["Gender"];
       if (genderStr) {
         genderStr = String(genderStr).toUpperCase().trim();
         if (genderStr.includes("LAKI") || genderStr === "L") {
-          gender = "LAKI_LAKI";
+          updateData.gender = "LAKI_LAKI";
         } else if (genderStr.includes("PEREMPUAN") || genderStr === "P" || genderStr.includes("WANITA")) {
-          gender = "PEREMPUAN";
+          updateData.gender = "PEREMPUAN";
         } else {
           errors.push(`Baris ${rowNum}: Format Gender tidak valid untuk ${namaLengkap}. Harus LAKI_LAKI atau PEREMPUAN`);
           failedCount++;
           continue;
         }
-      } else {
-        errors.push(`Baris ${rowNum}: Gender wajib diisi untuk ${namaLengkap}`);
+      }
+
+      if (hasValue(row["Asal Provinsi"])) {
+        updateData.asalProvinsi = String(row["Asal Provinsi"]);
+      }
+
+      if (hasValue(row["No. WA Santri"])) {
+        updateData.noWaSantri = String(row["No. WA Santri"]);
+      }
+
+      if (hasValue(row["Email"])) {
+        updateData.email = String(row["Email"]);
+      }
+
+      if (hasValue(row["Nama Wali"])) {
+        updateData.namaWali = String(row["Nama Wali"]);
+      }
+
+      if (hasValue(row["No. WA Wali"])) {
+        updateData.noWaWali = String(row["No. WA Wali"]);
+      }
+
+      if (hasValue(row["Riwayat Akademik"])) {
+        const riwayatStr = String(row["Riwayat Akademik"]).toUpperCase();
+        if (riwayatStr.includes("MA") || riwayatStr.includes("MADRASAH ALIYAH")) {
+          updateData.riwayatAkademik = "MA";
+        } else if (riwayatStr.includes("PESANTREN") || riwayatStr.includes("IJAZAH_PESANTREN")) {
+          updateData.riwayatAkademik = "IJAZAH_PESANTREN";
+        } else if (riwayatStr.includes("SMA")) {
+          updateData.riwayatAkademik = "SMA";
+        } else if (riwayatStr.includes("SMK")) {
+          updateData.riwayatAkademik = "SMK";
+        } else if (riwayatStr.includes("PAKET") || riwayatStr.includes("PAKET_C") || riwayatStr.includes("PAKET C")) {
+          updateData.riwayatAkademik = "PAKET_C";
+        }
+      }
+
+      if (hasValue(row["Tahun Kelulusan"])) {
+        const parsed = parseInt(row["Tahun Kelulusan"]);
+        if (!isNaN(parsed)) updateData.tahunKelulusan = parsed;
+      }
+
+      if (hasValue(row["Nomor Paspor"])) {
+        updateData.nomorPaspor = String(row["Nomor Paspor"]);
+      }
+
+      // Jika tidak ada field yang terisi, skip
+      if (Object.keys(updateData).length === 0) {
+        errors.push(`Baris ${rowNum}: Tidak ada data yang perlu diupdate untuk ${namaLengkap}`);
         failedCount++;
         continue;
       }
 
       try {
-        let existingSantri = await prisma.santri.findFirst({
-          where: {
-            namaLengkap: String(namaLengkap)
-          }
-        });
-
-        if (!existingSantri) {
-          errors.push(`Baris ${rowNum}: Santri dengan nama ${namaLengkap} tidak ditemukan`);
-          failedCount++;
-          continue;
-        }
-
-        // Update data yang ada
         const santri = await prisma.santri.update({
-          where: { id: existingSantri.id },
-          data: {
-            namaArab: String(namaArab),
-            gender: gender,
-            asalProvinsi,
-            noWaSantri,
-            email,
-            namaWali,
-            noWaWali,
-            riwayatAkademik,
-            tahunKelulusan,
-            nomorPaspor
-          }
+          where: { id: matchedSantri.id },
+          data: updateData
         });
         successCount++;
         newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
