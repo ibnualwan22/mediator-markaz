@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   assignLevelDL, updatePembayaranDL,
   updateStatusUjianDL, updateSettingDL,
-  generateNextLevelDL, resetAllLevelDL
+  generateNextLevelDL, resetAllLevelDL,
+  bulkUpdateStatusLulusDL
 } from "@/app/admin/(dashboard)/darul-lughoh/actions";
 import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download, RotateCcw } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
@@ -101,6 +102,39 @@ export default function SpreadsheetDarulLughoh({
     await resetAllLevelDL(santriId);
     setIsLoading(false);
     Swal.fire({ title: 'Telah Direset!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+  };
+
+  const handleBulkLulus = async (lvl: number) => {
+    const idsToLulus: string[] = [];
+    santriList.forEach(santri => {
+      const attempts = santri.darulLughoh
+        .filter((d: any) => d.level === lvl)
+        .sort((a: any, b: any) => b.percobaan - a.percobaan);
+      if (attempts.length > 0) {
+        const latestAttempt = attempts[0];
+        if (latestAttempt.statusUjian === 'BELUM_UJIAN') {
+          idsToLulus.push(latestAttempt.id);
+        }
+      }
+    });
+
+    if (idsToLulus.length === 0) {
+      Swal.fire({ title: 'Tidak ada santri!', text: `Tidak ada santri yang berstatus BELUM_UJIAN di level ${lvl}.`, icon: 'info' });
+      return;
+    }
+
+    const confirmRes = await Swal.fire({
+      title: 'Luluskan Semua?',
+      text: `Ada ${idsToLulus.length} santri yang akan diluluskan pada level ${lvl}. Yakin?`,
+      icon: 'question',
+      showCancelButton: true
+    });
+    if (!confirmRes.isConfirmed) return;
+
+    setIsLoading(true);
+    await bulkUpdateStatusLulusDL(idsToLulus);
+    setIsLoading(false);
+    Swal.fire({ title: 'Berhasil!', text: `${idsToLulus.length} santri berhasil diluluskan.`, icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   return (
@@ -209,7 +243,19 @@ export default function SpreadsheetDarulLughoh({
               <th className="p-3 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 w-24 text-center">Set Level</th>
 
               {levels.map(lvl => (
-                <th key={lvl} className="p-3 text-center border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[180px]">DL Level {lvl}</th>
+                <th key={lvl} className="p-3 text-center border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[180px]">
+                  <div className="flex flex-col items-center gap-1">
+                    <span>DL Level {lvl}</span>
+                    <button 
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleBulkLulus(lvl)}
+                      className="px-2 py-0.5 mt-1 bg-success/10 text-success hover:bg-success hover:text-white rounded text-[10px] font-bold transition-colors shadow-sm w-max"
+                    >
+                      Luluskan Semua
+                    </button>
+                  </div>
+                </th>
               ))}
             </tr>
           </thead>

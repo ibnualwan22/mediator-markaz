@@ -234,3 +234,10 @@ export async function resetAllLevelDL(santriId: string) {
     return { success: false, error: "Gagal me-reset Darul Lughoh" };
   }
 }
+
+export async function bulkUpdateStatusLulusDL(ids: string[]) {
+  for (const id of ids) {
+    await updateStatusUjianDL(id, "LULUS");
+  }
+  return { success: true };
+}
