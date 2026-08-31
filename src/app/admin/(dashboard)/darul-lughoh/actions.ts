@@ -241,3 +241,30 @@ export async function bulkUpdateStatusLulusDL(ids: string[]) {
   }
   return { success: true };
 }
+
+export async function undoStatusUjianDL(id: string) {
+  const current = await prisma.darulLughohSantri.findUnique({ where: { id } });
+  if (!current) return { success: false, error: "Not found" };
+
+  await prisma.darulLughohSantri.update({
+    where: { id },
+    data: { 
+      statusUjian: "BELUM_UJIAN",
+      tanggalUjian: null
+    }
+  });
+
+  await prisma.darulLughohSantri.deleteMany({
+    where: {
+      santriId: current.santriId,
+      OR: [
+        { level: { gt: current.level } },
+        { level: current.level, percobaan: { gt: current.percobaan } }
+      ]
+    }
+  });
+
+  revalidatePath("/admin/darul-lughoh");
+  revalidatePath("/admin/pembayaran");
+  return { success: true };
+}

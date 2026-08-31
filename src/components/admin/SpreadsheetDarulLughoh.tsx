@@ -6,7 +6,7 @@ import {
   assignLevelDL, updatePembayaranDL,
   updateStatusUjianDL, updateSettingDL,
   generateNextLevelDL, resetAllLevelDL,
-  bulkUpdateStatusLulusDL
+  bulkUpdateStatusLulusDL, undoStatusUjianDL
 } from "@/app/admin/(dashboard)/darul-lughoh/actions";
 import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download, RotateCcw } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
@@ -135,6 +135,22 @@ export default function SpreadsheetDarulLughoh({
     await bulkUpdateStatusLulusDL(idsToLulus);
     setIsLoading(false);
     Swal.fire({ title: 'Berhasil!', text: `${idsToLulus.length} santri berhasil diluluskan.`, icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+  };
+
+  const handleUndoStatus = async (attempt: any) => {
+    const confirmRes = await Swal.fire({
+      title: 'Undo Status?',
+      text: `Yakin membatalkan status Lulus/Remidi pada level ini? Aksi ini juga akan menghapus level di atasnya yang sudah otomatis terbuat sebelumnya.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33'
+    });
+    if (!confirmRes.isConfirmed) return;
+
+    setIsLoading(true);
+    await undoStatusUjianDL(attempt.id);
+    setIsLoading(false);
+    Swal.fire({ title: 'Status Dibatalkan!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   return (
@@ -335,9 +351,19 @@ export default function SpreadsheetDarulLughoh({
                                 <div className="flex justify-between items-center text-xs font-bold">
                                   <span className="text-text-secondary dark:text-gray-400">Tes Ke- {attempt.percobaan}</span>
                                   {attempt.statusUjian === "LULUS" ? (
-                                    <span className="text-success flex items-center gap-0.5"><CheckCircle2 size={12} /> LULUS</span>
+                                    <div className="flex items-center gap-1 group/undo">
+                                      <span className="text-success flex items-center gap-0.5"><CheckCircle2 size={12} /> LULUS</span>
+                                      <button onClick={() => handleUndoStatus(attempt)} disabled={isLoading} className="text-gray-300 hover:text-danger opacity-0 group-hover/undo:opacity-100 transition-opacity outline-none" title="Batalkan Lulus">
+                                        <RotateCcw size={10} strokeWidth={3} />
+                                      </button>
+                                    </div>
                                   ) : attempt.statusUjian === "REMIDI" ? (
-                                    <span className="text-danger flex items-center gap-0.5"><AlertTriangle size={12} /> REMIDI</span>
+                                    <div className="flex items-center gap-1 group/undo">
+                                      <span className="text-danger flex items-center gap-0.5"><AlertTriangle size={12} /> REMIDI</span>
+                                      <button onClick={() => handleUndoStatus(attempt)} disabled={isLoading} className="text-gray-300 hover:text-danger opacity-0 group-hover/undo:opacity-100 transition-opacity outline-none" title="Batalkan Remidi">
+                                        <RotateCcw size={10} strokeWidth={3} />
+                                      </button>
+                                    </div>
                                   ) : (
                                     <span className="text-warning">Ujian Tertunda</span>
                                   )}
