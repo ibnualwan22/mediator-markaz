@@ -268,3 +268,14 @@ export async function undoStatusUjianDL(id: string) {
   revalidatePath("/admin/pembayaran");
   return { success: true };
 }
+
+export async function deleteAttemptDL(id: string) {
+  try {
+    await prisma.darulLughohSantri.delete({ where: { id } });
+    revalidatePath("/admin/darul-lughoh");
+    revalidatePath("/admin/pembayaran");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Gagal menghapus riwayat" };
+  }
+}

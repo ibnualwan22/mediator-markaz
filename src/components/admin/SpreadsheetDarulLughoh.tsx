@@ -6,9 +6,9 @@ import {
   assignLevelDL, updatePembayaranDL,
   updateStatusUjianDL, updateSettingDL,
   generateNextLevelDL, resetAllLevelDL,
-  bulkUpdateStatusLulusDL, undoStatusUjianDL
+  bulkUpdateStatusLulusDL, undoStatusUjianDL, deleteAttemptDL
 } from "@/app/admin/(dashboard)/darul-lughoh/actions";
-import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download, RotateCcw } from "lucide-react";
+import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download, RotateCcw, Trash2 } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
 import Swal from "sweetalert2";
 
@@ -151,6 +151,23 @@ export default function SpreadsheetDarulLughoh({
     await undoStatusUjianDL(attempt.id);
     setIsLoading(false);
     Swal.fire({ title: 'Status Dibatalkan!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+  };
+
+  const handleDeleteAttempt = async (attempt: any) => {
+    const confirmRes = await Swal.fire({
+      title: 'Hapus Riwayat?',
+      text: `Yakin ingin menghapus riwayat tes ke-${attempt.percobaan} (Level ${attempt.level}) yang belum dilaksanakan ini?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Hapus'
+    });
+    if (!confirmRes.isConfirmed) return;
+
+    setIsLoading(true);
+    await deleteAttemptDL(attempt.id);
+    setIsLoading(false);
+    Swal.fire({ title: 'Terhapus!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   return (
@@ -365,7 +382,12 @@ export default function SpreadsheetDarulLughoh({
                                       </button>
                                     </div>
                                   ) : (
-                                    <span className="text-warning">Ujian Tertunda</span>
+                                    <div className="flex items-center gap-1 group/undo">
+                                      <span className="text-warning">Ujian Tertunda</span>
+                                      <button onClick={() => handleDeleteAttempt(attempt)} disabled={isLoading} className="text-gray-300 hover:text-danger opacity-0 group-hover/undo:opacity-100 transition-opacity outline-none" title="Hapus Riwayat Tertunda">
+                                        <Trash2 size={10} strokeWidth={3} />
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1 text-xs font-bold">
