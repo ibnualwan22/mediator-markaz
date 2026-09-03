@@ -15,7 +15,7 @@ const amiri = Amiri({
 
 export const metadata: Metadata = {
   title: "Mediator Markaz Arabiyah",
-  description: "Pendaftaran dan Pemberkasan Santri Markaz Arabiyah",
+  description: "Pendaftaran dan Pemberkasan Camaba Markaz Arabiyah",
 };
 
 export default function RootLayout({

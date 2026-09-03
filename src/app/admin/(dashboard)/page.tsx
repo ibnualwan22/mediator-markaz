@@ -80,7 +80,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
             <p className="text-xs font-bold text-text-secondary dark:text-gray-400 uppercase tracking-wider">Total Pendaftar</p>
           </div>
           <p className="text-3xl md:text-4xl font-black text-text-primary dark:text-gray-100 relative z-10">{totalSantriInPeriode}</p>
-          <p className="text-xs text-text-secondary mt-1 relative z-10">Santri periode {selectedPeriode?.nama}</p>
+          <p className="text-xs text-text-secondary mt-1 relative z-10">Camaba periode {selectedPeriode?.nama}</p>
         </div>
 
         <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-success/30 dark:border-success/20 relative overflow-hidden group hover:border-success/50 transition-colors">
@@ -94,7 +94,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
             <p className="text-xs font-bold text-text-secondary dark:text-gray-400 uppercase tracking-wider">Terverifikasi</p>
           </div>
           <p className="text-3xl md:text-4xl font-black text-text-primary dark:text-gray-100 relative z-10">{verifiedSantriInPeriode}</p>
-          <p className="text-xs text-text-secondary mt-1 relative z-10">NIS Generated</p>
+          <p className="text-xs text-text-secondary mt-1 relative z-10">NIC Generated</p>
         </div>
 
         <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-danger/20 dark:border-danger/10 relative overflow-hidden group hover:border-danger/40 transition-colors">
@@ -108,7 +108,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
             <p className="text-xs font-bold text-text-secondary dark:text-gray-400 uppercase tracking-wider">Mundur</p>
           </div>
           <p className="text-3xl md:text-4xl font-black text-text-primary dark:text-gray-100 relative z-10">{withdrawnSantriInPeriode}</p>
-          <p className="text-xs text-text-secondary mt-1 relative z-10">Santri yang mundur</p>
+          <p className="text-xs text-text-secondary mt-1 relative z-10">Camaba yang mundur</p>
         </div>
 
         <div className="bg-gradient-to-br from-primary to-primary-light p-6 rounded-2xl shadow-md text-white relative overflow-hidden group">

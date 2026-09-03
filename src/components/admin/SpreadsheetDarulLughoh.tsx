@@ -90,7 +90,7 @@ export default function SpreadsheetDarulLughoh({
   const handleResetDL = async (santriId: string, nama: string) => {
     const confirmRes = await Swal.fire({
       title: 'Reset Histori?',
-      text: `Yakin ingin mereset dan menghapus seluruh histori level Darul Lughoh untuk santri ${nama}?`,
+      text: `Yakin ingin mereset dan menghapus seluruh histori level Dauroh Lughoh & Ta'hili untuk camaba ${nama}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -119,13 +119,13 @@ export default function SpreadsheetDarulLughoh({
     });
 
     if (idsToLulus.length === 0) {
-      Swal.fire({ title: 'Tidak ada santri!', text: `Tidak ada santri yang berstatus BELUM_UJIAN di level ${lvl}.`, icon: 'info' });
+      Swal.fire({ title: 'Tidak ada camaba!', text: `Tidak ada camaba yang berstatus BELUM_UJIAN di level ${lvl}.`, icon: 'info' });
       return;
     }
 
     const confirmRes = await Swal.fire({
       title: 'Luluskan Semua?',
-      text: `Ada ${idsToLulus.length} santri yang akan diluluskan pada level ${lvl}. Yakin?`,
+      text: `Ada ${idsToLulus.length} camaba yang akan diluluskan pada level ${lvl}. Yakin?`,
       icon: 'question',
       showCancelButton: true
     });
@@ -134,7 +134,7 @@ export default function SpreadsheetDarulLughoh({
     setIsLoading(true);
     await bulkUpdateStatusLulusDL(idsToLulus);
     setIsLoading(false);
-    Swal.fire({ title: 'Berhasil!', text: `${idsToLulus.length} santri berhasil diluluskan.`, icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+    Swal.fire({ title: 'Berhasil!', text: `${idsToLulus.length} camaba berhasil diluluskan.`, icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
   };
 
   const handleUndoStatus = async (attempt: any) => {
@@ -215,7 +215,7 @@ export default function SpreadsheetDarulLughoh({
               type="text"
               name="q"
               defaultValue={query}
-              placeholder="Cari NIS atau Nama..."
+              placeholder="Cari NIC atau Nama..."
               className="w-full px-4 py-1.5 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
             />
             <input type="hidden" name="gelombangId" value={selectedGelombangId} />
@@ -262,7 +262,7 @@ export default function SpreadsheetDarulLughoh({
           >
             <Save size={16} /> Simpan
           </button>
-          <p className="text-xs text-amber-700 italic max-w-sm ml-4 mb-2"><AlertTriangle size={14} className="inline mr-1" /> Perubahan nominal hanya berlaku untuk resep tagihan baru (santri yg baru assign level atau baru remidi). Tagihan lama tetap memakai nominal yang telah dibuat.</p>
+          <p className="text-xs text-amber-700 italic max-w-sm ml-4 mb-2"><AlertTriangle size={14} className="inline mr-1" /> Perubahan nominal hanya berlaku untuk resep tagihan baru (camaba yg baru assign level atau baru remidi). Tagihan lama tetap memakai nominal yang telah dibuat.</p>
         </div>
       )}
 
@@ -271,7 +271,7 @@ export default function SpreadsheetDarulLughoh({
         <table className="w-full text-left border-collapse min-w-max">
           <thead className="sticky top-0 z-20 shadow-sm text-sm text-text-primary dark:text-gray-100 font-bold">
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
-              <th className="p-3 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIS</th>
+              <th className="p-3 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
               <th className="p-3 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[170px] sticky left-[80px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               <th className="p-3 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 w-24 text-center">Set Level</th>
 
@@ -419,7 +419,7 @@ export default function SpreadsheetDarulLughoh({
             {santriList.length === 0 && (
               <tr>
                 <td colSpan={10} className="p-8 text-center italic text-text-secondary dark:text-gray-400 bg-white dark:bg-gray-900">
-                  Belum ada data santri pada filter ini.
+                  Belum ada data camaba pada filter ini.
                 </td>
               </tr>
             )}

@@ -48,7 +48,7 @@ export default function WithdrawSantriButton({
       const res = await withdrawSantri(santriId, text);
       setIsLoading(false);
       if (res.success) {
-        Swal.fire({ title: 'Telah Nonaktif', text: 'Santri telah ditandai mundur dari gelombang ini', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        Swal.fire({ title: 'Telah Nonaktif', text: 'Camaba telah ditandai mundur dari gelombang ini', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
       } else {
         Swal.fire('Gagal', res.error, 'error');
       }
@@ -58,7 +58,7 @@ export default function WithdrawSantriButton({
   const handleReactivate = async () => {
     const result = await Swal.fire({
       title: 'Aktifkan Kembali?',
-      text: "Santri akan dikembalikan statusnya menjadi aktif tanpa mengubah gelombangnya.",
+      text: "Camaba akan dikembalikan statusnya menjadi aktif tanpa mengubah gelombangnya.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Ya, Aktifkan',
@@ -70,7 +70,7 @@ export default function WithdrawSantriButton({
       const res = await reactivateSantri(santriId);
       setIsLoading(false);
       if (res.success) {
-        Swal.fire({ title: 'Berhasil', text: 'Santri telah aktif kembali', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        Swal.fire({ title: 'Berhasil', text: 'Camaba telah aktif kembali', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
       } else {
         Swal.fire('Gagal', res.error, 'error');
       }
@@ -89,7 +89,7 @@ export default function WithdrawSantriButton({
 
     if (res.success) {
       setIsTransferModalOpen(false);
-      Swal.fire('Berhasil', 'Santri berhasil dipindahkan. Uang (saldo) pembayaran tahap telah didistribusikan ke tagihan paket periode baru (jika pindah periode). Data pemberkasan dan DL tetap dipertahankan.', 'success');
+      Swal.fire('Berhasil', 'Camaba berhasil dipindahkan. Uang (saldo) pembayaran tahap telah didistribusikan ke tagihan paket periode baru (jika pindah periode). Data pemberkasan dan DL tetap dipertahankan.', 'success');
     } else {
       Swal.fire('Gagal', res.error, 'error');
     }
@@ -148,8 +148,8 @@ export default function WithdrawSantriButton({
               <div className="bg-warning/10 border border-warning/20 p-4 rounded-xl">
                 <h4 className="font-bold text-warning text-sm">Informasi Penting Migrasi:</h4>
                 <ul className="text-xs text-warning/80 mt-1 list-disc pl-4 space-y-1">
-                  <li>Nomor Induk Santri (NIS) <strong>AKAN DI-GENERATE ULANG</strong> sesuai dengan gelombang tujuan agar No. Urut tidak bertabrakan.</li>
-                  <li>Progres Pemberkasan & Dauroh Lughoh santri akan di-keep utuh.</li>
+                  <li>Nomor Induk Camaba (NIC) <strong>AKAN DI-GENERATE ULANG</strong> sesuai dengan gelombang tujuan agar No. Urut tidak bertabrakan.</li>
+                  <li>Progres Pemberkasan & Dauroh Lughoh & Ta'hili camaba akan di-keep utuh.</li>
                   <li>Jika Paket Pembayaran berbeda, total saldo tagihan tahap lama dicairkan dan otomatis didistribusikan urut sebagai pembayaran Lunas ke paket baru tujuan.</li>
                 </ul>
               </div>

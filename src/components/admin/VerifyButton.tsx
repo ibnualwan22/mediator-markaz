@@ -19,8 +19,8 @@ export default function VerifyButton({ santriId, isVerified }: { santriId: strin
 
   const handleVerify = async () => {
     const confirmRes = await Swal.fire({
-      title: 'Verifikasi Santri?',
-      text: "Tindakan ini akan membuat NIS baru untuk santri ini.",
+      title: 'Verifikasi Camaba?',
+      text: "Tindakan ini akan membuat NIS baru untuk camaba ini.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -36,7 +36,7 @@ export default function VerifyButton({ santriId, isVerified }: { santriId: strin
       if (!res.success) {
         Swal.fire('Gagal!', res.error, 'error');
       } else {
-        Swal.fire({ title: 'Berhasil!', text: 'Santri telah diverifikasi', icon: 'success', timer: 2000, showConfirmButton: false });
+        Swal.fire({ title: 'Berhasil!', text: 'Camaba telah diverifikasi', icon: 'success', timer: 2000, showConfirmButton: false });
       }
     } catch (error) {
       Swal.fire('Error!', 'Terjadi kesalahan sistem saat verifikasi.', 'error');

@@ -31,7 +31,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-gray-400 w-5 h-5" />
           <input 
             type="text" 
-            placeholder="Cari nama, No. Daftar, NIS..." 
+            placeholder="Cari nama, No. Daftar, NIC..." 
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-bg-cream dark:bg-gray-800 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
@@ -77,7 +77,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           <thead>
             <tr className="bg-primary/5 text-text-primary dark:text-gray-100 text-sm">
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700 w-12 text-center">No.</th>
-              <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">No. Pendaftaran / NIS</th>
+              <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">No. Pendaftaran / NIC</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">Nama Lengkap</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">No. Paspor</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">Gelombang</th>
@@ -92,9 +92,9 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
                 <td className="p-4">
                   <div className="font-mono font-medium text-primary">{s.noPendaftaran}</div>
                   {s.nis ? (
-                    <div className="text-xs font-mono font-bold text-success mt-1">NIS: {s.nis}</div>
+                    <div className="text-xs font-mono font-bold text-success mt-1">NIC: {s.nis}</div>
                   ) : (
-                    <div className="text-xs text-text-secondary dark:text-gray-400/70 mt-1">NIS belum ada</div>
+                    <div className="text-xs text-text-secondary dark:text-gray-400/70 mt-1">NIC belum ada</div>
                   )}
                   {s.nomorUrut && (
                     <div className="text-[10px] font-bold text-purple-600 mt-1.5 bg-purple-100 px-2 py-0.5 rounded-full inline-block">Urut: {s.nomorUrut}</div>
@@ -135,7 +135,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
             )) : (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-text-secondary dark:text-gray-400 italic">
-                  Tidak ada data santri ditemukan.
+                  Tidak ada data camaba ditemukan.
                 </td>
               </tr>
             )}

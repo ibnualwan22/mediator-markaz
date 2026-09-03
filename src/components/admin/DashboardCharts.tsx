@@ -64,7 +64,7 @@ export default function DashboardCharts({
     labels: gelombangData.map(d => d.name),
     datasets: [
       {
-        label: 'Jumlah Santri',
+        label: 'Jumlah Camaba',
         data: gelombangData.map(d => d.count),
         backgroundColor: 'rgba(14, 165, 233, 0.8)', // Primary color
         borderRadius: 8,
@@ -77,7 +77,7 @@ export default function DashboardCharts({
     datasets: [
       {
         fill: true,
-        label: 'Total Santri',
+        label: 'Total Camaba',
         data: globalData.map(d => d.count),
         borderColor: 'rgba(139, 92, 246, 1)',
         backgroundColor: 'rgba(139, 92, 246, 0.2)',
@@ -143,7 +143,7 @@ export default function DashboardCharts({
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Chart 1 */}
         <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[400px]">
-          <h3 className="font-heading font-bold text-text-primary dark:text-gray-100 text-lg mb-1">Sebaran Santri per Gelombang</h3>
+          <h3 className="font-heading font-bold text-text-primary dark:text-gray-100 text-lg mb-1">Sebaran Camaba per Gelombang</h3>
           <p className="text-sm text-text-secondary dark:text-gray-400 mb-6 font-medium">Periode {selectedPeriodeName}</p>
           <div className="flex-1 relative">
             <Bar data={barChartData} options={commonOptions} />

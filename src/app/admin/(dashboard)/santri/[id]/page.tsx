@@ -72,7 +72,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
                 </span>
               ) : santri.nis ? (
                 <span className="px-3 py-1 bg-success/10 text-success text-sm font-bold rounded-full font-mono">
-                  NIS: {santri.nis}
+                  NIC: {santri.nis}
                 </span>
               ) : (
                 <span className="px-3 py-1 bg-warning/10 text-warning text-sm font-bold rounded-full">

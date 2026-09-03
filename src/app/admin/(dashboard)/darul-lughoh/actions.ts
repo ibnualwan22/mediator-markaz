@@ -26,7 +26,7 @@ export async function assignLevelDL(santriId: string, level: number) {
     where: { santriId }
   });
 
-  if (existing) return { success: false, error: "Santri sudah set level awal" };
+  if (existing) return { success: false, error: "Camaba sudah set level awal" };
 
   const recordsToCreate = [];
   
@@ -231,7 +231,7 @@ export async function resetAllLevelDL(santriId: string) {
     return { success: true };
   } catch (error) {
     console.error("Reset DL error:", error);
-    return { success: false, error: "Gagal me-reset Darul Lughoh" };
+    return { success: false, error: "Gagal me-reset Dauroh Lughoh & Ta'hili" };
   }
 }
 

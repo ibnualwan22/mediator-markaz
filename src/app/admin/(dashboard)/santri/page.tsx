@@ -24,7 +24,7 @@ export default async function AdminSantriPage() {
     <div className="space-y-4 md:space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-text-primary dark:text-gray-100">Data Santri</h1>
-        <p className="text-text-secondary dark:text-gray-400 mt-1">Kelola data pendaftar dan verifikasi untuk menghasilkan NIS.</p>
+        <p className="text-text-secondary dark:text-gray-400 mt-1">Kelola data pendaftar dan verifikasi untuk menghasilkan NIC.</p>
       </div>
       
       <SantriTable santriList={santriList} gelombangList={gelombangList} />

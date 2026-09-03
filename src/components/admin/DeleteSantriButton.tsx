@@ -19,7 +19,7 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
     const result = await deleteSantri(santriId);
     
     if (result.success) {
-      Swal.fire({ title: 'Terhapus!', text: 'Data santri berhasil dihapus.', icon: 'success', timer: 1500, showConfirmButton: false });
+      Swal.fire({ title: 'Terhapus!', text: 'Data camaba berhasil dihapus.', icon: 'success', timer: 1500, showConfirmButton: false });
       router.push("/admin/santri");
     } else {
       Swal.fire('Gagal Menghapus', result.error, 'error');
@@ -43,7 +43,7 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
             <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-danger/5">
               <div className="flex items-center gap-3 text-danger">
                 <AlertTriangle size={24} />
-                <h2 className="text-lg font-bold">Hapus Data Santri</h2>
+                <h2 className="text-lg font-bold">Hapus Data Camaba</h2>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
@@ -56,7 +56,7 @@ export default function DeleteSantriButton({ santriId, namaLengkap }: { santriId
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-600">
-                Tindakan ini <strong>SANGAT FATAL</strong> dan tidak dapat dibatalkan. Semua data terkait pendaftaran, pembayaran, pemberkasan, dan progres santri ini akan dihapus secara permanen dari sistem.
+                Tindakan ini <strong>SANGAT FATAL</strong> dan tidak dapat dibatalkan. Semua data terkait pendaftaran, pembayaran, pemberkasan, dan progres camaba ini akan dihapus secara permanen dari sistem.
               </p>
 
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200">

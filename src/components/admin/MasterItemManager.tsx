@@ -43,7 +43,7 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
   const handleDelete = async (id: string) => {
     const res = await Swal.fire({
       title: 'Hapus Berkas?',
-      text: "Peringatan: Seluruh data centang pemberkasan santri yang berhubungan dengan berkas ini akan raib!",
+      text: "Peringatan: Seluruh data centang pemberkasan camaba yang berhubungan dengan berkas ini akan raib!",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',

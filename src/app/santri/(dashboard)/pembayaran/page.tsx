@@ -137,7 +137,7 @@ export default async function PembayaranSantriPage() {
 
     const dlStage = {
       id: "darul-lughoh",
-      nama: "Biaya Darul Lughoh",
+      nama: "Biaya Dauroh Lughoh & Ta'hili",
       harus: dlHarus,
       dibayar: dlDibayar,
       status: dlStatus,

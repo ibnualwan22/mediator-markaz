@@ -108,7 +108,7 @@ export default function SpreadsheetProgres({
             type="text" 
             name="q"
             defaultValue={query}
-            placeholder="Cari NIS atau Nama..." 
+            placeholder="Cari NIC atau Nama..." 
             className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
           />
           <input type="hidden" name="gelombangId" value={selectedGelombangId} />
@@ -121,7 +121,7 @@ export default function SpreadsheetProgres({
           <thead className="sticky top-0 z-20 bg-primary/10 shadow-sm text-sm text-text-primary dark:text-gray-100">
             {/* Header 1: Category Group */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
-              <th colSpan={2} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
+              <th colSpan={2} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Camaba</th>
               
               {activeTahaps.length > 0 && (
                 <th colSpan={activeTahaps.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-green-50 text-green-800">Tahap Akademik Aktif</th>
@@ -135,7 +135,7 @@ export default function SpreadsheetProgres({
 
             {/* Header 2: Item Names */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
-              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIS</th>
+              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
               <th className="p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[150px] sticky left-[80px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               
               {tahaps.map(tahap => (
@@ -219,7 +219,7 @@ export default function SpreadsheetProgres({
             {santriList.length === 0 && (
               <tr>
                 <td colSpan={tahaps.length + 3} className="p-8 text-center italic text-text-secondary dark:text-gray-400 bg-white dark:bg-gray-900">
-                  Belum ada data santri pada filter ini.
+                  Belum ada data camaba pada filter ini.
                 </td>
               </tr>
             )}

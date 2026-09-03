@@ -43,7 +43,7 @@ export default function Home() {
             <div className="max-w-3xl mx-auto text-center space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary-light/50 bg-primary/5 text-primary text-sm font-medium mb-4">
                 <Sparkles size={14} />
-                <span>Penerimaan Santri Baru Terbuka</span>
+                <span>Penerimaan Camaba Baru Terbuka</span>
               </div>
               
               <h1 className="text-4xl md:text-6xl font-bold font-heading text-text-primary leading-tight">

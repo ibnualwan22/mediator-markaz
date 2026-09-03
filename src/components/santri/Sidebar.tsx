@@ -25,7 +25,7 @@ const menuItems = [
   { name: "Pembayaran", href: "/santri/pembayaran", icon: <CreditCard size={20} /> },
   { name: "Pemberkasan", href: "/santri/pemberkasan", icon: <FolderCheck size={20} /> },
   { name: "Progres", href: "/santri/progres", icon: <LineChart size={20} /> },
-  { name: "Daurah Lughoh", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
+  { name: "Dauroh Lughoh & Ta'hili", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
 ];
 
 export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
@@ -47,7 +47,7 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
           <div className="w-7 h-7 bg-gradient-to-br from-primary to-primary-light rounded-lg flex items-center justify-center">
             <BookOpen size={13} className="text-white" />
           </div>
-          <span className="font-heading font-bold text-primary text-sm">Portal Santri</span>
+          <span className="font-heading font-bold text-primary text-sm">Portal Camaba</span>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-light rounded-lg flex items-center justify-center">
             <BookOpen size={16} className="text-white" />
           </div>
-          <div className="font-heading font-bold text-lg text-primary flex-1">Portal Santri</div>
+          <div className="font-heading font-bold text-lg text-primary flex-1">Portal Camaba</div>
           <button
             onClick={() => setIsOpen(false)}
             className="lg:hidden p-1.5 rounded-lg hover:bg-primary/5 text-text-secondary transition-colors"

@@ -14,11 +14,11 @@ export default function AdminLayoutClient({ children, user }: { children: React.
   const menuItems = [
     { name: "Dashboard", href: "/admin", icon: <LayoutDashboard size={20} /> },
     { name: "Periode & Gelombang", href: "/admin/periode", icon: <CalendarDays size={20} /> },
-    { name: "Data Santri", href: "/admin/santri", icon: <Users size={20} /> },
+    { name: "Data Camaba", href: "/admin/santri", icon: <Users size={20} /> },
     { name: "Pembayaran", href: "/admin/pembayaran", icon: <CreditCard size={20} /> },
     { name: "Pemberkasan", href: "/admin/pemberkasan", icon: <FolderCheck size={20} /> },
-    { name: "Daurah Lughoh", href: "/admin/darul-lughoh", icon: <BookOpen size={20} /> },
-    { name: "Progres Santri", href: "/admin/progres", icon: <LineChart size={20} /> },
+    { name: "Dauroh Lughoh & Ta'hili", href: "/admin/darul-lughoh", icon: <BookOpen size={20} /> },
+    { name: "Progres Camaba", href: "/admin/progres", icon: <LineChart size={20} /> },
   ];
 
   return (

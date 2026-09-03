@@ -27,8 +27,8 @@ export default async function DarulLughohSantriPage() {
     return (
       <div className="max-w-4xl space-y-6">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-text-primary">Level Darul Lughoh</h1>
-          <p className="text-text-secondary mt-1">Lacak penempatan level dan hasil ujian Darul Lughoh Anda.</p>
+          <h1 className="text-3xl font-heading font-bold text-text-primary">Level Dauroh Lughoh & Ta'hili</h1>
+          <p className="text-text-secondary mt-1">Lacak penempatan level dan hasil ujian Dauroh Lughoh & Ta'hili Anda.</p>
         </div>
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
           <BookOpen className="w-12 h-12 text-primary mb-3" />
@@ -63,8 +63,8 @@ export default async function DarulLughohSantriPage() {
   return (
     <div className="max-w-4xl space-y-6 pb-20">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-text-primary">Level Darul Lughoh</h1>
-        <p className="text-text-secondary mt-1">Lacak penempatan level, status pembayaran, dan hasil ujian Darul Lughoh.</p>
+        <h1 className="text-3xl font-heading font-bold text-text-primary">Level Dauroh Lughoh & Ta'hili</h1>
+        <p className="text-text-secondary mt-1">Lacak penempatan level, status pembayaran, dan hasil ujian Dauroh Lughoh & Ta'hili.</p>
       </div>
 
       {/* Current Level Highlight */}

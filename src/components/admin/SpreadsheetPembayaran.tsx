@@ -320,7 +320,7 @@ export default function SpreadsheetPembayaran({
             type="text"
             name="q"
             defaultValue={query}
-            placeholder="Cari NIS atau Nama..."
+            placeholder="Cari NIC atau Nama..."
             className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
           />
           <input type="hidden" name="gelombangId" value={selectedGelombangId} />
@@ -358,7 +358,7 @@ export default function SpreadsheetPembayaran({
 
                 {pktSantris.length === 0 ? (
                   <div className="p-6 bg-white dark:bg-gray-900 rounded-lg border border-primary-light/20 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400 italic text-sm shadow-sm inline-block min-w-full">
-                    Belum ada data santri di paket ini untuk gelombang yang dipilih.
+                    Belum ada data camaba di paket ini untuk gelombang yang dipilih.
                   </div>
                 ) : (
                   <div className="relative border border-primary-light/20 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 shadow-sm inline-block min-w-full">
@@ -366,13 +366,13 @@ export default function SpreadsheetPembayaran({
                       <thead className="sticky top-0 z-20 shadow-sm bg-[#faf9f5] dark:bg-gray-800">
                         {/* Header Row 1: Groups */}
                         <tr className="text-text-primary dark:text-gray-100 text-sm border-b border-primary-light/20 dark:border-gray-700">
-                          <th colSpan={2} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
+                          <th colSpan={2} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Camaba</th>
 
                           {tahap1 && tahap1.poinTahap.length > 0 && (
                             <th colSpan={tahap1.poinTahap.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold">{tahap1.nama}</th>
                           )}
 
-                          <th colSpan={6} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-amber-50 text-amber-700">Darul Lughoh (DL)</th>
+                          <th colSpan={6} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-amber-50 text-amber-700">Dauroh Lughoh & Ta'hili (DL)</th>
 
                           {remainingTahaps.map((t: any) => t.poinTahap.length > 0 && (
                             <th key={t.id} colSpan={t.poinTahap.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold">{t.nama}</th>
@@ -383,7 +383,7 @@ export default function SpreadsheetPembayaran({
 
                         {/* Header Row 2: Sub-columns */}
                         <tr className="text-text-secondary dark:text-gray-400 text-xs border-b border-primary-light/20 dark:border-gray-700">
-                          <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[90px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIS</th>
+                          <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[90px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
                           <th className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[170px] sticky left-[90px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
 
                           {tahap1 && tahap1.poinTahap.map((poin: any) => (

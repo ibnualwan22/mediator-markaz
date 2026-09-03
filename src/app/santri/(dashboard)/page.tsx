@@ -82,7 +82,7 @@ export default async function SantriProfilPage() {
                 {santri.nis && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-success/10 text-success text-sm font-bold rounded-full font-mono">
                     <Hash size={12} />
-                    NIS: {santri.nis}
+                    NIC: {santri.nis}
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">

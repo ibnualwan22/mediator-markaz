@@ -41,7 +41,7 @@ export default function MasterProgresManager({ tahaps, selectedPeriodeId, period
   const handleDelete = async (id: string) => {
     const res = await Swal.fire({
       title: 'Hapus Tahap?',
-      text: "Seluruh data progres santri yang bersangkutan akan lenyap!",
+      text: "Seluruh data progres camaba yang bersangkutan akan lenyap!",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',

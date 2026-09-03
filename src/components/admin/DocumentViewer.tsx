@@ -28,7 +28,7 @@ export default function DocumentViewer({ url, label = "Dokumen" }: { url: string
               <div className="flex items-center gap-2">
                 <a 
                   href={url} 
-                  download={`File_Santri_${label.replace(/\s+/g, "_")}`}
+                  download={`File_Camaba_${label.replace(/\s+/g, "_")}`}
                   title="Unduh Dokumen"
                   className="p-1.5 hover:bg-black dark:hover:bg-white/10 rounded-full transition-colors text-primary"
                 >
@@ -54,7 +54,7 @@ export default function DocumentViewer({ url, label = "Dokumen" }: { url: string
                   <p className="text-text-primary dark:text-gray-100 font-medium mb-4">File ini berupa Dokumen (Bukan Gambar).</p>
                   <a 
                     href={url} 
-                    download={`File_Santri_${label.replace(/\s+/g, "_")}`}
+                    download={`File_Camaba_${label.replace(/\s+/g, "_")}`}
                     className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-light transition-colors shadow-sm"
                   >
                     <Download size={18} /> Unduh File Saja

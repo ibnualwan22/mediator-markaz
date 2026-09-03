@@ -53,10 +53,10 @@ export default function SantriLoginPage() {
             <div className="absolute top-4 right-4 text-white/20">
               <Sparkles size={24} />
             </div>
-            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-white/20 shadow-lg">
-              <BookOpen size={36} className="text-white" />
+            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0 backdrop-blur-sm border border-white/30">
+              <BookOpen className="text-white w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-heading font-bold text-white relative z-10">Portal Santri</h1>
+            <h1 className="text-2xl font-heading font-bold text-white relative z-10">Portal Camaba</h1>
             <p className="text-white/80 mt-1.5 text-sm relative z-10">
               Markaz Arabiyah
             </p>
@@ -72,7 +72,7 @@ export default function SantriLoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-text-secondary">NIS (Nomor Induk Santri)</label>
+                <label className="text-sm font-medium text-text-secondary">NIC (Nomor Induk Camaba)</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary/50">
                     <User size={18} />
@@ -84,7 +84,7 @@ export default function SantriLoginPage() {
                     value={formData.nis}
                     onChange={(e) => setFormData((f) => ({ ...f, nis: e.target.value }))}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-primary-light/40 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-bg-cream/30"
-                    placeholder="Masukkan NIS"
+                    placeholder="Masukkan NIC"
                   />
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function SantriLoginPage() {
             </form>
 
             <p className="text-center text-xs text-text-secondary/60 mt-6">
-              Password default: NIS Anda
+              Password default: NIC Anda
             </p>
           </div>
         </div>

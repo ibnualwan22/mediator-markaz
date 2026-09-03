@@ -138,7 +138,7 @@ export default function SpreadsheetPemberkasan({
             type="text" 
             name="q"
             defaultValue={query}
-            placeholder="Cari NIS atau Nama..." 
+            placeholder="Cari NIC atau Nama..." 
             className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
           />
           <input type="hidden" name="gelombangId" value={selectedGelombangId} />
@@ -243,8 +243,8 @@ export default function SpreadsheetPemberkasan({
               <table className="w-full text-left border-collapse text-sm">
                 <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800 shadow-sm z-10 text-sm">
                   <tr>
-                    <th className="p-3 border-b border-primary-light/20 dark:border-gray-700">NIS / No. Urut</th>
-                    <th className="p-3 border-b border-primary-light/20 dark:border-gray-700">Nama Santri</th>
+                    <th className="p-3 border-b border-primary-light/20 dark:border-gray-700">NIC / No. Urut</th>
+                    <th className="p-3 border-b border-primary-light/20 dark:border-gray-700">Nama Camaba</th>
                     <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Periode & Gelombang</th>
                     <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Status Lapor</th>
                     {itemModalView === 'ARSIP' && <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Aksi / File</th>}
@@ -323,7 +323,7 @@ export default function SpreadsheetPemberkasan({
                       <tr>
                         <td colSpan={5} className="p-8 text-center bg-gray-50/50">
                           <CheckCircle2 size={32} className="mx-auto text-success/50 mb-2" />
-                          <div className="text-success font-bold text-sm">Semua Santri Sudah Lengkap!</div>
+                          <div className="text-success font-bold text-sm">Semua Camaba Sudah Lengkap!</div>
                         </td>
                       </tr>
                     )}
@@ -340,7 +340,7 @@ export default function SpreadsheetPemberkasan({
           <thead className="sticky top-0 z-20 bg-primary/10 shadow-sm text-sm text-text-primary dark:text-gray-100">
             {/* Header 1: Category Group */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
-              <th colSpan={3} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Santri</th>
+              <th colSpan={3} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Camaba</th>
               
               {indoCount > 0 && (
                 <th colSpan={indoCount} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">Berkas Dalam Negeri (INDONESIA)</th>
@@ -355,7 +355,7 @@ export default function SpreadsheetPemberkasan({
             {/* Header 2: Item Names */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
               <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[70px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">No. Urut</th>
-              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[100px] sticky left-[70px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIS</th>
+              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[100px] sticky left-[70px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
               <th className="p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[150px] sticky left-[170px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               
               {visibleItems.map(item => (
@@ -453,7 +453,7 @@ export default function SpreadsheetPemberkasan({
             {santriList.length === 0 && (
               <tr>
                 <td colSpan={visibleItems.length + 4} className="p-8 text-center italic text-text-secondary dark:text-gray-400 bg-white dark:bg-gray-900">
-                  Belum ada data santri pada filter ini.
+                  Belum ada data camaba pada filter ini.
                 </td>
               </tr>
             )}

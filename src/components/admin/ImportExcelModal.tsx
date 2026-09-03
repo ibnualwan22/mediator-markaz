@@ -75,7 +75,7 @@ export default function ImportExcelModal({
       return;
     }
     if (showGelombang && !selectedGelombang) {
-      Swal.fire({ icon: 'warning', title: 'Gelombang Kosong', text: 'Pilih gelombang penempatan santri' });
+      Swal.fire({ icon: 'warning', title: 'Gelombang Kosong', text: 'Pilih gelombang penempatan camaba' });
       return;
     }
 
@@ -124,7 +124,7 @@ export default function ImportExcelModal({
               <FileSpreadsheet size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-heading font-bold text-gray-800">Import Santri</h2>
+              <h2 className="text-xl font-heading font-bold text-gray-800">Import Camaba</h2>
               <p className="text-sm text-gray-500 mt-0.5">Tambah data massal dari file Excel</p>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function ImportExcelModal({
                   className="w-4 h-4 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary accent-primary"
                 />
                 <label htmlFor="overwriteCheckbox" className="text-sm text-gray-700 cursor-pointer select-none">
-                  Timpa data santri dengan Nama Lengkap yang sama (jika ada)
+                  Timpa data camaba dengan Nama Lengkap yang sama (jika ada)
                 </label>
               </div>
             </div>
@@ -226,7 +226,7 @@ export default function ImportExcelModal({
                    </div>
                    <h3 className="text-lg font-bold text-gray-800">Import Selesai!</h3>
                    <p className="text-sm text-gray-600 mt-2">
-                     Berhasil memasukkan <strong className="text-success">{result.summary.success}</strong> data santri.
+                     Berhasil memasukkan <strong className="text-success">{result.summary.success}</strong> data camaba.
                    </p>
                    {result.summary.failed > 0 && (
                      <p className="text-sm text-danger mt-1">
