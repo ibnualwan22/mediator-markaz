@@ -24,7 +24,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
     include: { periode: true },
     orderBy: { nama: 'asc' }
   });
-  
+
   const paketList = await prisma.paketPembayaran.findMany({
     orderBy: { urutan: 'asc' }
   });
@@ -85,9 +85,9 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
-          <WithdrawSantriButton 
-            santriId={santri.id} 
-            isWithdrawn={santri.isWithdrawn} 
+          <WithdrawSantriButton
+            santriId={santri.id}
+            isWithdrawn={santri.isWithdrawn}
             gelombangList={gelombangList}
             paketList={paketList}
           />
@@ -118,22 +118,14 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           <DataGroup title="4. Paspor & Konfirmasi" icon={<Globe size={20} />}>
             <DataItem label="Nomor Paspor" value={santri.nomorPaspor} />
             <DataItem label="Tanggal Kadaluarsa" value={santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toLocaleDateString() : null} />
-            <DataItem label="File Paspor" value={santri.filePaspor} isFile />
-            <div className="sm:col-span-2 mt-4">
-              <dt className="text-sm font-medium text-text-secondary dark:text-gray-400">Persetujuan Investasi</dt>
-              <dd className="mt-1 flex items-center gap-2 text-sm text-text-primary dark:text-gray-100 font-semibold">
-                <CheckCircle2 size={18} className={santri.setujuInvestasi ? "text-success" : "text-danger"} />
-                {santri.setujuInvestasi ? "Telah Disetujui" : "Belum Disetujui"}
-              </dd>
-            </div>
           </DataGroup>
-          
+
           {santri.isWithdrawn && santri.withdrawnNote && (
             <DataGroup title="5. Catatan Mundur" icon={<User size={20} />}>
               <div className="sm:col-span-2">
-                 <p className="text-sm font-semibold text-danger bg-danger/10 p-4 rounded-lg italic">
-                    &quot;{santri.withdrawnNote}&quot;
-                 </p>
+                <p className="text-sm font-semibold text-danger bg-danger/10 p-4 rounded-lg italic">
+                  &quot;{santri.withdrawnNote}&quot;
+                </p>
               </div>
             </DataGroup>
           )}
@@ -150,11 +142,6 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <h3 className="font-bold text-lg text-text-primary dark:text-gray-100">{santri.namaLengkap}</h3>
             <p className="text-sm font-medium text-text-secondary dark:text-gray-400 mt-1">{santri.gelombang.periode.nama} - {santri.gelombang.nama}</p>
           </div>
-
-          <DataGroup title="2. Dokumen Pribadi" icon={<FileText size={20} />}>
-            <DataItem label="Scan Akte Kelahiran" value={santri.fileAkteLahir} isFile />
-            <DataItem label="Pas Foto" value={santri.filePasFoto} isFile />
-          </DataGroup>
         </div>
       </div>
     </div>

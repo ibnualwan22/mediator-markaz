@@ -49,7 +49,7 @@ export default function PeriodeManager({ periodes }: { periodes: any[] }) {
                       <div className="flex items-center gap-3">
                         <span className="font-semibold">{g.nama}</span>
                         <span className="text-xs text-text-secondary dark:text-gray-400">
-                          ({new Date(g.tanggalBuka).toLocaleDateString()} - {new Date(g.tanggalTutup).toLocaleDateString()})
+                          ({new Date(g.tanggalBuka).toLocaleDateString('en-GB')} - {new Date(g.tanggalTutup).toLocaleDateString('en-GB')})
                         </span>
                       </div>
                       <button 
