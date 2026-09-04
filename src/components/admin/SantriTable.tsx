@@ -81,7 +81,6 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">Nama Lengkap</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">No. Paspor</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">Gelombang</th>
-              <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700">Status</th>
               <th className="p-4 font-semibold border-b border-primary-light/20 dark:border-gray-700 text-center">Aksi</th>
             </tr>
           </thead>
@@ -113,15 +112,6 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
                 </td>
                 <td className="p-4 text-text-secondary dark:text-gray-400">
                   {s.gelombang.periode.nama} <br/> <span className="font-medium text-xs border rounded px-1.5 py-0.5 mt-1 inline-block bg-white dark:bg-gray-900">{s.gelombang.nama}</span>
-                </td>
-                <td className="p-4">
-                  {s.isWithdrawn ? (
-                    <span className="px-2.5 py-1 bg-danger/10 text-danger font-bold text-xs rounded-full">Mundur</span>
-                  ) : s.isVerified ? (
-                    <span className="px-2.5 py-1 bg-success/10 text-success font-bold text-xs rounded-full">Terverifikasi</span>
-                  ) : (
-                    <span className="px-2.5 py-1 bg-warning/10 text-warning font-bold text-xs rounded-full">Menunggu</span>
-                  )}
                 </td>
                 <td className="p-4 text-center">
                   <Link 

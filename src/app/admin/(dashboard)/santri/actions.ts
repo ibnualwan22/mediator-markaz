@@ -62,15 +62,27 @@ export async function verifySantri(santriId: string) {
   // Build pembayaran records if paket exists
   const pembayaranRecords: any[] = [];
   if (paket) {
-    for (const tahap of paket.tahapPaket) {
-      for (const poin of tahap.poinTahap) {
+    for (let t = 0; t < paket.tahapPaket.length; t++) {
+      const tahap = paket.tahapPaket[t];
+      for (let p = 0; p < tahap.poinTahap.length; p++) {
+        const poin = tahap.poinTahap[p];
         const nominalActive = (tahap.isIjazahBased && isAgama && poin.nominalIjazah !== null) ? poin.nominalIjazah : poin.nominal;
+        
+        // Auto-pay Tahap 1 Poin 1 (Booking Rp 1.000.000)
+        let nominalDibayar = 0;
+        let isLunas = nominalActive === 0;
+        
+        if (t === 0 && p === 0) {
+          nominalDibayar = nominalActive;
+          isLunas = true; // Full bayar booking
+        }
+
         pembayaranRecords.push({
           santriId,
           poinTahapId: poin.id,
           nominalHarus: nominalActive,
-          nominalDibayar: 0,
-          isLunas: nominalActive === 0
+          nominalDibayar: nominalDibayar,
+          isLunas: isLunas
         });
       }
     }

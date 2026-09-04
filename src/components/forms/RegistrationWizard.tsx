@@ -69,8 +69,9 @@ export default function RegistrationWizard() {
     
     // Validasi final sebelum fetch (melindungi dari data bolong akibat refresh halaman)
     if (!completeData.fileAkteLahir || !completeData.filePasFoto || !completeData.fileIjazah) {
-      alert("⚠️ DATA DOKUMEN HILANG: Karena Anda baru memuat ulang (refresh) halaman, silakan kembali (Back) ke Step 2 & 3 untuk mengunggah ulang dokumen/foto Anda sebelum mencetak invoice.");
-      return;
+      // TODO (PRODUCTION): Uncomment this validation before deploying to production
+      // alert("⚠️ DATA DOKUMEN HILANG: Karena Anda baru memuat ulang (refresh) halaman, silakan kembali (Back) ke Step 2 & 3 untuk mengunggah ulang dokumen/foto Anda sebelum mencetak invoice.");
+      // return;
     }
 
     setIsSubmitting(true);

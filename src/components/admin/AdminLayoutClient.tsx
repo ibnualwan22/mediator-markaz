@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeProvider } from "./ThemeProvider";
 import ThemeToggle from "./ThemeToggle";
-import { Menu, X, LogOut, LayoutDashboard, CalendarDays, Users, CreditCard, FolderCheck, LineChart, BookOpen } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, CalendarDays, Users, CreditCard, FolderCheck, LineChart, BookOpen, UserPlus } from "lucide-react";
 
 export default function AdminLayoutClient({ children, user }: { children: React.ReactNode; user: any }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,6 +14,7 @@ export default function AdminLayoutClient({ children, user }: { children: React.
   const menuItems = [
     { name: "Dashboard", href: "/admin", icon: <LayoutDashboard size={20} /> },
     { name: "Periode & Gelombang", href: "/admin/periode", icon: <CalendarDays size={20} /> },
+    { name: "Pendaftaran Camaba", href: "/admin/pendaftaran", icon: <UserPlus size={20} /> },
     { name: "Data Camaba", href: "/admin/santri", icon: <Users size={20} /> },
     { name: "Pembayaran", href: "/admin/pembayaran", icon: <CreditCard size={20} /> },
     { name: "Pemberkasan", href: "/admin/pemberkasan", icon: <FolderCheck size={20} /> },
