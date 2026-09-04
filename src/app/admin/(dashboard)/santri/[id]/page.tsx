@@ -112,7 +112,6 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           <DataGroup title="3. Riwayat Akademik" icon={<GraduationCap size={20} />}>
             <DataItem label="Pendidikan Terakhir" value={santri.riwayatAkademik === 'LAINNYA' ? santri.riwayatAkademikLainnya : santri.riwayatAkademik} />
             <DataItem label="Tahun Kelulusan" value={santri.tahunKelulusan} />
-            <DataItem label="Scan Ijazah" value={santri.fileIjazah} isFile />
           </DataGroup>
 
           <DataGroup title="4. Paspor & Konfirmasi" icon={<Globe size={20} />}>
