@@ -78,7 +78,7 @@ export default function SpreadsheetPemberkasan({
     setBulkLoading(prev => { const next = new Set(prev); next.delete(itemId); return next; });
   }, [santriList, router]);
 
-  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string) => {
+  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string, gelombangNama?: string, periodeNama?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
@@ -89,6 +89,8 @@ export default function SpreadsheetPemberkasan({
       formData.append("file", file);
       formData.append("santriName", santriName);
       formData.append("documentName", documentName);
+      if (gelombangNama) formData.append("gelombangNama", gelombangNama);
+      if (periodeNama) formData.append("periodeNama", periodeNama);
 
       const res = await fetch("/api/upload-drive", {
         method: "POST",
@@ -370,7 +372,7 @@ export default function SpreadsheetPemberkasan({
                                           type="file" 
                                           className="hidden" 
                                           accept=".pdf,.jpg,.jpeg,.png"
-                                          onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, activeItemModal.nama)}
+                                          onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, activeItemModal.nama, santri.gelombang?.nama, santri.gelombang?.periode?.nama)}
                                           disabled={cellLoading}
                                         />
                                       </label>
@@ -496,7 +498,7 @@ export default function SpreadsheetPemberkasan({
                                      type="file" 
                                      className="hidden" 
                                      accept=".pdf,.jpg,.jpeg,.png"
-                                     onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, item.nama)}
+                                     onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, item.nama, santri.gelombang?.nama, santri.gelombang?.periode?.nama)}
                                      disabled={cellLoading}
                                    />
                                 </label>

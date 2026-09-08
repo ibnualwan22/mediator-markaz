@@ -47,7 +47,7 @@ export default function SpreadsheetProgres({
     removeLoading(progresSantriId);
   }, [router]);
 
-  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string) => {
+  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string, gelombangNama?: string, periodeNama?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
     // Reset input so the same file can be re-selected if needed
@@ -59,6 +59,8 @@ export default function SpreadsheetProgres({
       formData.append("file", file);
       formData.append("santriName", santriName);
       formData.append("documentName", documentName);
+      if (gelombangNama) formData.append("gelombangNama", gelombangNama);
+      if (periodeNama) formData.append("periodeNama", periodeNama);
 
       const res = await fetch("/api/upload-drive", {
         method: "POST",
@@ -231,7 +233,7 @@ export default function SpreadsheetProgres({
                                      type="file" 
                                      className="hidden" 
                                      accept=".pdf,.jpg,.jpeg,.png"
-                                     onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, tahap.nama)}
+                                     onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, tahap.nama, santri.gelombang?.nama, santri.gelombang?.periode?.nama)}
                                      disabled={cellLoading}
                                    />
                                 </label>

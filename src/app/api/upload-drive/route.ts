@@ -11,6 +11,10 @@ export async function POST(req: Request) {
     let santriName = formData.get("santriName") as string;
     const documentName = formData.get("documentName") as string; // e.g. "Pas Foto", "Akte Kelahiran"
 
+    // Optional: admin spreadsheet can pass the santri's actual gelombang/periode
+    const overrideGelombang = formData.get("gelombangNama") as string | null;
+    const overridePeriode = formData.get("periodeNama") as string | null;
+
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
     }
@@ -19,18 +23,28 @@ export async function POST(req: Request) {
       santriName = "Tanpa Nama"; // fallback if user hasn't filled Step 1 completely
     }
 
-    // 1. Dapatkan Gelombang dan Periode Aktif
-    const activeGelombang = await prisma.gelombang.findFirst({
-      where: { isActive: true },
-      include: { periode: true },
-    });
+    let periodeNama: string;
+    let gelombangNama: string;
 
-    if (!activeGelombang) {
-      return NextResponse.json({ error: "Pendaftaran sedang ditutup. Tidak ada gelombang aktif." }, { status: 400 });
+    if (overrideGelombang && overridePeriode) {
+      // Use the santri's actual gelombang/periode (from admin spreadsheet)
+      periodeNama = overridePeriode.replace(/\//g, "-");
+      gelombangNama = overrideGelombang.replace(/\//g, "-");
+    } else {
+      // Fallback: use active gelombang (for santri self-registration)
+      const activeGelombang = await prisma.gelombang.findFirst({
+        where: { isActive: true },
+        include: { periode: true },
+      });
+
+      if (!activeGelombang) {
+        return NextResponse.json({ error: "Pendaftaran sedang ditutup. Tidak ada gelombang aktif." }, { status: 400 });
+      }
+
+      periodeNama = activeGelombang.periode.nama.replace(/\//g, "-");
+      gelombangNama = activeGelombang.nama.replace(/\//g, "-");
     }
 
-    const periodeNama = activeGelombang.periode.nama.replace(/\//g, "-"); // safe folder name
-    const gelombangNama = activeGelombang.nama.replace(/\//g, "-");
     const safeSantriName = santriName.replace(/\//g, "-");
 
     // 2. Siapkan Folder Google Drive (Otomatis)

@@ -37,7 +37,8 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
       ]
     },
     include: {
-      progresSantri: true
+      progresSantri: true,
+      gelombang: { include: { periode: true } }
     },
     orderBy: [
       { nomorUrut: 'asc' },
