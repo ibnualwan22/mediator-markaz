@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
-import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle } from "lucide-react";
+import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2 } from "lucide-react";
 
 export default function SpreadsheetPemberkasan({
   santriList,
@@ -23,7 +23,10 @@ export default function SpreadsheetPemberkasan({
   selectedPeriodeId: string;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingCells, setLoadingCells] = useState<Set<string>>(new Set());
+  const [optimisticData, setOptimisticData] = useState<Record<string, { sudahDikumpulkan?: boolean; fileUrl?: string | null }>>({});
+  const [isPending, startTransition] = useTransition();
+  const [bulkLoading, setBulkLoading] = useState<Set<string>>(new Set());
   const [filterKategori, setFilterKategori] = useState<"ALL" | "INDONESIA" | "MESIR">("ALL");
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState<any | null>(null);
@@ -34,13 +37,22 @@ export default function SpreadsheetPemberkasan({
   const indoCount = visibleItems.filter(i => i.kategori === 'INDONESIA').length;
   const mesirCount = visibleItems.filter(i => i.kategori === 'MESIR').length;
 
-  const handleToggle = async (pemberkasanId: string, currentStatus: boolean) => {
-    setIsLoading(true);
-    await toggleCheckboxPemberkasan(pemberkasanId, !currentStatus);
-    setIsLoading(false);
-  };
+  const addLoading = (id: string) => setLoadingCells(prev => new Set(prev).add(id));
+  const removeLoading = (id: string) => setLoadingCells(prev => { const next = new Set(prev); next.delete(id); return next; });
 
-  const handleCheckAll = async (itemId: string) => {
+  const handleToggle = useCallback(async (pemberkasanId: string, currentStatus: boolean) => {
+    addLoading(pemberkasanId);
+    setOptimisticData(prev => ({ ...prev, [pemberkasanId]: { ...prev[pemberkasanId], sudahDikumpulkan: !currentStatus } }));
+    try {
+      await toggleCheckboxPemberkasan(pemberkasanId, !currentStatus);
+      startTransition(() => router.refresh());
+    } catch {
+      setOptimisticData(prev => ({ ...prev, [pemberkasanId]: { ...prev[pemberkasanId], sudahDikumpulkan: currentStatus } }));
+    }
+    removeLoading(pemberkasanId);
+  }, [router]);
+
+  const handleCheckAll = useCallback(async (itemId: string) => {
     const idsToUpdate: string[] = [];
     for (const santri of santriList) {
       const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === itemId);
@@ -49,16 +61,29 @@ export default function SpreadsheetPemberkasan({
       }
     }
     if (idsToUpdate.length === 0) return;
-    setIsLoading(true);
-    await bulkToggleCheckboxPemberkasan(idsToUpdate, true);
-    setIsLoading(false);
-  };
+    setBulkLoading(prev => new Set(prev).add(itemId));
+    // Optimistic: mark all as checked
+    const updates: Record<string, { sudahDikumpulkan?: boolean; fileUrl?: string | null }> = {};
+    idsToUpdate.forEach(id => { updates[id] = { sudahDikumpulkan: true }; });
+    setOptimisticData(prev => ({ ...prev, ...updates }));
+    try {
+      await bulkToggleCheckboxPemberkasan(idsToUpdate, true);
+      startTransition(() => router.refresh());
+    } catch {
+      // Revert
+      const reverts: Record<string, { sudahDikumpulkan?: boolean; fileUrl?: string | null }> = {};
+      idsToUpdate.forEach(id => { reverts[id] = { sudahDikumpulkan: false }; });
+      setOptimisticData(prev => ({ ...prev, ...reverts }));
+    }
+    setBulkLoading(prev => { const next = new Set(prev); next.delete(itemId); return next; });
+  }, [santriList, router]);
 
-  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string) => {
+  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
 
-    setIsLoading(true);
+    addLoading(recordId);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -72,17 +97,20 @@ export default function SpreadsheetPemberkasan({
       const data = await res.json();
 
       if (data.success && data.secure_url) {
-        await updateFileUrl(recordId, data.secure_url);
-        // Automatically check the item if not already checked
-        await toggleCheckboxPemberkasan(recordId, true);
+        setOptimisticData(prev => ({ ...prev, [recordId]: { sudahDikumpulkan: true, fileUrl: data.secure_url } }));
+        await Promise.all([
+          updateFileUrl(recordId, data.secure_url),
+          toggleCheckboxPemberkasan(recordId, true)
+        ]);
+        startTransition(() => router.refresh());
       } else {
         alert(data.error || "Gagal mengupload file");
       }
     } catch (err: any) {
       alert("Terjadi kesalahan: " + err.message);
     }
-    setIsLoading(false);
-  };
+    removeLoading(recordId);
+  }, [router]);
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-10rem)] md:h-[calc(100vh-12rem)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
@@ -235,7 +263,7 @@ export default function SpreadsheetPemberkasan({
                      <UploadCloud size={14}/> Arsip Dokumen
                    </button>
                 </div>
-                <button disabled={isLoading} onClick={() => setActiveItemModal(null)} className="text-text-secondary dark:text-gray-400 p-1 hover:text-danger rounded-lg transition-colors"><X size={24} /></button>
+                <button onClick={() => setActiveItemModal(null)} className="text-text-secondary dark:text-gray-400 p-1 hover:text-danger rounded-lg transition-colors"><X size={24} /></button>
               </div>
             </div>
             
@@ -273,40 +301,58 @@ export default function SpreadsheetPemberkasan({
                              <div className="text-sm text-text-secondary dark:text-gray-400">{santri.gelombang?.nama || '-'}</div>
                           </td>
                           <td className="p-3 text-center">
-                            <label className={`inline-flex items-center gap-2 cursor-pointer ${isLoading ? 'opacity-50' : 'hover:bg-primary-light/10'} p-1.5 rounded transition-colors`}>
-                              <input 
-                                 type="checkbox" 
-                                 checked={record?.sudahDikumpulkan || false}
-                                 onChange={() => record && handleToggle(record.id, record.sudahDikumpulkan)}
-                                 disabled={!record || isLoading}
-                                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success"
-                              />
-                              <span className="text-sm font-medium">{record?.sudahDikumpulkan ? 'Lengkap' : 'Kurang'}</span>
-                            </label>
+                            {(() => {
+                              const opt = record ? optimisticData[record.id] : undefined;
+                              const isChecked = opt?.sudahDikumpulkan ?? record?.sudahDikumpulkan ?? false;
+                              const cellLoading = record ? loadingCells.has(record.id) : false;
+                              return (
+                                <label className={`inline-flex items-center gap-2 cursor-pointer ${cellLoading ? 'opacity-50' : 'hover:bg-primary-light/10'} p-1.5 rounded transition-colors`}>
+                                  {cellLoading ? (
+                                    <Loader2 size={16} className="animate-spin text-primary" />
+                                  ) : (
+                                    <input 
+                                       type="checkbox" 
+                                       checked={isChecked}
+                                       onChange={() => record && handleToggle(record.id, isChecked)}
+                                       disabled={!record}
+                                       className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success"
+                                    />
+                                  )}
+                                  <span className="text-sm font-medium">{isChecked ? 'Lengkap' : 'Kurang'}</span>
+                                </label>
+                              );
+                            })()}
                           </td>
                           {itemModalView === 'ARSIP' && (
                             <td className="p-3 text-center">
                               {record ? (
-                                <div className="flex flex-col items-center gap-2">
-                                  {record.fileUrl ? (
-                                    <a href={record.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors">
-                                      <span>Sudah Diupload</span> <CheckCircle2 size={12} />
-                                    </a>
-                                  ) : (
-                                    <div className="text-sm text-text-secondary dark:text-gray-400 w-full">Belum Upload</div>
-                                  )}
-                                  
-                                  <label className={`text-sm bg-primary text-white px-2 py-1 rounded cursor-pointer hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 w-full max-w-[120px] ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                    <UploadCloud size={12} /> {record.fileUrl ? 'Ganti File' : 'Upload Dokumen'}
-                                    <input 
-                                      type="file" 
-                                      className="hidden" 
-                                      accept=".pdf,.jpg,.jpeg,.png"
-                                      onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, activeItemModal.nama)}
-                                      disabled={isLoading}
-                                    />
-                                  </label>
-                                </div>
+                                (() => {
+                                  const opt = optimisticData[record.id];
+                                  const cellFileUrl = opt?.fileUrl ?? record.fileUrl;
+                                  const cellLoading = loadingCells.has(record.id);
+                                  return (
+                                    <div className="flex flex-col items-center gap-2">
+                                      {cellFileUrl ? (
+                                        <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors">
+                                          <span>Sudah Diupload</span> <CheckCircle2 size={12} />
+                                        </a>
+                                      ) : (
+                                        <div className="text-sm text-text-secondary dark:text-gray-400 w-full">Belum Upload</div>
+                                      )}
+                                      
+                                      <label className={`text-sm bg-primary text-white px-2 py-1 rounded cursor-pointer hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 w-full max-w-[120px] ${cellLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                        {cellLoading ? <Loader2 size={12} className="animate-spin" /> : <UploadCloud size={12} />} {cellFileUrl ? 'Ganti File' : 'Upload Dokumen'}
+                                        <input 
+                                          type="file" 
+                                          className="hidden" 
+                                          accept=".pdf,.jpg,.jpeg,.png"
+                                          onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, activeItemModal.nama)}
+                                          disabled={cellLoading}
+                                        />
+                                      </label>
+                                    </div>
+                                  );
+                                })()
                               ) : (
                                 <span className="text-gray-300 text-sm italic">No record</span>
                               )}
@@ -366,10 +412,10 @@ export default function SpreadsheetPemberkasan({
                   </div>
                   <button 
                     onClick={() => handleCheckAll(item.id)}
-                    disabled={isLoading}
+                    disabled={bulkLoading.has(item.id)}
                     className="mt-1.5 w-full text-sm bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
                   >
-                    CHECK ALL
+                    {bulkLoading.has(item.id) ? <Loader2 size={12} className="animate-spin mx-auto" /> : 'CHECK ALL'}
                   </button>
                 </th>
               ))}
@@ -392,39 +438,46 @@ export default function SpreadsheetPemberkasan({
                   
                   {visibleItems.map(item => {
                     const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === item.id);
+                    const opt = record ? optimisticData[record.id] : undefined;
+                    const isChecked = opt?.sudahDikumpulkan ?? record?.sudahDikumpulkan ?? false;
+                    const cellFileUrl = opt?.fileUrl ?? record?.fileUrl ?? null;
+                    const cellLoading = record ? loadingCells.has(record.id) : false;
                     
-                    if (record && record.sudahDikumpulkan) {
+                    if (isChecked) {
                       totalSelesai++;
-                    } else if (item.isActive && !record?.sudahDikumpulkan) {
+                    } else if (item.isActive && !isChecked) {
                       requiredItemsLeft++;
                     }
 
                     return (
-                      <td key={item.id} className={`border-r border-primary-light/10 dark:border-gray-700 text-center transition-colors ${record?.sudahDikumpulkan ? 'bg-success/5 hover:bg-success/10' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:bg-gray-800'}`}>
+                      <td key={item.id} className={`border-r border-primary-light/10 dark:border-gray-700 text-center transition-colors ${isChecked ? 'bg-success/5 hover:bg-success/10' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:bg-gray-800'}`}>
                         {record ? (
                           <div className="flex flex-col items-center justify-between h-full p-2 gap-2">
-                            <input 
-                               type="checkbox" 
-                               checked={record.sudahDikumpulkan}
-                               onChange={() => !isLoading && handleToggle(record.id, record.sudahDikumpulkan)}
-                               className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success cursor-pointer disabled:opacity-50"
-                               disabled={isLoading}
-                            />
+                            {cellLoading ? (
+                              <Loader2 size={16} className="animate-spin text-primary" />
+                            ) : (
+                              <input 
+                                 type="checkbox" 
+                                 checked={isChecked}
+                                 onChange={() => handleToggle(record.id, isChecked)}
+                                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success cursor-pointer"
+                              />
+                            )}
                             
                             <div className="w-full">
-                              {!record.fileUrl ? (
-                                <label className={`text-sm font-bold text-white bg-primary px-1.5 py-0.5 rounded cursor-pointer opacity-70 hover:opacity-100 flex items-center justify-center gap-1 w-full whitespace-nowrap ${isLoading ? 'pointer-events-none' : ''}`}>
+                              {!cellFileUrl ? (
+                                <label className={`text-sm font-bold text-white bg-primary px-1.5 py-0.5 rounded cursor-pointer opacity-70 hover:opacity-100 flex items-center justify-center gap-1 w-full whitespace-nowrap ${cellLoading ? 'pointer-events-none opacity-50' : ''}`}>
                                    <UploadCloud size={10} /> Upload
                                    <input 
                                      type="file" 
                                      className="hidden" 
                                      accept=".pdf,.jpg,.jpeg,.png"
                                      onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, item.nama)}
-                                     disabled={isLoading}
+                                     disabled={cellLoading}
                                    />
                                 </label>
                               ) : (
-                                <a href={record.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full hover:bg-blue-100 whitespace-nowrap" title="Buka Dokumen">
+                                <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full hover:bg-blue-100 whitespace-nowrap" title="Buka Dokumen">
                                   <span>Diupload ✓</span>
                                 </a>
                               )}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { UploadCloud, CheckCircle2 } from "lucide-react";
+import { useState, useTransition, useCallback } from "react";
+import { UploadCloud, CheckCircle2, Loader2 } from "lucide-react";
 import { toggleCheckboxProgres, updateProgresFileUrl } from "@/app/admin/(dashboard)/progres/actions";
 import { useRouter } from "next/navigation";
 
@@ -23,22 +23,37 @@ export default function SpreadsheetProgres({
   selectedPeriodeId: string;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingCells, setLoadingCells] = useState<Set<string>>(new Set());
+  const [optimisticData, setOptimisticData] = useState<Record<string, { selesai?: boolean; fileUrl?: string | null }>>({}); 
+  const [isPending, startTransition] = useTransition();
 
   const activeTahaps = tahaps.filter(t => t.isActive);
   const inactiveTahapsCount = tahaps.length - activeTahaps.length;
 
-  const handleToggle = async (progresSantriId: string, currentStatus: boolean) => {
-    setIsLoading(true);
-    await toggleCheckboxProgres(progresSantriId, !currentStatus);
-    setIsLoading(false);
-  };
+  const addLoading = (id: string) => setLoadingCells(prev => new Set(prev).add(id));
+  const removeLoading = (id: string) => setLoadingCells(prev => { const next = new Set(prev); next.delete(id); return next; });
 
-  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string) => {
+  const handleToggle = useCallback(async (progresSantriId: string, currentStatus: boolean) => {
+    addLoading(progresSantriId);
+    // Optimistic update
+    setOptimisticData(prev => ({ ...prev, [progresSantriId]: { ...prev[progresSantriId], selesai: !currentStatus } }));
+    try {
+      await toggleCheckboxProgres(progresSantriId, !currentStatus);
+      startTransition(() => router.refresh());
+    } catch {
+      // Revert on error
+      setOptimisticData(prev => ({ ...prev, [progresSantriId]: { ...prev[progresSantriId], selesai: currentStatus } }));
+    }
+    removeLoading(progresSantriId);
+  }, [router]);
+
+  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, recordId: string, santriName: string, documentName: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so the same file can be re-selected if needed
+    e.target.value = '';
 
-    setIsLoading(true);
+    addLoading(recordId);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -52,17 +67,22 @@ export default function SpreadsheetProgres({
       const data = await res.json();
 
       if (data.success && data.secure_url) {
-        await updateProgresFileUrl(recordId, data.secure_url);
-        // Automatically check the item if not already checked
-        await toggleCheckboxProgres(recordId, true);
+        // Optimistic update: show uploaded state immediately
+        setOptimisticData(prev => ({ ...prev, [recordId]: { selesai: true, fileUrl: data.secure_url } }));
+        // Fire server actions without blocking UI
+        await Promise.all([
+          updateProgresFileUrl(recordId, data.secure_url),
+          toggleCheckboxProgres(recordId, true)
+        ]);
+        startTransition(() => router.refresh());
       } else {
         alert(data.error || "Gagal mengupload file");
       }
     } catch (err: any) {
       alert("Terjadi kesalahan: " + err.message);
     }
-    setIsLoading(false);
-  };
+    removeLoading(recordId);
+  }, [router]);
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-12rem)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
@@ -161,8 +181,12 @@ export default function SpreadsheetProgres({
                   
                   {tahaps.map(tahap => {
                     const record = santri.progresSantri.find((p: any) => p.tahapProgresId === tahap.id);
+                    const opt = record ? optimisticData[record.id] : undefined;
+                    const isSelesai = opt?.selesai ?? record?.selesai ?? false;
+                    const cellFileUrl = opt?.fileUrl ?? record?.fileUrl ?? null;
+                    const cellLoading = record ? loadingCells.has(record.id) : false;
                     
-                    if (record && record.selesai) {
+                    if (isSelesai) {
                       totalSelesai++;
                     }
                     if (tahap.isActive) {
@@ -170,31 +194,34 @@ export default function SpreadsheetProgres({
                     }
 
                     return (
-                      <td key={tahap.id} className={`p-2 border-r border-primary-light/10 dark:border-gray-700 text-center transition-colors ${record?.selesai ? 'bg-success/5 hover:bg-success/10' : (!tahap.isActive ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:bg-gray-800')}`}>
+                      <td key={tahap.id} className={`p-2 border-r border-primary-light/10 dark:border-gray-700 text-center transition-colors ${isSelesai ? 'bg-success/5 hover:bg-success/10' : (!tahap.isActive ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:bg-gray-800')}`}>
                         {record ? (
                           <div className="flex flex-col items-center justify-between h-full p-1 gap-2">
-                            <input 
-                               type="checkbox" 
-                               checked={record.selesai}
-                               onChange={() => !isLoading && handleToggle(record.id, record.selesai)}
-                               className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success cursor-pointer disabled:opacity-50"
-                               disabled={isLoading}
-                            />
+                            {cellLoading ? (
+                              <Loader2 size={16} className="animate-spin text-primary" />
+                            ) : (
+                              <input 
+                                 type="checkbox" 
+                                 checked={isSelesai}
+                                 onChange={() => handleToggle(record.id, isSelesai)}
+                                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success cursor-pointer"
+                              />
+                            )}
                             
                             <div className="w-full">
-                              {!record.fileUrl ? (
-                                <label className={`text-xs font-bold text-white bg-primary px-1.5 py-0.5 rounded cursor-pointer opacity-70 hover:opacity-100 flex items-center justify-center gap-1 w-full whitespace-nowrap ${isLoading ? 'pointer-events-none' : ''}`}>
+                              {!cellFileUrl ? (
+                                <label className={`text-xs font-bold text-white bg-primary px-1.5 py-0.5 rounded cursor-pointer opacity-70 hover:opacity-100 flex items-center justify-center gap-1 w-full whitespace-nowrap ${cellLoading ? 'pointer-events-none opacity-50' : ''}`}>
                                    <UploadCloud size={10} /> Upload
                                    <input 
                                      type="file" 
                                      className="hidden" 
                                      accept=".pdf,.jpg,.jpeg,.png"
                                      onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, tahap.nama)}
-                                     disabled={isLoading}
+                                     disabled={cellLoading}
                                    />
                                 </label>
                               ) : (
-                                <a href={record.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full hover:bg-blue-100 whitespace-nowrap" title="Buka Dokumen">
+                                <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full hover:bg-blue-100 whitespace-nowrap" title="Buka Dokumen">
                                   <span>Diupload ✓</span>
                                 </a>
                               )}
