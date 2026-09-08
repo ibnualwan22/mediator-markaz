@@ -25,7 +25,7 @@ export default function SpreadsheetPemberkasan({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [filterKategori, setFilterKategori] = useState<"ALL" | "INDONESIA" | "MESIR">("ALL");
-  const [summaryExpanded, setSummaryExpanded] = useState(true);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState<any | null>(null);
   const [itemModalView, setItemModalView] = useState<'MISSING' | 'ARSIP'>('MISSING');
 

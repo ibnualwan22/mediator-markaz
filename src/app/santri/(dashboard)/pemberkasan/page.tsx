@@ -2,6 +2,7 @@ import { getSantriSession } from "@/lib/santri-auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { FolderCheck, CheckCircle2, Clock, AlertCircle, Download } from "lucide-react";
+import CollapsibleCategory from "@/components/santri/CollapsibleCategory";
 
 export default async function PemberkasanSantriPage() {
   const session = await getSantriSession();
@@ -32,7 +33,7 @@ export default async function PemberkasanSantriPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-7xl space-y-6">
         <div>
           <h1 className="text-3xl font-heading font-bold text-text-primary">Status Pemberkasan</h1>
           <p className="text-text-secondary mt-1">Lacak kelengkapan dokumen pendaftaran Anda.</p>
@@ -74,7 +75,7 @@ export default async function PemberkasanSantriPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6 pb-20">
+    <div className="max-w-7xl space-y-6 pb-20">
       <div>
         <h1 className="text-3xl font-heading font-bold text-text-primary">Status Pemberkasan</h1>
         <p className="text-text-secondary mt-1">Lacak kelengkapan dokumen pendaftaran Anda. Data hanya bisa diubah oleh admin.</p>
@@ -133,23 +134,16 @@ export default async function PemberkasanSantriPage() {
         const kComplete = kCount === kCollected;
 
         return (
-          <div key={kategori} className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden">
-            <div className={`p-5 flex items-center justify-between border-b ${kComplete ? 'bg-success/5 border-success/20' : 'bg-bg-cream border-primary-light/20'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kComplete ? 'bg-success text-white' : 'bg-white text-primary border border-primary/20 shadow-sm'}`}>
-                  {kComplete ? <CheckCircle2 size={20} /> : <FolderCheck size={20} />}
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-text-primary">Berkas {kategori}</h3>
-                  <p className="text-xs text-text-secondary">
-                    {kComplete ? 'Semua berkas terkumpul' : `${kCollected} dari ${kCount} dikumpulkan`}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="divide-y divide-primary-light/10">
+          <CollapsibleCategory
+            key={kategori}
+            kategori={kategori}
+            isComplete={kComplete}
+            collected={kCollected}
+            total={kCount}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2">
               {kItems.map((item, idx) => (
-                <div key={item.id} className="p-4 sm:p-5 flex gap-4 hover:bg-bg-cream/50 transition-colors">
+                <div key={item.id} className={`p-4 sm:p-5 flex gap-4 hover:bg-bg-cream/50 transition-colors border-b border-primary-light/10 lg:odd:border-r`}>
                   <div className="mt-0.5 relative shrink-0">
                     <div className={`w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors ${
                       item.sudahDikumpulkan 
@@ -159,7 +153,7 @@ export default async function PemberkasanSantriPage() {
                       <CheckCircle2 size={14} className={item.sudahDikumpulkan ? 'opacity-100' : 'opacity-0'} />
                     </div>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className={`font-medium ${item.sudahDikumpulkan ? 'text-text-primary' : 'text-text-secondary'}`}>
                       {item.nama}
                     </p>
@@ -195,7 +189,7 @@ export default async function PemberkasanSantriPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </CollapsibleCategory>
         );
       })}
     </div>
