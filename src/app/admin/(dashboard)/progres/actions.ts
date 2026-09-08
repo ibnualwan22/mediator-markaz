@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { deleteFileFromDrive } from "@/lib/googleDrive";
 
 export async function toggleCheckboxProgres(progresSantriId: string, status: boolean) {
   try {
@@ -23,6 +24,16 @@ export async function toggleCheckboxProgres(progresSantriId: string, status: boo
 
 export async function updateProgresFileUrl(id: string, fileUrl: string | null) {
   try {
+    if (fileUrl === null) {
+      const record = await prisma.progresSantri.findUnique({ where: { id } });
+      if (record?.fileUrl) {
+         const match = record.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+         if (match) {
+             await deleteFileFromDrive(match[1]).catch(e => console.error("Drive delete error", e));
+         }
+      }
+    }
+
     await prisma.progresSantri.update({
       where: { id },
       data: { fileUrl }

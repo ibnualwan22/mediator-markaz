@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
-import { UploadCloud, CheckCircle2, Loader2 } from "lucide-react";
+import { UploadCloud, CheckCircle2, Loader2, Trash2 } from "lucide-react";
 import { toggleCheckboxProgres, updateProgresFileUrl } from "@/app/admin/(dashboard)/progres/actions";
 import { useRouter } from "next/navigation";
 
@@ -80,6 +80,21 @@ export default function SpreadsheetProgres({
       }
     } catch (err: any) {
       alert("Terjadi kesalahan: " + err.message);
+    }
+    removeLoading(recordId);
+  }, [router]);
+
+  const handleDeleteFile = useCallback(async (recordId: string) => {
+    if (!confirm("Yakin ingin menghapus dokumen ini? File di Google Drive juga akan ikut terhapus.")) return;
+
+    addLoading(recordId);
+    try {
+      setOptimisticData(prev => ({ ...prev, [recordId]: { ...prev[recordId], fileUrl: null } }));
+      await updateProgresFileUrl(recordId, null);
+      startTransition(() => router.refresh());
+    } catch (err: any) {
+      alert("Gagal menghapus dokumen: " + err.message);
+      // Revert optimistic delete on error (if previous fileUrl was saved somewhere)
     }
     removeLoading(recordId);
   }, [router]);
@@ -221,9 +236,19 @@ export default function SpreadsheetProgres({
                                    />
                                 </label>
                               ) : (
-                                <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full hover:bg-blue-100 whitespace-nowrap" title="Buka Dokumen">
-                                  <span>Diupload ✓</span>
-                                </a>
+                                <div className="flex items-stretch justify-center h-full gap-0.5">
+                                  <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
+                                    <span className="truncate">Diupload ✓</span>
+                                  </a>
+                                  <button 
+                                    onClick={() => handleDeleteFile(record.id)}
+                                    disabled={cellLoading}
+                                    title="Hapus Dokumen"
+                                    className="bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger-dark px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 flex items-center justify-center"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </div>

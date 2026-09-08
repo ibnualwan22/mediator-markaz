@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { deleteFileFromDrive } from "@/lib/googleDrive";
 
 export async function createItemPemberkasan(data: { nama: string; tipe: string; isWajib: boolean; urutan: number }) {
   const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
@@ -108,6 +109,16 @@ export async function updateStatusPemberkasan(id: string, status: string, catata
 }
 
 export async function updateFileUrl(id: string, fileUrl: string | null) {
+  if (fileUrl === null) {
+    const record = await prisma.pemberkasanSantri.findUnique({ where: { id } });
+    if (record?.fileUrl) {
+       const match = record.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+       if (match) {
+           await deleteFileFromDrive(match[1]).catch(e => console.error("Drive delete error", e));
+       }
+    }
+  }
+
   await prisma.pemberkasanSantri.update({
     where: { id },
     data: { fileUrl }

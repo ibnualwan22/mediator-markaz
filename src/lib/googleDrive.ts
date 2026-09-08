@@ -163,3 +163,17 @@ export async function uploadFileToDrive(
     throw error;
   }
 }
+
+/**
+ * Deletes a file from Google Drive by its ID.
+ */
+export async function deleteFileFromDrive(fileId: string) {
+  const drive = getDriveClient();
+  try {
+    await drive.files.delete({ fileId });
+    return true;
+  } catch (error) {
+    console.error(`Error deleting file ${fileId}:`, error);
+    throw error;
+  }
+}

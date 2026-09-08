@@ -3,7 +3,7 @@
 import { useState, useTransition, useCallback } from "react";
 import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
-import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2 } from "lucide-react";
+import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2 } from "lucide-react";
 
 export default function SpreadsheetPemberkasan({
   santriList,
@@ -108,6 +108,20 @@ export default function SpreadsheetPemberkasan({
       }
     } catch (err: any) {
       alert("Terjadi kesalahan: " + err.message);
+    }
+    removeLoading(recordId);
+  }, [router]);
+
+  const handleDeleteFile = useCallback(async (recordId: string) => {
+    if (!confirm("Yakin ingin menghapus dokumen ini? File di Google Drive juga akan ikut terhapus.")) return;
+
+    addLoading(recordId);
+    try {
+      setOptimisticData(prev => ({ ...prev, [recordId]: { ...prev[recordId], fileUrl: null } }));
+      await updateFileUrl(recordId, null);
+      startTransition(() => router.refresh());
+    } catch (err: any) {
+      alert("Gagal menghapus dokumen: " + err.message);
     }
     removeLoading(recordId);
   }, [router]);
@@ -333,9 +347,19 @@ export default function SpreadsheetPemberkasan({
                                   return (
                                     <div className="flex flex-col items-center gap-2">
                                       {cellFileUrl ? (
-                                        <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors">
-                                          <span>Sudah Diupload</span> <CheckCircle2 size={12} />
-                                        </a>
+                                        <div className="flex items-stretch w-full max-w-[150px]">
+                                          <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-l-md hover:bg-blue-100 transition-colors w-full min-w-0">
+                                            <span className="truncate">Sudah Diupload</span> <CheckCircle2 size={12} className="shrink-0" />
+                                          </a>
+                                          <button 
+                                            onClick={() => handleDeleteFile(record.id)}
+                                            disabled={cellLoading}
+                                            title="Hapus Dokumen"
+                                            className="bg-danger/10 text-danger hover:bg-danger/20 px-2 py-1.5 rounded-r-md transition-colors disabled:opacity-50 border-l border-white shrink-0 flex items-center justify-center"
+                                          >
+                                            <Trash2 size={12} />
+                                          </button>
+                                        </div>
                                       ) : (
                                         <div className="text-sm text-text-secondary dark:text-gray-400 w-full">Belum Upload</div>
                                       )}
@@ -477,9 +501,19 @@ export default function SpreadsheetPemberkasan({
                                    />
                                 </label>
                               ) : (
-                                <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full hover:bg-blue-100 whitespace-nowrap" title="Buka Dokumen">
-                                  <span>Diupload ✓</span>
-                                </a>
+                                <div className="flex items-stretch justify-center h-full gap-0.5">
+                                  <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
+                                    <span className="truncate">Diupload ✓</span>
+                                  </a>
+                                  <button 
+                                    onClick={() => handleDeleteFile(record.id)}
+                                    disabled={cellLoading}
+                                    title="Hapus Dokumen"
+                                    className="bg-danger/10 text-danger hover:bg-danger/20 px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 shrink-0 flex items-center justify-center"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </div>
