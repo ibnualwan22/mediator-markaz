@@ -177,3 +177,27 @@ export async function deleteFileFromDrive(fileId: string) {
     throw error;
   }
 }
+
+/**
+ * Moves a file to a new parent folder in Google Drive.
+ * Removes existing parents and adds the new one.
+ */
+export async function moveFileToFolder(fileId: string, newParentFolderId: string) {
+  const drive = getDriveClient();
+  try {
+    // Get current parents
+    const file = await drive.files.get({ fileId, fields: "parents" });
+    const previousParents = file.data.parents?.join(",") || "";
+
+    await drive.files.update({
+      fileId,
+      addParents: newParentFolderId,
+      removeParents: previousParents,
+      fields: "id, parents",
+    });
+    return true;
+  } catch (error) {
+    console.error(`Error moving file ${fileId}:`, error);
+    throw error;
+  }
+}
