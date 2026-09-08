@@ -126,3 +126,62 @@ export async function duplicateTahapProgresFromPeriode(sourcePeriodeId: string, 
     return { success: false, error: 'Kesusahan menduplikasi tahap.' };
   }
 }
+
+/**
+ * Searches for Santri across all Gelombang in a given Periode.
+ * Uses a basic custom fuzzy match for typo-tolerance (e.g. "ahmd" matches "Ahmad").
+ */
+export async function searchSantriGlobal(query: string, periodeId: string) {
+  if (!query || query.length < 2) return [];
+
+  // 1. Fetch all verified santri for the current periode, returning minimal fields
+  // If periode is empty, return empty (or search all periods, but typically we want the active one).
+  const santriList = await prisma.santri.findMany({
+    where: {
+      isVerified: true,
+      isWithdrawn: false,
+      gelombang: periodeId ? { periodeId: periodeId } : undefined,
+    },
+    select: {
+      id: true,
+      namaLengkap: true,
+      nis: true,
+      gelombangId: true,
+      gelombang: {
+        select: { nama: true }
+      }
+    }
+  });
+
+  const queryLower = query.toLowerCase().replace(/\s+/g, "");
+
+  // 2. Perform in-memory fuzzy/substring matching
+  const matched = santriList.filter(s => {
+    // Exact/Substring match first
+    const nameLower = s.namaLengkap.toLowerCase();
+    const nisLower = s.nis?.toLowerCase() || "";
+    
+    if (nameLower.includes(query.toLowerCase()) || nisLower.includes(query.toLowerCase())) return true;
+    
+    // Fuzzy logic (subsequence match): check if query letters appear in order within the name
+    let qIdx = 0;
+    const nameNoSpaces = nameLower.replace(/\s+/g, "");
+    for (let i = 0; i < nameNoSpaces.length; i++) {
+      if (nameNoSpaces[i] === queryLower[qIdx]) {
+        qIdx++;
+      }
+      if (qIdx === queryLower.length) return true;
+    }
+    
+    return false;
+  });
+
+  // Limit to 10 results to keep the UI snappy
+  return matched.slice(0, 10).map(s => ({
+    id: s.id,
+    namaLengkap: s.namaLengkap,
+    nis: s.nis,
+    gelombangId: s.gelombangId,
+    gelombangNama: s.gelombang?.nama || "Unknown"
+  }));
+}
