@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Lock, User } from "lucide-react";
+import Image from "next/image";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -45,8 +46,8 @@ export default function AdminLoginPage() {
               <path d="M0 100 L 100 0 L 100 50 L 50 100 Z" fill="currentColor" />
             </svg>
           </div>
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-white/20">
-            <Lock size={32} className="text-white" />
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-white/20 overflow-hidden">
+            <Image src="/logo-mediator.png" alt="Logo" width={64} height={64} className="object-cover" />
           </div>
           <h1 className="text-2xl font-heading font-bold text-white relative z-10">Portal Admin</h1>
           <p className="text-primary-bg/90 mt-1 text-sm relative z-10">

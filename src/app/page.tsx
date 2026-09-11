@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Globe2, Sparkles, MapPin } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -8,8 +9,8 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b border-primary-light/30 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl font-heading">
-              م
+            <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+              <Image src="/logo-mediator.png" alt="Logo Markaz" width={32} height={32} className="object-cover" />
             </div>
             <span className="font-heading font-bold text-xl text-primary">Markaz Arabiyah</span>
           </div>

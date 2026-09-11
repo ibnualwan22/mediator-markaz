@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import SantriLogoutButton from "@/components/santri/LogoutButton";
+import Image from "next/image";
 
 interface SantriSidebarProps {
   nama: string;
@@ -44,8 +45,8 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
           <Menu size={22} />
         </button>
         <div className="ml-3 flex items-center gap-2">
-          <div className="w-7 h-7 bg-gradient-to-br from-primary to-primary-light rounded-lg flex items-center justify-center">
-            <BookOpen size={13} className="text-white" />
+          <div className="w-7 h-7 flex items-center justify-center overflow-hidden">
+            <Image src="/logo-mediator.png" alt="Logo" width={28} height={28} className="rounded-sm" />
           </div>
           <span className="font-heading font-bold text-primary text-sm">Portal Camaba</span>
         </div>
@@ -69,8 +70,8 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
         `}
       >
         <div className="h-14 lg:h-16 flex items-center px-6 border-b border-primary-light/20 gap-3 shrink-0">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-light rounded-lg flex items-center justify-center">
-            <BookOpen size={16} className="text-white" />
+          <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
+            <Image src="/logo-mediator.png" alt="Logo" width={32} height={32} className="rounded-sm" />
           </div>
           <div className="font-heading font-bold text-lg text-primary flex-1">Portal Camaba</div>
           <button

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, BookOpen, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 export default function SantriLoginPage() {
   const router = useRouter();
@@ -53,8 +54,8 @@ export default function SantriLoginPage() {
             <div className="absolute top-4 right-4 text-white/20">
               <Sparkles size={24} />
             </div>
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0 backdrop-blur-sm border border-white/30">
-              <BookOpen className="text-white w-6 h-6" />
+            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0 backdrop-blur-sm border border-white/30 overflow-hidden">
+              <Image src="/logo-mediator.png" alt="Logo" width={48} height={48} className="object-cover" />
             </div>
             <h1 className="text-2xl font-heading font-bold text-white relative z-10">Portal Camaba</h1>
             <p className="text-white/80 mt-1.5 text-sm relative z-10">

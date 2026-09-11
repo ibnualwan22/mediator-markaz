@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ThemeProvider } from "./ThemeProvider";
 import ThemeToggle from "./ThemeToggle";
 import { Menu, X, LogOut, LayoutDashboard, CalendarDays, Users, CreditCard, FolderCheck, LineChart, BookOpen, UserPlus } from "lucide-react";
+import Image from "next/image";
 
 export default function AdminLayoutClient({ children, user }: { children: React.ReactNode; user: any }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -37,7 +38,10 @@ export default function AdminLayoutClient({ children, user }: { children: React.
         {/* Sidebar */}
         <aside className={`w-64 bg-white dark:bg-gray-800 border-r border-primary-light/20 dark:border-gray-700 flex flex-col fixed inset-y-0 left-0 z-50 transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="h-16 flex items-center justify-between px-6 border-b border-primary-light/20 dark:border-gray-700 shrink-0">
-            <div className="font-heading font-bold text-xl text-primary dark:text-primary-light">Markaz Admin</div>
+            <div className="flex items-center gap-2">
+              <Image src="/logo-mediator.png" alt="Logo" width={28} height={28} className="rounded-full" />
+              <div className="font-heading font-bold text-xl text-primary dark:text-primary-light">Markaz Admin</div>
+            </div>
             <button className="lg:hidden text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary-light" onClick={() => setIsSidebarOpen(false)}>
               <X size={24} />
             </button>
@@ -88,7 +92,10 @@ export default function AdminLayoutClient({ children, user }: { children: React.
             <button onClick={() => setIsSidebarOpen(true)} className="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary-light mr-4 p-1">
               <Menu size={24} />
             </button>
-            <div className="font-heading font-bold text-lg text-primary dark:text-primary-light">Markaz Admin</div>
+            <div className="flex items-center gap-2">
+              <Image src="/logo-mediator.png" alt="Logo" width={24} height={24} className="rounded-full" />
+              <div className="font-heading font-bold text-lg text-primary dark:text-primary-light">Markaz Admin</div>
+            </div>
           </header>
           <div className="flex-1 p-4 md:p-6 lg:p-8">
             {children}
