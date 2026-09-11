@@ -27,12 +27,11 @@ export default function SpreadsheetPemberkasan({
   const [optimisticData, setOptimisticData] = useState<Record<string, { sudahDikumpulkan?: boolean; fileUrl?: string | null }>>({});
   const [isPending, startTransition] = useTransition();
   const [bulkLoading, setBulkLoading] = useState<Set<string>>(new Set());
-  const [filterKategori, setFilterKategori] = useState<"ALL" | "INDONESIA" | "MESIR">("ALL");
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState<any | null>(null);
   const [itemModalView, setItemModalView] = useState<'MISSING' | 'ARSIP'>('MISSING');
 
-  const visibleItems = items.filter(i => filterKategori === "ALL" || i.kategori === filterKategori);
+  const visibleItems = items.filter(i => i.kategori !== "MESIR");
   
   const indoCount = visibleItems.filter(i => i.kategori === 'INDONESIA').length;
   const mesirCount = visibleItems.filter(i => i.kategori === 'MESIR').length;
@@ -166,16 +165,6 @@ export default function SpreadsheetPemberkasan({
           </select>
         </div>
         
-        <select 
-          className="px-3 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm font-medium"
-          value={filterKategori}
-          onChange={(e: any) => setFilterKategori(e.target.value)}
-        >
-          <option value="ALL">Semua Kategori Berkas</option>
-          <option value="INDONESIA">Dalam Negeri (INDONESIA)</option>
-          <option value="MESIR">Luar Negeri (MESIR)</option>
-        </select>
-
         <form className="relative flex-1 max-w-sm">
           <input 
             type="text" 

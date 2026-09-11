@@ -170,7 +170,6 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
                 className="w-full px-3 py-2 rounded-lg border outline-none focus:border-primary mt-1 text-sm bg-bg-cream dark:bg-gray-800"
               >
                 <option value="INDO">Dalam Negeri (INDO)</option>
-                <option value="MESIR">Luar Negeri (MESIR)</option>
               </select>
             </div>
             <div>
@@ -246,7 +245,6 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
         )}
 
         {renderTable(indoItems, "Berkas Dalam Negeri (INDO)")}
-        {renderTable(mesirItems, "Berkas Luar Negeri (MESIR)")}
       </div>
     </div>
   );

@@ -72,7 +72,6 @@ export default async function PemberkasanSantriPage() {
   // Grup berdasarkan kategori
   const groupedItems = {
     INDONESIA: mappedItems.filter(i => i.kategori === 'INDONESIA'),
-    MESIR: mappedItems.filter(i => i.kategori === 'MESIR')
   };
 
   return (
@@ -141,6 +140,7 @@ export default async function PemberkasanSantriPage() {
             isComplete={kComplete}
             collected={kCollected}
             total={kCount}
+            defaultOpen={true}
           >
             <div className="grid grid-cols-1 lg:grid-cols-2">
               {kItems.map((item, idx) => (
