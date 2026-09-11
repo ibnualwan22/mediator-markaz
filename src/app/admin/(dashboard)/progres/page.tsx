@@ -31,6 +31,7 @@ export default async function AdminProgresPage({ searchParams }: { searchParams:
       isVerified: true,
       isWithdrawn: false,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
+      gelombang: selectedGelombangId === "all" ? { periodeId: selectedPeriodeId } : undefined,
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },
         { nis: { contains: query, mode: 'insensitive' } }

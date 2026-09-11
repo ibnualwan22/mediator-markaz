@@ -20,7 +20,7 @@ export async function updateSettingDL(nominalPerLevel: number) {
 
 export async function assignLevelDL(santriId: string, level: number) {
   const setting = await getSettingDL();
-  
+
   // Check if exists
   const existing = await prisma.darulLughohSantri.findFirst({
     where: { santriId }
@@ -29,7 +29,7 @@ export async function assignLevelDL(santriId: string, level: number) {
   if (existing) return { success: false, error: "Camaba sudah set level awal" };
 
   const recordsToCreate = [];
-  
+
   // Level terlewati otomatis LULUS dan free
   for (let i = 1; i < level; i++) {
     recordsToCreate.push({
@@ -92,19 +92,19 @@ export async function updatePembayaranDL(id: string, nominalDibayar: number) {
         if (surplus <= 0) break;
         const nextDl = allDLs[i];
         const nextKekurangan = Math.max(0, nextDl.nominalHarus - nextDl.nominalDibayar);
-        
+
         if (nextKekurangan > 0) {
           const takeAmount = Math.min(surplus, nextKekurangan);
           const newDibayar = nextDl.nominalDibayar + takeAmount;
-          
+
           await prisma.darulLughohSantri.update({
             where: { id: nextDl.id },
-            data: { 
-              nominalDibayar: newDibayar, 
-              isLunas: newDibayar >= nextDl.nominalHarus 
+            data: {
+              nominalDibayar: newDibayar,
+              isLunas: newDibayar >= nextDl.nominalHarus
             }
           });
-          
+
           surplus -= takeAmount;
         }
       }
@@ -147,7 +147,7 @@ export async function updateStatusUjianDL(id: string, status: string) {
 
   await prisma.darulLughohSantri.update({
     where: { id },
-    data: { 
+    data: {
       statusUjian: status,
       tanggalUjian: new Date()
     }
@@ -167,7 +167,7 @@ export async function updateStatusUjianDL(id: string, status: string) {
   } else if (status === "LULUS" && current.level < 6) {
     // Lanjut ke level berikutnya
     const setting = await getSettingDL();
-    
+
     // Cek agar tidak duplikat
     const existNext = await prisma.darulLughohSantri.findFirst({
       where: {
@@ -225,13 +225,13 @@ export async function resetAllLevelDL(santriId: string) {
     await prisma.darulLughohSantri.deleteMany({
       where: { santriId }
     });
-    
+
     revalidatePath("/admin/darul-lughoh");
     revalidatePath("/admin/pembayaran");
     return { success: true };
   } catch (error) {
     console.error("Reset DL error:", error);
-    return { success: false, error: "Gagal me-reset Dauroh Lughoh & Ta'hili" };
+    return { success: false, error: "Gagal me-reset Dauroh Lughoh " };
   }
 }
 
@@ -248,7 +248,7 @@ export async function undoStatusUjianDL(id: string) {
 
   await prisma.darulLughohSantri.update({
     where: { id },
-    data: { 
+    data: {
       statusUjian: "BELUM_UJIAN",
       tanggalUjian: null
     }

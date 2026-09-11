@@ -121,7 +121,7 @@ export default function SpreadsheetPembayaran({
     setIsLoading(true);
     const res = await updatePembayaranDL(dlId, currentVal);
     setIsLoading(false);
-    
+
     setLocalCicilan(prev => {
       const next = { ...prev };
       delete next[`dl-${dlId}`];
@@ -291,8 +291,7 @@ export default function SpreadsheetPembayaran({
             value={selectedGelombangId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
-              else params.delete('gelombangId');
+              if (e.target.value) params.set('gelombangId', e.target.value);
               router.push(`/admin/pembayaran?${params.toString()}`);
             }}
           >
@@ -326,7 +325,7 @@ export default function SpreadsheetPembayaran({
           <input type="hidden" name="gelombangId" value={selectedGelombangId} />
         </form>
 
-        <button 
+        <button
           onClick={async () => {
             if (selectedPaketId === "all" || !selectedPaketId) {
               const Swal = (await import('sweetalert2')).default;
@@ -372,7 +371,7 @@ export default function SpreadsheetPembayaran({
                             <th colSpan={tahap1.poinTahap.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold">{tahap1.nama}</th>
                           )}
 
-                          <th colSpan={6} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-amber-50 text-amber-700">Dauroh Lughoh & Ta'hili (DL)</th>
+                          <th colSpan={6} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-amber-50 text-amber-700">Dauroh Lughoh  (DL)</th>
 
                           {remainingTahaps.map((t: any) => t.poinTahap.length > 0 && (
                             <th key={t.id} colSpan={t.poinTahap.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold">{t.nama}</th>

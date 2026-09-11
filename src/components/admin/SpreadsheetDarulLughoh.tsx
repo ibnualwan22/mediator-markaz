@@ -63,7 +63,7 @@ export default function SpreadsheetDarulLughoh({
       showCancelButton: true
     });
     if (!confirmRes.isConfirmed) return;
-    
+
     setIsLoading(true);
     await updateStatusUjianDL(dlId, status);
     setIsLoading(false);
@@ -90,14 +90,14 @@ export default function SpreadsheetDarulLughoh({
   const handleResetDL = async (santriId: string, nama: string) => {
     const confirmRes = await Swal.fire({
       title: 'Reset Histori?',
-      text: `Yakin ingin mereset dan menghapus seluruh histori level Dauroh Lughoh & Ta'hili untuk camaba ${nama}?`,
+      text: `Yakin ingin mereset dan menghapus seluruh histori level Dauroh Lughoh  untuk camaba ${nama}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       confirmButtonText: 'Ya, Reset!'
     });
     if (!confirmRes.isConfirmed) return;
-    
+
     setIsLoading(true);
     await resetAllLevelDL(santriId);
     setIsLoading(false);
@@ -184,7 +184,7 @@ export default function SpreadsheetDarulLughoh({
               const params = new URLSearchParams(window.location.search);
               if (e.target.value) params.set('periodeId', e.target.value);
               else params.delete('periodeId');
-              
+
               params.delete('gelombangId'); // reset gelombang when changing periode
               router.push(`/admin/darul-lughoh?${params.toString()}`);
             }}
@@ -279,7 +279,7 @@ export default function SpreadsheetDarulLughoh({
                 <th key={lvl} className="p-3 text-center border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[180px]">
                   <div className="flex flex-col items-center gap-1">
                     <span>DL Level {lvl}</span>
-                    <button 
+                    <button
                       type="button"
                       disabled={isLoading}
                       onClick={() => handleBulkLulus(lvl)}
@@ -332,13 +332,13 @@ export default function SpreadsheetDarulLughoh({
                   {/* Level Columns */}
                   {levels.map(lvl => {
                     const attempts = santri.darulLughoh.filter((d: any) => d.level === lvl).sort((a: any, b: any) => b.percobaan - a.percobaan);
-                    
+
                     if (attempts.length === 0) {
                       const prevLvl = santri.darulLughoh.filter((d: any) => d.level === lvl - 1).sort((a: any, b: any) => b.percobaan - a.percobaan)[0];
                       if (prevLvl && prevLvl.statusUjian === "LULUS") {
                         return (
                           <td key={lvl} className="border-r border-primary-light/10 dark:border-gray-700 p-2 text-center align-middle">
-                            <button 
+                            <button
                               onClick={async () => {
                                 setIsLoading(true);
                                 await generateNextLevelDL(santri.id, lvl);

@@ -19,6 +19,7 @@ import Image from "next/image";
 interface SantriSidebarProps {
   nama: string;
   nis: string;
+  foto?: string | null;
 }
 
 const menuItems = [
@@ -26,10 +27,10 @@ const menuItems = [
   { name: "Pembayaran", href: "/santri/pembayaran", icon: <CreditCard size={20} /> },
   { name: "Pemberkasan", href: "/santri/pemberkasan", icon: <FolderCheck size={20} /> },
   { name: "Progres", href: "/santri/progres", icon: <LineChart size={20} /> },
-  { name: "Dauroh Lughoh & Ta'hili", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
+  { name: "Dauroh Lughoh ", href: "/santri/darul-lughoh", icon: <BookOpen size={20} /> },
 ];
 
-export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
+export default function SantriSidebar({ nama, nis, foto }: SantriSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -107,9 +108,15 @@ export default function SantriSidebar({ nama, nis }: SantriSidebarProps) {
 
         <div className="p-4 border-t border-primary-light/20 shrink-0">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-light/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-              {nama?.[0] || "S"}
-            </div>
+            {foto && foto !== "-" ? (
+              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-primary-light/20">
+                <img src={foto} alt={nama} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-light/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                {nama?.[0] || "S"}
+              </div>
+            )}
             <div className="overflow-hidden flex-1 min-w-0">
               <p className="text-sm font-bold text-text-primary truncate">{nama}</p>
               <p className="text-xs text-text-secondary font-mono truncate">{nis}</p>

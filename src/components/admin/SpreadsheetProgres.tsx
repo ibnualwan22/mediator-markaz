@@ -131,8 +131,7 @@ export default function SpreadsheetProgres({
             value={selectedGelombangId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
-              else params.delete('gelombangId');
+              if (e.target.value) params.set('gelombangId', e.target.value);
               router.push(`/admin/progres?${params.toString()}`);
             }}
           >

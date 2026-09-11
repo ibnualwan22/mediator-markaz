@@ -19,17 +19,17 @@ export default function AdminLayoutClient({ children, user }: { children: React.
     { name: "Data Camaba", href: "/admin/santri", icon: <Users size={20} /> },
     { name: "Pembayaran", href: "/admin/pembayaran", icon: <CreditCard size={20} /> },
     { name: "Pemberkasan", href: "/admin/pemberkasan", icon: <FolderCheck size={20} /> },
-    { name: "Dauroh Lughoh & Ta'hili", href: "/admin/darul-lughoh", icon: <BookOpen size={20} /> },
+    { name: "Dauroh Lughoh ", href: "/admin/darul-lughoh", icon: <BookOpen size={20} /> },
     { name: "Progres Camaba", href: "/admin/progres", icon: <LineChart size={20} /> },
   ];
 
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-bg-cream dark:bg-gray-900 flex text-text-primary dark:text-gray-100 transition-colors">
-        
+
         {/* Mobile Backdrop */}
         {isSidebarOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
           />

@@ -75,6 +75,7 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
       isVerified: true,
       isWithdrawn: false,
       gelombangId: selectedGelombangId === "all" ? undefined : selectedGelombangId,
+      gelombang: selectedGelombangId === "all" ? { periodeId: selectedPeriodeId } : undefined,
       paketPembayaranId: selectedPaketId === "all" ? undefined : selectedPaketId,
       OR: [
         { namaLengkap: { contains: query, mode: 'insensitive' } },

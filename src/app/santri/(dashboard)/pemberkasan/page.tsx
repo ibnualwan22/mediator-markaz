@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { FolderCheck, CheckCircle2, Clock, AlertCircle, Download } from "lucide-react";
 import CollapsibleCategory from "@/components/santri/CollapsibleCategory";
+import PemberkasanUploadButton from "@/components/santri/PemberkasanUploadButton";
 
 export default async function PemberkasanSantriPage() {
   const session = await getSantriSession();
@@ -176,6 +177,11 @@ export default async function PemberkasanSantriPage() {
                           <span className="font-bold text-warning text-xs uppercase tracking-wider block mb-0.5">Catatan Admin</span>
                           {item.catatan}
                         </div>
+                      </div>
+                    )}
+                    {!item.sudahDikumpulkan && (
+                      <div className="mt-2">
+                        <PemberkasanUploadButton itemPemberkasanId={item.id} />
                       </div>
                     )}
                   </div>

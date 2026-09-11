@@ -149,7 +149,7 @@ export default function WithdrawSantriButton({
                 <h4 className="font-bold text-warning text-sm">Informasi Penting Migrasi:</h4>
                 <ul className="text-xs text-warning/80 mt-1 list-disc pl-4 space-y-1">
                   <li>Nomor Induk Camaba (NIC) <strong>AKAN DI-GENERATE ULANG</strong> sesuai dengan gelombang tujuan agar No. Urut tidak bertabrakan.</li>
-                  <li>Progres Pemberkasan & Dauroh Lughoh & Ta'hili camaba akan di-keep utuh.</li>
+                  <li>Progres Pemberkasan & Dauroh Lughoh  camaba akan di-keep utuh.</li>
                   <li>Jika Paket Pembayaran berbeda, total saldo tagihan tahap lama dicairkan dan otomatis didistribusikan urut sebagai pembayaran Lunas ke paket baru tujuan.</li>
                 </ul>
               </div>

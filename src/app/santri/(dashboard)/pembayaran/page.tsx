@@ -66,7 +66,7 @@ export default async function PembayaranSantriPage() {
     const poinList = tahap.poinTahap.map(poin => {
       // Cari record pembayaran untuk poin ini
       const paymentRecord = santri.pembayaranSantri.find(p => p.poinTahapId === poin.id);
-      
+
       // Jika pembayaran belum ada (misal digenerate on logic / blm dibikin)
       let harus = 0;
       if (paymentRecord) {
@@ -111,15 +111,15 @@ export default async function PembayaranSantriPage() {
       isDarulLughoh: false
     };
   });
-  
+
   if (santri.darulLughoh && santri.darulLughoh.length > 0) {
     let dlHarus = 0;
     let dlDibayar = 0;
-    
+
     const poinList = santri.darulLughoh.map(dl => {
       dlHarus += dl.nominalHarus;
       dlDibayar += dl.nominalDibayar;
-      
+
       const isRemidi = dl.percobaan > 1;
       return {
         id: dl.id,
@@ -137,7 +137,7 @@ export default async function PembayaranSantriPage() {
 
     const dlStage = {
       id: "darul-lughoh",
-      nama: "Biaya Dauroh Lughoh & Ta'hili",
+      nama: "Biaya Dauroh Lughoh ",
       harus: dlHarus,
       dibayar: dlDibayar,
       status: dlStatus,
@@ -194,8 +194,8 @@ export default async function PembayaranSantriPage() {
             <span className="text-sm font-bold text-primary">{percent}%</span>
           </div>
           <div className="h-3 w-full bg-bg-cream rounded-full overflow-hidden border border-primary/10">
-            <div 
-              className="h-full bg-gradient-to-r from-primary to-primary-light transition-all duration-1000 ease-out rounded-full relative" 
+            <div
+              className="h-full bg-gradient-to-r from-primary to-primary-light transition-all duration-1000 ease-out rounded-full relative"
               style={{ width: `${percent}%` }}
             >
               <div className="absolute inset-0 bg-white/20" style={{ backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)', backgroundSize: '1rem 1rem' }}></div>
@@ -207,26 +207,25 @@ export default async function PembayaranSantriPage() {
       {/* Rincian per Tahap */}
       <div className="space-y-4">
         <h2 className="text-xl font-heading font-bold text-text-primary mt-8 mb-4">Rincian per Tahap</h2>
-        
+
         {stagesData.map((tahap, idx) => (
           <div key={tahap.id} className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden">
             {/* Header Tahap */}
             <div className={`p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${tahap.status === 'LUNAS' ? 'bg-success/5 border-success/20' : 'bg-bg-cream border-primary-light/20'}`}>
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                  tahap.status === 'LUNAS' ? 'bg-success text-white' : 
-                  tahap.status === 'SEBAGIAN' ? 'bg-warning text-white' : 
-                  'bg-white text-text-secondary border border-text-secondary/20'
-                }`}>
-                  {tahap.status === 'LUNAS' ? <CheckCircle2 size={18} /> : 
-                   tahap.status === 'SEBAGIAN' ? <Clock size={18} /> : 
-                   <span className="text-sm font-bold">{idx + 1}</span>}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${tahap.status === 'LUNAS' ? 'bg-success text-white' :
+                    tahap.status === 'SEBAGIAN' ? 'bg-warning text-white' :
+                      'bg-white text-text-secondary border border-text-secondary/20'
+                  }`}>
+                  {tahap.status === 'LUNAS' ? <CheckCircle2 size={18} /> :
+                    tahap.status === 'SEBAGIAN' ? <Clock size={18} /> :
+                      <span className="text-sm font-bold">{idx + 1}</span>}
                 </div>
                 <div>
                   <h3 className="font-heading font-bold text-text-primary">{tahap.nama}</h3>
                   <p className="text-xs text-text-secondary">
-                    {tahap.status === 'LUNAS' ? 'Semua poin telah lunas' : 
-                     tahap.status === 'SEBAGIAN' ? 'Sedang dicicil' : 'Belum dibayar'}
+                    {tahap.status === 'LUNAS' ? 'Semua poin telah lunas' :
+                      tahap.status === 'SEBAGIAN' ? 'Sedang dicicil' : 'Belum dibayar'}
                   </p>
                 </div>
               </div>
@@ -246,7 +245,7 @@ export default async function PembayaranSantriPage() {
                     <p className="font-medium text-sm text-text-primary">{poin.nama}</p>
                     {poin.status === 'LUNAS' && poin.terakhirUpdate && (
                       <p className="text-[11px] text-text-secondary mt-1">
-                        Selesai pada: {new Date(poin.terakhirUpdate).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}
+                        Selesai pada: {new Date(poin.terakhirUpdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
                     )}
                   </div>
