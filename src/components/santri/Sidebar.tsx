@@ -49,7 +49,7 @@ export default function SantriSidebar({ nama, nis, foto }: SantriSidebarProps) {
           <div className="w-7 h-7 flex items-center justify-center overflow-hidden">
             <Image src="/logo-mediator.png" alt="Logo" width={28} height={28} className="rounded-sm" />
           </div>
-          <span className="font-heading font-bold text-primary text-sm">Portal Camaba</span>
+          <span className="font-heading font-bold text-primary text-sm">Portal CAMABA</span>
         </div>
       </div>
 

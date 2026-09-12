@@ -414,9 +414,9 @@ export default function SpreadsheetPemberkasan({
 
             {/* Header 2: Item Names */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
-              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[70px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">No. Urut</th>
-              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[100px] sticky left-[70px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
-              <th className="p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[150px] sticky left-[170px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+              <th className="px-1 py-2 md:p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[40px] md:min-w-[60px] w-[40px] md:w-[60px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)] text-center">No.</th>
+              <th className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[130px] md:min-w-[160px] max-w-[130px] md:max-w-[160px] sticky left-[40px] md:left-[60px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+              <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] md:min-w-[100px] z-20">NIC</th>
               
               {visibleItems.map(item => (
                 <th key={item.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[100px] align-bottom group" title={item.nama}>
@@ -444,11 +444,11 @@ export default function SpreadsheetPemberkasan({
 
               return (
                 <tr key={santri.id} className="border-b border-primary-light/10 dark:border-gray-700 hover:bg-[#faf9f5] dark:bg-gray-800 transition-colors group">
-                  <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-bold text-text-secondary dark:text-gray-400 text-center sticky left-0 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
+                  <td className="px-1 py-2 md:p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-bold text-text-secondary dark:text-gray-400 text-center sticky left-0 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)] min-w-[40px] md:min-w-[60px] w-[40px] md:w-[60px]">
                     {santri.nomorUrut || (santri.nis ? santri.nis.slice(-3) : '-')}
                   </td>
-                  <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-medium text-primary text-[11px] whitespace-nowrap sticky left-[70px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.nis}</td>
-                  <td className="p-2 border-r border-primary-light/30 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-semibold truncate min-w-[150px] max-w-[200px] sticky left-[170px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]" title={santri.namaLengkap}>{santri.namaLengkap}</td>
+                  <td className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-semibold min-w-[130px] md:min-w-[160px] max-w-[130px] md:max-w-[160px] whitespace-normal break-words leading-tight sticky left-[40px] md:left-[60px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]" title={santri.namaLengkap}>{santri.namaLengkap}</td>
+                  <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-medium text-primary text-[11px] whitespace-nowrap z-0 min-w-[80px] md:min-w-[100px]">{santri.nis}</td>
                   
                   {visibleItems.map(item => {
                     const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === item.id);

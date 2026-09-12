@@ -148,7 +148,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
       {/* Action Bar */}
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-primary-light/20 shadow-sm">
         <div>
-          <h2 className="font-heading font-bold text-xl text-text-primary">Profil Santri</h2>
+          <h2 className="font-heading font-bold text-xl text-text-primary">Profil Camaba</h2>
           <p className="text-text-secondary text-sm">Lengkapi data diri Anda dengan benar</p>
         </div>
         <div>
