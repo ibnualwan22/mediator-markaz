@@ -16,12 +16,12 @@ export default async function SantriDashboardLayout({
 
   const santri = await prisma.santri.findUnique({
     where: { id: session.santriId },
-    select: { filePasFoto: true }
+    select: { fotoProfil: true }
   });
 
   return (
     <div className="min-h-screen bg-bg-cream flex">
-      <SantriSidebar nama={session.nama} nis={session.nis} foto={santri?.filePasFoto || null} />
+      <SantriSidebar nama={session.nama} nis={session.nis} foto={santri?.fotoProfil || null} />
 
       {/* Main Content - responsive padding */}
       <main className="flex-1 lg:ml-64 pt-18 lg:pt-0 p-4 sm:p-6 lg:p-8">

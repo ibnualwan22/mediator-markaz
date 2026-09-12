@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSantriSession } from "@/lib/santri-auth";
-import { ensureSantriFolder, uploadFileToDrive } from "@/lib/googleDrive";
+import { ensureSantriFolder, uploadFileToDrive, getDriveClient } from "@/lib/googleDrive";
 
 export const maxDuration = 60;
 
@@ -15,6 +15,10 @@ export async function POST(req: Request) {
 
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "File harus berupa gambar (JPG/PNG), bukan PDF/Dokumen." }, { status: 400 });
     }
 
     const santri = await prisma.santri.findUnique({
@@ -40,17 +44,25 @@ export async function POST(req: Request) {
 
     const driveRes = await uploadFileToDrive(buffer, newFileName, file.type, santriFolderId);
 
-    const url = driveRes.webViewLink;
-    if (!url) throw new Error("Gagal mendapatkan link dari Google Drive");
+    if (!driveRes.id) throw new Error("Gagal mendapatkan link dari Google Drive");
+    
+    // Make file public so it can be loaded in an <img> tag and get direct URL
+    const drive = getDriveClient();
+    await drive.permissions.create({
+      fileId: driveRes.id as string,
+      requestBody: { role: 'reader', type: 'anyone' }
+    });
+
+    const url = `https://drive.google.com/uc?export=view&id=${driveRes.id}`;
 
     const updatedSantri = await prisma.santri.update({
       where: { id: session.santriId },
-      data: { filePasFoto: url }
+      data: { fotoProfil: url }
     });
 
     return NextResponse.json({
       success: true,
-      fileUrl: driveRes.webViewLink,
+      fileUrl: url,
       santri: updatedSantri
     });
   } catch (error: any) {

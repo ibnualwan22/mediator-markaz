@@ -4,6 +4,45 @@ import { useState, useRef } from "react";
 import { User, GraduationCap, Globe, CheckCircle2, Shield, MapPin, Phone, Mail, Calendar, Hash, Edit2, X, Save, Camera, Loader2, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+const DataGroup = ({ title, icon, children }: any) => (
+  <div className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden mb-6">
+    <div className="bg-bg-cream border-b border-primary-light/20 px-6 py-4 flex items-center gap-3">
+      <div className="text-primary">{icon}</div>
+      <h3 className="font-heading font-bold text-text-primary text-lg">{title}</h3>
+    </div>
+    <div className="p-6">
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+        {children}
+      </dl>
+    </div>
+  </div>
+);
+
+const DataItem = ({ label, field, icon, value, isEditing, formData, setFormData }: { label: string; field?: keyof any; icon?: React.ReactNode; value?: any; isEditing?: boolean; formData?: any; setFormData?: any }) => {
+  const isArabic = field === 'namaArab';
+  return (
+    <div className="sm:col-span-1">
+      <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-2">
+        {icon}
+        {label}
+      </dt>
+      <dd className="text-sm text-text-primary font-semibold">
+        {isEditing && field && formData && setFormData ? (
+          <input
+            type="text"
+            className={`w-full px-3 py-2.5 border border-primary-light/30 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-normal ${isArabic ? 'font-arabic text-xl text-right' : ''}`}
+            dir={isArabic ? 'rtl' : 'ltr'}
+            value={formData[field] as string}
+            onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+            placeholder={`Masukkan ${label}`}
+          />
+        ) : (
+          value || <span className="text-text-secondary/40 italic font-normal">Belum diisi</span>
+        )}
+      </dd>
+    </div>
+  )
+};
 
 export default function SantriProfileClient({ santriData }: { santriData: any }) {
   const router = useRouter();
@@ -62,6 +101,11 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      Swal.fire("Gagal", "File foto profil harus berupa gambar, bukan dokumen/PDF.", "error");
+      return;
+    }
+
     if (file.size > 5 * 1024 * 1024) {
       Swal.fire("Gagal", "Ukuran foto maksimal 5MB.", "error");
       return;
@@ -98,41 +142,6 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
     }
   };
 
-  const DataGroup = ({ title, icon, children }: any) => (
-    <div className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden mb-6">
-      <div className="bg-bg-cream border-b border-primary-light/20 px-6 py-4 flex items-center gap-3">
-        <div className="text-primary">{icon}</div>
-        <h3 className="font-heading font-bold text-text-primary text-lg">{title}</h3>
-      </div>
-      <div className="p-6">
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
-          {children}
-        </dl>
-      </div>
-    </div>
-  );
-
-  const DataItem = ({ label, field, icon, value }: { label: string; field?: keyof typeof formData; icon?: React.ReactNode; value?: any }) => (
-    <div className="sm:col-span-1">
-      <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-        {icon}
-        {label}
-      </dt>
-      <dd className="text-sm text-text-primary font-semibold">
-        {isEditing && field ? (
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-primary-light/30 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-normal"
-            value={formData[field]}
-            onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-            placeholder={`Masukkan ${label}`}
-          />
-        ) : (
-          value || <span className="text-text-secondary/40 italic font-normal">Belum diisi</span>
-        )}
-      </dd>
-    </div>
-  );
 
   return (
     <div className="space-y-6 pb-20 max-w-4xl">
@@ -177,12 +186,17 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
         <div className="bg-gradient-to-r from-primary/5 via-primary-light/5 to-transparent p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             {/* Photo */}
-            <div className="relative group">
-              {santriData.filePasFoto && santriData.filePasFoto !== "-" ? (
-                <div className="w-24 h-28 sm:w-28 sm:h-32 rounded-2xl border-2 border-primary-light/30 overflow-hidden shadow-lg relative">
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => {
+                if (!isUploadingPhoto) fileInputRef.current?.click();
+              }}
+            >
+              {santriData.fotoProfil && santriData.fotoProfil !== "-" ? (
+                <div className="w-24 h-28 sm:w-28 sm:h-32 rounded-2xl border-2 border-primary-light/30 overflow-hidden shadow-lg relative bg-bg-cream">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={santriData.filePasFoto} alt="Pas Foto" className="w-full h-full object-cover" />
-                  
+                  <img src={santriData.fotoProfil} alt="Foto Profil" className="w-full h-full object-cover" />
+
                   {isUploadingPhoto && (
                     <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
                       <Loader2 className="animate-spin text-primary w-8 h-8" />
@@ -198,22 +212,20 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
                   )}
                 </div>
               )}
-              
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingPhoto}
-                className="absolute -bottom-3 inset-x-2 sm:inset-x-3 bg-white border border-primary-light/30 text-primary hover:bg-primary hover:text-white shadow-md text-xs font-bold py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 flex justify-center items-center gap-1.5 z-10"
-              >
-                <Camera size={14} /> Ganti Foto
-              </button>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handlePhotoUpload} 
-                accept="image/*" 
-                className="hidden" 
+
+              {/* Permanent Edit Icon */}
+              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm border border-primary-light/30 text-primary shadow-sm w-7 h-7 rounded-full flex justify-center items-center z-10 transition-transform group-hover:scale-110">
+                <Edit2 size={13} />
+              </div>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePhotoUpload}
+                accept="image/*"
+                className="hidden"
               />
-              
+
               {santriData.isVerified && (
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-success rounded-full flex items-center justify-center shadow-md border-2 border-white z-0">
                   <Shield size={14} className="text-white" />
@@ -247,15 +259,14 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
         </div>
       </div>
 
-      {/* Data Pribadi */}
       <DataGroup title="Data Pribadi" icon={<User size={20} />}>
-        <DataItem label="Nama Lengkap" field="namaLengkap" value={santriData.namaLengkap} />
-        <DataItem label="Nama Arab" field="namaArab" value={santriData.namaArab !== "-" ? santriData.namaArab : null} />
-        <DataItem label="Asal Provinsi" field="asalProvinsi" icon={<MapPin size={10} />} value={santriData.asalProvinsi !== "-" ? santriData.asalProvinsi : null} />
-        <DataItem label="Email" field="email" icon={<Mail size={10} />} value={santriData.email !== "-" ? santriData.email : null} />
-        <DataItem label="No. WA Santri" field="noWaSantri" icon={<Phone size={10} />} value={santriData.noWaSantri !== "-" ? santriData.noWaSantri : null} />
-        <DataItem label="Nama Wali" field="namaWali" value={santriData.namaWali !== "-" ? santriData.namaWali : null} />
-        <DataItem label="No. WA Wali" field="noWaWali" icon={<Phone size={10} />} value={santriData.noWaWali !== "-" ? santriData.noWaWali : null} />
+        <DataItem label="Nama Lengkap" field="namaLengkap" value={santriData.namaLengkap} isEditing={isEditing} formData={formData} setFormData={setFormData} />
+        <DataItem label="Nama Arab" field="namaArab" value={santriData.namaArab !== "-" ? santriData.namaArab : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
+        <DataItem label="Asal Provinsi" field="asalProvinsi" icon={<MapPin size={10} />} value={santriData.asalProvinsi !== "-" ? santriData.asalProvinsi : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
+        <DataItem label="Email" field="email" icon={<Mail size={10} />} value={santriData.email !== "-" ? santriData.email : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
+        <DataItem label="No. WA Santri" field="noWaSantri" icon={<Phone size={10} />} value={santriData.noWaSantri !== "-" ? santriData.noWaSantri : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
+        <DataItem label="Nama Wali" field="namaWali" value={santriData.namaWali !== "-" ? santriData.namaWali : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
+        <DataItem label="No. WA Wali" field="noWaWali" icon={<Phone size={10} />} value={santriData.noWaWali !== "-" ? santriData.noWaWali : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
         <DataItem label="Gender" value={santriData.gender === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"} />
       </DataGroup>
 
@@ -295,7 +306,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
             )}
           </dd>
         </div>
-        
+
         <div className="sm:col-span-1">
           <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
             <Calendar size={10} />
@@ -318,21 +329,6 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
       </DataGroup>
 
       {/* Status Verifikasi */}
-      <div className="bg-white rounded-2xl border border-primary-light/20 shadow-sm overflow-hidden p-6">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${santriData.isVerified ? "bg-success/10" : "bg-warning/10"}`}>
-            <CheckCircle2 size={20} className={santriData.isVerified ? "text-success" : "text-warning"} />
-          </div>
-          <div>
-            <p className="font-semibold text-text-primary">
-              Status: {santriData.isVerified ? "Terverifikasi" : "Menunggu Verifikasi Admin"}
-            </p>
-            <p className="text-xs text-text-secondary">
-              Pastikan data pribadi dan dokumen Anda lengkap agar segera diverifikasi oleh admin.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

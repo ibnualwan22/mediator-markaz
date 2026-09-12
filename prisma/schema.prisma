@@ -77,7 +77,8 @@ model Santri {
 
   // Dokumen
   fileAkteLahir     String           // Cloudinary URL
-  filePasFoto       String           // Cloudinary URL
+  filePasFoto       String           // Dokumen resmi (syarat)
+  fotoProfil        String?          // Foto profil portal kasual
 
   // Akademik
   riwayatAkademik       RiwayatAkademik

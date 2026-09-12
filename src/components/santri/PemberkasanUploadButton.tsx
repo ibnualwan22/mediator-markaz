@@ -14,8 +14,8 @@ export default function PemberkasanUploadButton({ itemPemberkasanId }: { itemPem
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) { // max 10MB
-      Swal.fire("Gagal", "Ukuran dokumen maksimal 10MB.", "error");
+    if (file.size > 50 * 1024 * 1024) { // max 50MB
+      Swal.fire("Gagal", "Ukuran dokumen maksimal 50MB.", "error");
       return;
     }
 
