@@ -110,7 +110,7 @@ export default function SantriSidebar({ nama, nis, foto }: SantriSidebarProps) {
           <div className="flex items-center gap-3 mb-4 px-2">
             {foto && foto !== "-" ? (
               <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-primary-light/20">
-                <img src="/api/santri/profile/photo/image" alt={nama} className="w-full h-full object-cover" />
+                <img src={`/api/santri/profile/photo/image?v=${encodeURIComponent(foto.slice(-15))}`} alt={nama} className="w-full h-full object-cover" />
               </div>
             ) : (
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-light/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">

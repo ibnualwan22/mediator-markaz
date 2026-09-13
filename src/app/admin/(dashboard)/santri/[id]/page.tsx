@@ -132,10 +132,10 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
 
         <div className="space-y-4 md:space-y-6">
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-primary-light/20 dark:border-gray-700 shadow-sm overflow-hidden p-6 text-center">
-            {santri.filePasFoto && (
+            {santri.fotoProfil && (
               <div className="w-32 h-40 bg-gray-100 dark:bg-gray-800 rounded-lg border border-primary-light/30 dark:border-gray-700 mx-auto mb-4 overflow-hidden shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={santri.filePasFoto} alt="Pas Foto" className="w-full h-full object-cover" />
+                <img src={`/api/admin/santri/${santri.id}/photo?v=${encodeURIComponent(santri.fotoProfil.slice(-15))}`} alt="Foto Profil" className="w-full h-full object-cover" />
               </div>
             )}
             <h3 className="font-bold text-lg text-text-primary dark:text-gray-100">{santri.namaLengkap}</h3>
