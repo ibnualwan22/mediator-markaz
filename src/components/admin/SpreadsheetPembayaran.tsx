@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { upsertCicilanPembayaran, changePaketSantri, bulkUpsertCicilanPembayaran, updatePembayaranSantriMeta } from "@/app/admin/(dashboard)/pembayaran/actions";
-import { updatePembayaranDL, bulkUpdatePembayaranDL, updateDarulLughohMeta } from "@/app/admin/(dashboard)/darul-lughoh/actions";
+import { updatePembayaranDL, bulkUpdatePembayaranDL, updateDarulLughohMeta, waivePembayaranDL, resetTagihanDL } from "@/app/admin/(dashboard)/darul-lughoh/actions";
 import { CheckCircle2, AlertCircle, CalendarRange, X, Save, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ImportExcelModal from "@/components/admin/ImportExcelModal";
@@ -525,7 +525,7 @@ export default function SpreadsheetPembayaran({
                                 const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
                                 const borderClass = isInputLunas ? 'border-success/30 focus:border-success text-success' : isOverdue ? 'border-danger focus:border-danger text-danger bg-danger/5 ring-1 ring-danger/30' : 'border-warning/30 focus:border-warning text-warning-dark';
 
-                                if (harus === 0) return <td key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>
+                                if (harus === 0 && !poin.isBebas) return <td key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>
 
                                 return (
                                   <td key={poin.id} className={`p-1.5 border-r border-primary-light/10 dark:border-gray-700 align-top ${isInputLunas ? 'bg-success/5' : isOverdue ? 'bg-danger/10' : 'bg-warning/5'}`}>
@@ -618,9 +618,10 @@ export default function SpreadsheetPembayaran({
                                                   type="button"
                                                   onClick={async () => {
                                                     const Swal = (await import('sweetalert2')).default;
+                                                    const isWaived = dl.nominalHarus === 0;
                                                     const result = await Swal.fire({
-                                                      title: 'Batalkan Pembayaran?',
-                                                      text: `Yakin ingin mengulang nominal pembayaran menjadi 0 untuk DL Tes Ke- ${dl.percobaan}?`,
+                                                      title: isWaived ? 'Batalkan Pembebasan?' : 'Batalkan Pembayaran?',
+                                                      text: isWaived ? `Yakin ingin mengembalikan tagihan DL Tes Ke- ${dl.percobaan} ke semula?` : `Yakin ingin mengulang nominal pembayaran menjadi 0 untuk DL Tes Ke- ${dl.percobaan}?`,
                                                       icon: 'warning',
                                                       showCancelButton: true,
                                                       confirmButtonText: 'Ya, Batalkan',
@@ -628,7 +629,13 @@ export default function SpreadsheetPembayaran({
                                                       confirmButtonColor: '#e11d48'
                                                     });
                                                     if (result.isConfirmed) {
-                                                      handleBlurDL(dl.id, 0, dl.nominalDibayar, dl.nominalHarus);
+                                                      if (isWaived) {
+                                                        setIsLoading(true);
+                                                        await resetTagihanDL(dl.id);
+                                                        setIsLoading(false);
+                                                      } else {
+                                                        handleBlurDL(dl.id, 0, dl.nominalDibayar, dl.nominalHarus);
+                                                      }
                                                     }
                                                   }}
                                                   disabled={isLoading}
@@ -672,17 +679,44 @@ export default function SpreadsheetPembayaran({
                                               <div className="flex justify-between items-center px-1">
                                                 <div className="flex items-center gap-1">
                                                   {!isInputLunas ? (
-                                                    <button
-                                                      type="button"
-                                                      onClick={() => {
-                                                        handleCicilanChange(k, String(dl.nominalHarus));
-                                                        handleBlurDL(dl.id, dl.nominalHarus, dl.nominalDibayar, dl.nominalHarus);
-                                                      }}
-                                                      className="text-xs bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
-                                                    >
-                                                      SET LUNAS
-                                                    </button>
-                                                  ) : <div />}
+                                                    <div className="flex items-center gap-1">
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                          handleCicilanChange(k, String(dl.nominalHarus));
+                                                          handleBlurDL(dl.id, dl.nominalHarus, dl.nominalDibayar, dl.nominalHarus);
+                                                        }}
+                                                        className="text-[10px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold whitespace-nowrap"
+                                                      >
+                                                        SET LUNAS
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                          setIsLoading(true);
+                                                          await waivePembayaranDL(dl.id);
+                                                          setIsLoading(false);
+                                                        }}
+                                                        className="text-[10px] bg-warning/20 text-warning-dark hover:bg-warning/30 px-1 py-0.5 rounded transition-colors font-bold"
+                                                      >
+                                                        BEBASKAN
+                                                      </button>
+                                                    </div>
+                                                  ) : (
+                                                    dl.nominalHarus === 0 ? (
+                                                      <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                          setIsLoading(true);
+                                                          await resetTagihanDL(dl.id);
+                                                          setIsLoading(false);
+                                                        }}
+                                                        className="text-[10px] text-danger/70 hover:text-danger underline outline-none"
+                                                      >
+                                                        Batal Bebas
+                                                      </button>
+                                                    ) : <div />
+                                                  )}
                                                   <button
                                                     type="button"
                                                     title="Target & Catatan Cicilan"
@@ -717,7 +751,7 @@ export default function SpreadsheetPembayaran({
                                   const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
                                   const borderClass = isInputLunas ? 'border-success/30 focus:border-success text-success' : isOverdue ? 'border-danger focus:border-danger text-danger bg-danger/5 ring-1 ring-danger/30' : 'border-warning/30 focus:border-warning text-warning-dark';
 
-                                  if (harus === 0) return <td key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>
+                                  if (harus === 0 && !poin.isBebas) return <td key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 text-center text-text-secondary dark:text-gray-400/30 align-top">-</td>
 
                                   return (
                                     <td key={poin.id} className={`p-1.5 border-r border-primary-light/10 dark:border-gray-700 align-top ${isInputLunas ? 'bg-success/5' : isOverdue ? 'bg-danger/10' : 'bg-warning/5'}`}>

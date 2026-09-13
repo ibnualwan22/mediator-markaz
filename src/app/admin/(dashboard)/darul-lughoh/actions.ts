@@ -279,3 +279,32 @@ export async function deleteAttemptDL(id: string) {
     return { success: false, error: "Gagal menghapus riwayat" };
   }
 }
+
+export async function waivePembayaranDL(id: string) {
+  try {
+    await prisma.darulLughohSantri.update({
+      where: { id },
+      data: { nominalHarus: 0, nominalDibayar: 0, isLunas: true }
+    });
+    revalidatePath("/admin/darul-lughoh");
+    revalidatePath("/admin/pembayaran");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Gagal membebaskan tagihan DL" };
+  }
+}
+
+export async function resetTagihanDL(id: string) {
+  try {
+    const setting = await getSettingDL();
+    await prisma.darulLughohSantri.update({
+      where: { id },
+      data: { nominalHarus: setting.nominalPerLevel, nominalDibayar: 0, isLunas: false }
+    });
+    revalidatePath("/admin/darul-lughoh");
+    revalidatePath("/admin/pembayaran");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Gagal mereset tagihan DL" };
+  }
+}
