@@ -467,14 +467,19 @@ export default function SpreadsheetPembayaran({
                           tahaps.forEach((t: any) => {
                             t.poinTahap.forEach((pt: any) => {
                               let h = pt.nominal;
-                              if (t.isIjazahBased && pt.nominalIjazah) {
+                              const ps = santri.pembayaranSantri.find((s: any) => s.poinTahapId === pt.id);
+                              
+                              if (ps && ps.nominalHarus !== undefined) {
+                                // If database record exists, its nominalHarus is the source of truth
+                                h = ps.nominalHarus;
+                              } else if (t.isIjazahBased && pt.nominalIjazah) {
+                                // Fallback mapping
                                 if (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN') {
                                   h = pt.nominalIjazah;
                                 }
                               }
                               calcHarusList[pt.id] = h;
 
-                              const ps = santri.pembayaranSantri.find((s: any) => s.poinTahapId === pt.id);
                               const dibayar = ps?.nominalDibayar || 0;
                               globalKekurangan += Math.max(0, h - dibayar);
                             });
