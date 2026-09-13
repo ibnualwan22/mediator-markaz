@@ -57,7 +57,7 @@ export default function SantriLoginPage() {
             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0 backdrop-blur-sm border border-white/30 overflow-hidden">
               <Image src="/logo-mediator.png" alt="Logo" width={48} height={48} className="object-cover" />
             </div>
-            <h1 className="text-2xl font-heading font-bold text-white relative z-10">Portal Camaba</h1>
+            <h1 className="text-2xl font-heading font-bold text-white relative z-10">Portal CAMABA</h1>
             <p className="text-white/80 mt-1.5 text-sm relative z-10">
               Markaz Arabiyah
             </p>

@@ -74,7 +74,7 @@ export default function SantriSidebar({ nama, nis, foto }: SantriSidebarProps) {
           <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
             <Image src="/logo-mediator.png" alt="Logo" width={32} height={32} className="rounded-sm" />
           </div>
-          <div className="font-heading font-bold text-lg text-primary flex-1">Portal Camaba</div>
+          <div className="font-heading font-bold text-lg text-primary flex-1">PORTAL CAMABA</div>
           <button
             onClick={() => setIsOpen(false)}
             className="lg:hidden p-1.5 rounded-lg hover:bg-primary/5 text-text-secondary transition-colors"
