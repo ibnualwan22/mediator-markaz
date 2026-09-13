@@ -28,6 +28,36 @@ export async function POST(req: Request) {
       },
     });
 
+    const isAgama = santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN';
+    
+    // Tarik pembayaran yang terpengaruh ijazah
+    const pembayaranSantriToUpdate = await prisma.pembayaranSantri.findMany({
+      where: { santriId: santri.id },
+      include: {
+        poinTahap: {
+          include: { tahapPaket: true }
+        }
+      }
+    });
+
+    for (const p of pembayaranSantriToUpdate) {
+      const poin = p.poinTahap;
+      // Tambahkan @ts-ignore jika isBebas belum digenerate type-nya
+      // @ts-ignore
+      if (poin.isBebas) continue;
+
+      if (poin.tahapPaket.isIjazahBased && poin.nominalIjazah !== null) {
+        const nominalHarus = isAgama ? poin.nominalIjazah : poin.nominal;
+        if (p.nominalHarus !== nominalHarus) {
+          const isLunas = p.nominalDibayar >= nominalHarus;
+          await prisma.pembayaranSantri.update({
+            where: { id: p.id },
+            data: { nominalHarus, isLunas }
+          });
+        }
+      }
+    }
+
     return NextResponse.json({ success: true, santri });
   } catch (error: any) {
     console.error("Update Profile Error:", error);

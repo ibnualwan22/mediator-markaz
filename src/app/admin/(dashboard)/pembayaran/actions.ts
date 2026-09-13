@@ -133,7 +133,8 @@ export async function createPoinTahap(data: {
   nama: string; 
   urutan: number; 
   nominal: number; 
-  nominalIjazah?: number 
+  nominalIjazah?: number;
+  isBebas: boolean;
 }) {
   await prisma.poinTahap.create({
     data: {
@@ -141,7 +142,8 @@ export async function createPoinTahap(data: {
       nama: data.nama,
       urutan: data.urutan,
       nominal: data.nominal,
-      nominalIjazah: data.nominalIjazah
+      nominalIjazah: data.nominalIjazah,
+      isBebas: data.isBebas
     }
   });
   revalidatePath("/admin/pembayaran/master");
@@ -154,7 +156,7 @@ export async function deletePoinTahap(id: string) {
 
 // ============ PEMBAYARAN SANTRI (SPREADSHEET ACTION) ============
 
-export async function updatePembayaranSantriMeta(santriId: string, poinTahapId: string, tanggalJatuhTempo: Date | null, catatan: string | null) {
+export async function updatePembayaranSantriMeta(santriId: string, poinTahapId: string, tanggalJatuhTempo: Date | null, catatan: string | null, targetNominalBebas?: number) {
   // Try to find the nominalHarus if creating a new record
   const santri = await prisma.santri.findUnique({
     where: { id: santriId },
@@ -172,8 +174,10 @@ export async function updatePembayaranSantriMeta(santriId: string, poinTahapId: 
     for (const t of santri.paketPembayaran.tahapPaket) {
       const pt = t.poinTahap.find(p => p.id === poinTahapId);
       if (pt) {
-        nominalHarus = pt.nominal;
-        if (t.isIjazahBased && pt.nominalIjazah) {
+        nominalHarus = targetNominalBebas ?? pt.nominal;
+        if (targetNominalBebas !== undefined) {
+           // use targetNominalBebas directly
+        } else if (t.isIjazahBased && pt.nominalIjazah) {
           if (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN') {
             nominalHarus = pt.nominalIjazah;
           }
@@ -185,7 +189,11 @@ export async function updatePembayaranSantriMeta(santriId: string, poinTahapId: 
 
   await prisma.pembayaranSantri.upsert({
     where: { santriId_poinTahapId: { santriId, poinTahapId } },
-    update: { tanggalJatuhTempo, catatan },
+    update: { 
+       tanggalJatuhTempo, 
+       catatan,
+       nominalHarus: targetNominalBebas !== undefined ? targetNominalBebas : undefined 
+    },
     create: {
       santriId,
       poinTahapId,

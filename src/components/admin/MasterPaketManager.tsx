@@ -17,7 +17,7 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
   // Form states
   const [paketForm, setPaketForm] = useState({ nama: "", urutan: 1, isDefault: false });
   const [tahapForm, setTahapForm] = useState({ nama: "", urutan: 1, isIjazahBased: false });
-  const [poinForm, setPoinForm] = useState({ nama: "", urutan: 1, nominal: 0, nominalIjazah: 0 });
+  const [poinForm, setPoinForm] = useState({ nama: "", urutan: 1, nominal: 0, nominalIjazah: 0, isBebas: false });
 
   const [activeFormTarget, setActiveFormTarget] = useState<{type: 'tahap' | 'poin', id: string} | null>(null);
 
@@ -45,10 +45,11 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
       tahapPaketId: tahapId,
       nama: poinForm.nama,
       urutan: poinForm.urutan,
-      nominal: poinForm.nominal,
-      nominalIjazah: isIjazahBased ? poinForm.nominalIjazah : undefined
+      nominal: poinForm.isBebas ? 0 : poinForm.nominal,
+      nominalIjazah: poinForm.isBebas ? undefined : (isIjazahBased ? poinForm.nominalIjazah : undefined),
+      isBebas: poinForm.isBebas
     });
-    setPoinForm({ nama: "", urutan: 1, nominal: 0, nominalIjazah: 0 });
+    setPoinForm({ nama: "", urutan: 1, nominal: 0, nominalIjazah: 0, isBebas: false });
     setActiveFormTarget(null);
     setIsLoading(false);
   };
@@ -205,6 +206,7 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                               <th className="pb-2 font-medium">Nama Poin</th>
                               <th className="pb-2 font-medium">Nominal</th>
                               {tahap.isIjazahBased && <th className="pb-2 font-medium">Nominal Khusus (MA/P)</th>}
+                              <th className="pb-2 font-medium">Status Target</th>
                               <th className="pb-2"></th>
                             </tr>
                           </thead>
@@ -213,8 +215,9 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                               <tr key={poin.id} className="border-t border-primary-light/10 dark:border-gray-700">
                                 <td className="py-2">{poin.urutan}</td>
                                 <td className="py-2 font-medium text-text-primary dark:text-gray-100">{poin.nama}</td>
-                                <td className="py-2">Rp {poin.nominal.toLocaleString('id-ID')}</td>
-                                {tahap.isIjazahBased && <td className="py-2 text-warning font-medium">Rp {poin.nominalIjazah?.toLocaleString('id-ID')}</td>}
+                                <td className="py-2">{poin.isBebas ? '-' : `Rp ${poin.nominal.toLocaleString('id-ID')}`}</td>
+                                {tahap.isIjazahBased && <td className="py-2 text-warning font-medium">{poin.isBebas ? '-' : `Rp ${poin.nominalIjazah?.toLocaleString('id-ID')}`}</td>}
+                                <td className="py-2">{poin.isBebas ? <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-bold">Bebas/Fleksibel</span> : <span className="text-gray-400">-</span>}</td>
                                 <td className="py-2 text-right">
                                   <button onClick={() => deletePoinTahap(poin.id)} className="text-danger hover:bg-danger/10 p-1 rounded"><Trash2 size={14}/></button>
                                 </td>
@@ -237,15 +240,23 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
                              <label className="text-[10px] text-text-secondary dark:text-gray-400">Urutan</label>
                              <input type="number" required value={poinForm.urutan} onChange={e => setPoinForm(f => ({ ...f, urutan: parseInt(e.target.value) }))} className="w-full px-2 py-1.5 rounded border text-xs text-center outline-none" />
                            </div>
-                           <div className="w-32">
-                             <label className="text-[10px] text-text-secondary dark:text-gray-400">Nominal {tahap.isIjazahBased ? '(Umum)' : ''}</label>
-                             <input type="number" required value={poinForm.nominal || ''} onChange={e => setPoinForm(f => ({ ...f, nominal: parseInt(e.target.value) || 0 }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none" />
+                           <div className="flex items-center gap-1.5 mb-1.5 mr-2">
+                             <input type="checkbox" checked={poinForm.isBebas} onChange={e => setPoinForm(f => ({ ...f, isBebas: e.target.checked }))} className="rounded text-primary focus:ring-primary h-3.5 w-3.5" />
+                             <label className="text-[10px] whitespace-nowrap cursor-pointer" onClick={() => setPoinForm(f => ({ ...f, isBebas: !f.isBebas }))}>Fleksibel/Bebas</label>
                            </div>
-                           {tahap.isIjazahBased && (
-                             <div className="w-32">
-                               <label className="text-[10px] text-text-secondary dark:text-gray-400">Nominal (MA/P)</label>
-                               <input type="number" required value={poinForm.nominalIjazah || ''} onChange={e => setPoinForm(f => ({ ...f, nominalIjazah: parseInt(e.target.value) || 0 }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none bg-warning/5 border-warning/30" />
-                             </div>
+                           {!poinForm.isBebas && (
+                             <>
+                               <div className="w-32">
+                                 <label className="text-[10px] text-text-secondary dark:text-gray-400">Nominal {tahap.isIjazahBased ? '(Umum)' : ''}</label>
+                                 <input type="number" required value={poinForm.nominal || ''} onChange={e => setPoinForm(f => ({ ...f, nominal: parseInt(e.target.value) || 0 }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none" />
+                               </div>
+                               {tahap.isIjazahBased && (
+                                 <div className="w-32">
+                                   <label className="text-[10px] text-text-secondary dark:text-gray-400">Nominal (MA/P)</label>
+                                   <input type="number" required value={poinForm.nominalIjazah || ''} onChange={e => setPoinForm(f => ({ ...f, nominalIjazah: parseInt(e.target.value) || 0 }))} className="w-full px-2 py-1.5 rounded border text-xs outline-none bg-warning/5 border-warning/30" />
+                                 </div>
+                               )}
+                             </>
                            )}
                            <button type="submit" disabled={isLoading} className="px-3 py-1.5 bg-primary text-white text-xs rounded font-medium disabled:opacity-50 h-[30px] mb-0.5">Simpan</button>
                            <button type="button" onClick={() => setActiveFormTarget(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded font-medium h-[30px] mb-0.5">Batal</button>

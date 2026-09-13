@@ -70,7 +70,7 @@ export async function verifySantri(santriId: string) {
         
         // Auto-pay Tahap 1 Poin 1 (Booking Rp 1.000.000)
         let nominalDibayar = 0;
-        let isLunas = nominalActive === 0;
+        let isLunas = nominalActive === 0 && !poin.isBebas;
         
         if (t === 0 && p === 0) {
           nominalDibayar = nominalActive;
@@ -280,12 +280,15 @@ export async function transferSantriToGelombang(santriId: string, targetGelomban
             const toPay = Math.min(remainingBalance, nominalHarus);
             remainingBalance -= toPay;
 
+            let isLunas = toPay >= nominalHarus && nominalHarus > 0;
+            if (nominalHarus === 0 && !poin.isBebas) isLunas = true; // Auto-lunas if it is genuinely free
+
             newPembayaranRecords.push({
               santriId,
               poinTahapId: poin.id,
               nominalHarus,
               nominalDibayar: toPay,
-              isLunas: toPay >= nominalHarus
+              isLunas
             });
           }
         }

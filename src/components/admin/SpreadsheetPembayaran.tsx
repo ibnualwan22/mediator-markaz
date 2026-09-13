@@ -38,7 +38,7 @@ export default function SpreadsheetPembayaran({
 
   // Meta Modal State
   const [metaModal, setMetaModal] = useState<{
-    isOpen: boolean; type: 'TAHAP' | 'DL'; recordId: string; santriId?: string; poinTahapId?: string; nama: string; tanggal: string; catatan: string;
+    isOpen: boolean; type: 'TAHAP' | 'DL'; recordId: string; santriId?: string; poinTahapId?: string; nama: string; tanggal: string; catatan: string; isBebas?: boolean; nominalHarus?: number;
   } | null>(null);
 
   const [overdueAlertClosed, setOverdueAlertClosed] = useState(false);
@@ -233,6 +233,20 @@ export default function SpreadsheetPembayaran({
                   className="w-full px-3 py-2 border border-primary-light/30 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 outline-none focus:border-primary"
                 />
               </div>
+              {metaModal.type === 'TAHAP' && metaModal.isBebas && (
+                <div>
+                  <label className="block text-xs font-bold text-text-primary dark:text-gray-100 mb-1 flex justify-between">
+                    Target Nominal (Bebas)
+                    <span className="text-[10px] text-primary/70 font-normal">Diperbarui saat disimpan</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={metaModal.nominalHarus ?? ''}
+                    onChange={e => setMetaModal({ ...metaModal, nominalHarus: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-primary-light/30 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 outline-none focus:border-primary"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-bold text-text-primary dark:text-gray-100 mb-1">Catatan Tambahan</label>
                 <textarea
@@ -248,7 +262,7 @@ export default function SpreadsheetPembayaran({
                 onClick={async () => {
                   setIsLoading(true);
                   if (metaModal.type === 'TAHAP' && metaModal.santriId && metaModal.poinTahapId) {
-                    await updatePembayaranSantriMeta(metaModal.santriId, metaModal.poinTahapId, metaModal.tanggal ? new Date(metaModal.tanggal) : null, metaModal.catatan || null);
+                    await updatePembayaranSantriMeta(metaModal.santriId, metaModal.poinTahapId, metaModal.tanggal ? new Date(metaModal.tanggal) : null, metaModal.catatan || null, metaModal.nominalHarus);
                   } else if (metaModal.type === 'DL') {
                     await updateDarulLughohMeta(metaModal.recordId, metaModal.tanggal ? new Date(metaModal.tanggal) : null, metaModal.catatan || null);
                   }
@@ -541,7 +555,7 @@ export default function SpreadsheetPembayaran({
                                           <button
                                             type="button"
                                             title="Target & Catatan Cicilan"
-                                            onClick={() => setMetaModal({ isOpen: true, type: 'TAHAP', recordId: ps?.id || '', santriId: santri.id, poinTahapId: poin.id, nama: poin.nama, tanggal: ps?.tanggalJatuhTempo ? new Date(ps.tanggalJatuhTempo).toISOString().split('T')[0] : '', catatan: ps?.catatan || '' })}
+                                            onClick={() => setMetaModal({ isOpen: true, type: 'TAHAP', recordId: ps?.id || '', santriId: santri.id, poinTahapId: poin.id, nama: poin.nama, tanggal: ps?.tanggalJatuhTempo ? new Date(ps.tanggalJatuhTempo).toISOString().split('T')[0] : '', catatan: ps?.catatan || '', isBebas: poin.isBebas, nominalHarus: harus })}
                                             className="text-primary/50 hover:text-primary outline-none"
                                           ><CalendarRange size={10} /></button>
                                         </div>
@@ -729,7 +743,7 @@ export default function SpreadsheetPembayaran({
                                             <button
                                               type="button"
                                               title="Target & Catatan Cicilan"
-                                              onClick={() => setMetaModal({ isOpen: true, type: 'TAHAP', recordId: ps?.id || '', santriId: santri.id, poinTahapId: poin.id, nama: poin.nama, tanggal: ps?.tanggalJatuhTempo ? new Date(ps.tanggalJatuhTempo).toISOString().split('T')[0] : '', catatan: ps?.catatan || '' })}
+                                              onClick={() => setMetaModal({ isOpen: true, type: 'TAHAP', recordId: ps?.id || '', santriId: santri.id, poinTahapId: poin.id, nama: poin.nama, tanggal: ps?.tanggalJatuhTempo ? new Date(ps.tanggalJatuhTempo).toISOString().split('T')[0] : '', catatan: ps?.catatan || '', isBebas: poin.isBebas, nominalHarus: harus })}
                                               className="text-primary/50 hover:text-primary outline-none"
                                             ><CalendarRange size={10} /></button>
                                           </div>

@@ -173,6 +173,7 @@ model PoinTahap {
   nama             String     // "Biaya Pendaftaran"
   nominal          Int        // Default nominal (untuk non-ijazah atau umum)
   nominalIjazah    Int?       // Nominal khusus MA/Pesantren (jika parent tahap isIjazahBased)
+  isBebas          Boolean    @default(false) // Fleksibel/target manual
   urutan           Int
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
