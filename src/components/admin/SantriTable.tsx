@@ -17,12 +17,12 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   const [isCopying, setIsCopying] = useState(false);
 
   const filteredData = santriList.filter(s => {
-    const matchSearch = s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        s.noPendaftaran.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (s.nis && s.nis.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+    const matchSearch = s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.noPendaftaran.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.nis && s.nis.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchGelombang = filterGelombang ? s.gelombangId === filterGelombang : true;
-    
+
     return matchSearch && matchGelombang;
   });
 
@@ -49,8 +49,8 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
       }
       if (!s.tahunKelulusan || s.tahunKelulusan === 0) missingFields.push("Tahun Kelulusan");
 
-      // Check KTP
-      if (!s.fileKtp) missingFields.push("Foto KTP");
+      // Check Foto Profil (Profil Santri)
+      if (!s.fotoProfil || s.fotoProfil === "-" || s.fotoProfil === "") missingFields.push("Foto Profil (Backgroun Merah)");
 
       // Check Paspor
       if (!s.nomorPaspor || s.nomorPaspor === "-" || s.nomorPaspor === "") missingFields.push("Nomor Paspor");
@@ -86,15 +86,15 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
       <div className="p-4 md:p-6 border-b border-primary-light/20 dark:border-gray-700 flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-72">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-gray-400 w-5 h-5" />
-          <input 
-            type="text" 
-            placeholder="Cari nama, No. Daftar, NIC..." 
+          <input
+            type="text"
+            placeholder="Cari nama, No. Daftar, NIC..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-bg-cream dark:bg-gray-800 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
           />
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={handleCopyIncompleteData}
@@ -104,9 +104,9 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           >
             <Filter size={16} /> {isCopying ? "Menyalin..." : "Salin Data Kosong"}
           </button>
-          
+
           <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
-          
+
           <button
             onClick={() => setShowPasporModal(true)}
             className="flex items-center justify-center gap-2 px-4 py-2 bg-warning/10 hover:bg-warning text-warning hover:text-white border border-warning/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"
@@ -127,7 +127,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           </button>
           <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
           <Filter size={18} className="text-text-secondary dark:text-gray-400" />
-          <select 
+          <select
             value={filterGelombang}
             onChange={e => setFilterGelombang(e.target.value)}
             className="w-full sm:w-48 px-3 py-2 bg-bg-cream dark:bg-gray-800 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
@@ -179,10 +179,10 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
                   )}
                 </td>
                 <td className="p-4 text-text-secondary dark:text-gray-400">
-                  {s.gelombang.periode.nama} <br/> <span className="font-medium text-xs border rounded px-1.5 py-0.5 mt-1 inline-block bg-white dark:bg-gray-900">{s.gelombang.nama}</span>
+                  {s.gelombang.periode.nama} <br /> <span className="font-medium text-xs border rounded px-1.5 py-0.5 mt-1 inline-block bg-white dark:bg-gray-900">{s.gelombang.nama}</span>
                 </td>
                 <td className="p-4 text-center">
-                  <Link 
+                  <Link
                     href={`/admin/santri/${s.id}`}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-900 border border-primary-light/40 dark:border-gray-700 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-xs font-medium"
                   >
@@ -200,7 +200,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           </tbody>
         </table>
       </div>
-      <ImportExcelModal 
+      <ImportExcelModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         gelombangList={gelombangList}
@@ -211,7 +211,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         showGelombang={false}
       />
 
-      <ImportExcelModal 
+      <ImportExcelModal
         isOpen={showPasporModal}
         onClose={() => setShowPasporModal(false)}
         gelombangList={gelombangList}
@@ -223,8 +223,8 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         templateUrl="/api/admin/santri/paspor/template"
         showGelombang={false}
       />
-      
-      <ImportExcelModal 
+
+      <ImportExcelModal
         isOpen={showUrutModal}
         onClose={() => setShowUrutModal(false)}
         gelombangList={gelombangList}
