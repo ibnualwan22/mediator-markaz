@@ -146,6 +146,7 @@ export async function updateSantriData(santriId: string, data: any) {
         tanggalKadaluarsaPaspor: parseDate(data.tanggalKadaluarsaPaspor),
         nis: data.nis,
         nomorUrut: data.nomorUrut,
+        jurusan: data.jurusan || null,
       }
     });
 

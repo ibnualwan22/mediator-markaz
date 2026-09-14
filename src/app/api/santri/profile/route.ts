@@ -25,6 +25,7 @@ export async function POST(req: Request) {
         riwayatAkademik: data.riwayatAkademik,
         riwayatAkademikLainnya: data.riwayatAkademikLainnya,
         tahunKelulusan: data.tahunKelulusan ? parseInt(data.tahunKelulusan, 10) : undefined,
+        jurusan: data.jurusan,
       },
     });
 

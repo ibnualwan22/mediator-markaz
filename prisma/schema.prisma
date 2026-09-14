@@ -57,6 +57,14 @@ enum RiwayatAkademik {
   LAINNYA
 }
 
+enum JurusanType {
+  LUGHAH
+  SYARIAH
+  USHULUDDIN
+  DIRASAT
+  ULUM
+}
+
 model Santri {
   id                String           @id @default(cuid())
   noPendaftaran     String           @unique // Auto-generated: MA-2026-0001
@@ -86,6 +94,7 @@ model Santri {
   riwayatAkademikLainnya String?     // Jika pilih LAINNYA
   tahunKelulusan        Int
   fileIjazah            String       // Cloudinary URL
+  jurusan               JurusanType?
 
   // Paspor
   nomorPaspor           String?

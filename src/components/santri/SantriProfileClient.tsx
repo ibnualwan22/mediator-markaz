@@ -60,6 +60,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
     riwayatAkademik: santriData.riwayatAkademik || "SMA",
     riwayatAkademikLainnya: santriData.riwayatAkademikLainnya || "",
     tahunKelulusan: santriData.tahunKelulusan || new Date().getFullYear(),
+    jurusan: santriData.jurusan || "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -272,14 +273,6 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
 
       {/* Dokumen Pribadi */}
       <DataGroup title="Dokumen Pribadi" icon={<FileText size={20} />}>
-        {santriData.fileAkteLahir && (
-          <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Akte Kelahiran</dt>
-            <dd className="text-sm">
-              <a href={santriData.fileAkteLahir.replace('export=view', 'export=download')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors">Unduh Dokumen</a>
-            </dd>
-          </div>
-        )}
         {santriData.fileKtp && (
           <div className="sm:col-span-1">
             <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Foto KTP</dt>
@@ -288,18 +281,39 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
             </dd>
           </div>
         )}
-        {santriData.filePasFoto && (
-          <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Pas Foto Resmi</dt>
-            <dd className="text-sm">
-              <a href={santriData.filePasFoto.replace('export=view', 'export=download')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors">Unduh Dokumen</a>
-            </dd>
-          </div>
-        )}
       </DataGroup>
 
       {/* Riwayat Akademik */}
       <DataGroup title="Riwayat Akademik" icon={<GraduationCap size={20} />}>
+        <div className="sm:col-span-1">
+          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            Pesan Jurusan / Program Studi
+          </dt>
+          <dd className="text-sm text-text-primary font-semibold">
+            {isEditing ? (
+              <select
+                value={formData.jurusan}
+                onChange={(e) => setFormData({ ...formData, jurusan: e.target.value })}
+                className="w-full px-3 py-2 border border-primary-light/30 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-normal bg-white"
+              >
+                <option value="">Pilih Jurusan</option>
+                <option value="LUGHAH">Lughah</option>
+                <option value="SYARIAH">Syariah</option>
+                <option value="USHULUDDIN">Ushuluddin</option>
+                <option value="DIRASAT">Dirasat</option>
+                <option value="ULUM">Ulum</option>
+              </select>
+            ) : (
+              santriData.jurusan === "LUGHAH" ? "Lughah" :
+                santriData.jurusan === "SYARIAH" ? "Syariah" :
+                  santriData.jurusan === "USHULUDDIN" ? "Ushuluddin" :
+                    santriData.jurusan === "DIRASAT" ? "Dirasat" :
+                      santriData.jurusan === "ULUM" ? "Ulum" :
+                        <span className="text-text-secondary/40 italic font-normal">Belum diisi</span>
+            )}
+          </dd>
+        </div>
+
         <div className="sm:col-span-1">
           <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
             Pendidikan Terakhir
@@ -363,7 +377,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
             Nomor Paspor
           </dt>
           <dd className="text-sm text-text-primary font-semibold font-mono">
-             {santriData.nomorPaspor || <span className="text-text-secondary/40 italic font-normal font-sans">Belum diisi</span>}
+            {santriData.nomorPaspor || <span className="text-text-secondary/40 italic font-normal font-sans">Belum diisi</span>}
           </dd>
         </div>
         <div className="sm:col-span-1"></div>
@@ -374,7 +388,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
             Tanggal Pembuatan
           </dt>
           <dd className="text-sm text-text-primary font-semibold">
-            {santriData.tanggalPembuatanPaspor ? new Date(santriData.tanggalPembuatanPaspor).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : "-"}
+            {santriData.tanggalPembuatanPaspor ? new Date(santriData.tanggalPembuatanPaspor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
           </dd>
         </div>
 
@@ -384,7 +398,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
             Tanggal Kadaluarsa
           </dt>
           <dd className="text-sm text-text-primary font-semibold">
-            {santriData.tanggalKadaluarsaPaspor ? new Date(santriData.tanggalKadaluarsaPaspor).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : "-"}
+            {santriData.tanggalKadaluarsaPaspor ? new Date(santriData.tanggalKadaluarsaPaspor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
           </dd>
         </div>
       </DataGroup>

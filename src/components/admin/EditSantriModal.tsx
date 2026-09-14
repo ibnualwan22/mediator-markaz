@@ -23,6 +23,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
     tanggalKadaluarsaPaspor: santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toISOString().split('T')[0] : "",
     nis: santri.nis || "",
     nomorUrut: santri.nomorUrut || "",
+    jurusan: santri.jurusan || "",
   });
 
 
@@ -42,6 +43,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
         tanggalKadaluarsaPaspor: santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toISOString().split('T')[0] : "",
         nis: santri.nis || "",
         nomorUrut: santri.nomorUrut || "",
+        jurusan: santri.jurusan || "",
       });
     }
   }, [isOpen, santri]);
@@ -106,6 +108,17 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                     <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all">
                       <option value="LAKI_LAKI">Laki-laki</option>
                       <option value="PEREMPUAN">Perempuan</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Jurusan / Program</label>
+                    <select name="jurusan" value={formData.jurusan} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all text-primary font-semibold">
+                      <option value="">- Kosong / Belum diisi -</option>
+                      <option value="LUGHAH">Lughawi</option>
+                      <option value="SYARIAH">Syariah</option>
+                      <option value="USHULUDDIN">Ushuluddin</option>
+                      <option value="DIRASAT">Dirasat</option>
+                      <option value="ULUM">Ulumul Quran</option>
                     </select>
                   </div>
                   <div>
