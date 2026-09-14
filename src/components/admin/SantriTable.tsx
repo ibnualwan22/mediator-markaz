@@ -49,6 +49,9 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
       }
       if (!s.tahunKelulusan || s.tahunKelulusan === 0) missingFields.push("Tahun Kelulusan");
 
+      // Check KTP
+      if (!s.fileKtp) missingFields.push("Foto KTP");
+
       // Check Paspor
       if (!s.nomorPaspor || s.nomorPaspor === "-" || s.nomorPaspor === "") missingFields.push("Nomor Paspor");
 

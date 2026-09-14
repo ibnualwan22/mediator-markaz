@@ -106,7 +106,7 @@ export default function SpreadsheetPembayaran({
     // Refresh FIRST, then show non-blocking toast
     router.refresh();
 
-    if (res?.success && currentVal > nominalHarus) {
+    if (res?.success && currentVal > nominalHarus && !res.wasAutoAdjusted) {
       const Swal = (await import('sweetalert2')).default;
       if (res.remainingSurplus && res.remainingSurplus > 0) {
         Swal.fire({ title: 'Perhatian', text: `Sisa uang Rp ${res.remainingSurplus.toLocaleString('id-ID')} tidak bisa dibagikan karena tidak ada tagihan kolom berikutnya.`, icon: 'warning', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
@@ -519,7 +519,7 @@ export default function SpreadsheetPembayaran({
                                 const dibayar = ps?.nominalDibayar || 0;
                                 const k = `${santri.id}-${poin.id}`;
                                 const displayVal = localCicilan[k] !== undefined ? localCicilan[k] : dibayar;
-                                const isInputLunas = displayVal >= harus;
+                                const isInputLunas = displayVal >= harus && (harus > 0 || !poin.isBebas || (ps?.isLunas));
                                 const displayStr = displayVal === 0 ? '' : displayVal.toLocaleString('id-ID');
 
                                 const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
@@ -745,7 +745,7 @@ export default function SpreadsheetPembayaran({
                                   const dibayar = ps?.nominalDibayar || 0;
                                   const k = `${santri.id}-${poin.id}`;
                                   const displayVal = localCicilan[k] !== undefined ? localCicilan[k] : dibayar;
-                                  const isInputLunas = displayVal >= harus;
+                                  const isInputLunas = displayVal >= harus && (harus > 0 || !poin.isBebas || (ps?.isLunas));
                                   const displayStr = displayVal === 0 ? '' : displayVal.toLocaleString('id-ID');
 
                                   const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;

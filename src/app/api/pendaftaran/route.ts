@@ -41,6 +41,7 @@ export async function POST(req: Request) {
         noWaWali: body.noWaWali,
 
         fileAkteLahir: body.fileAkteLahir,
+        fileKtp: body.fileKtp || null,
         filePasFoto: body.filePasFoto,
 
         riwayatAkademik: body.riwayatAkademik,

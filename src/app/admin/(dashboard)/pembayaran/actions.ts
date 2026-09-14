@@ -246,7 +246,16 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
     } 
   });
 
-  const resolvedHarus = p ? p.nominalHarus : nominalHarus;
+  const pt = allPoints[startIndex];
+  let resolvedHarus = p ? p.nominalHarus : nominalHarus;
+  
+  let wasAutoAdjusted = false;
+  // Jika poin ini bersifat bebas, dan targetnya masih 0 (belum pernah diset),
+  // otomatiskan target tagihannya mengikuti uang yang pertama kali diinput!
+  if (pt.isBebas && resolvedHarus === 0) {
+    resolvedHarus = inputNominalDibayar;
+    wasAutoAdjusted = true;
+  }
   
   // Calculate surplus
   let currentNominal = Math.min(inputNominalDibayar, resolvedHarus);
@@ -334,7 +343,7 @@ export async function upsertCicilanPembayaran(santriId: string, poinTahapId: str
 
   console.log('[UPSERT] Final remainingSurplus:', surplus);
   revalidatePath("/admin/pembayaran");
-  return { success: true, remainingSurplus: surplus };
+  return { success: true, remainingSurplus: surplus, wasAutoAdjusted };
 }
 
 export async function bulkUpsertCicilanPembayaran(updates: { santriId: string, poinTahapId: string, nominalHarus: number }[]) {

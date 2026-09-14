@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, GraduationCap, Globe, CheckCircle2, Shield, MapPin, Phone, Mail, Calendar, Hash, Edit2, X, Save, Camera, Loader2, UploadCloud } from "lucide-react";
+import { User, GraduationCap, Globe, CheckCircle2, Shield, MapPin, Phone, Mail, Calendar, Hash, Edit2, X, Save, Camera, Loader2, UploadCloud, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 const DataGroup = ({ title, icon, children }: any) => (
@@ -268,6 +268,34 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
         <DataItem label="Nama Wali" field="namaWali" value={santriData.namaWali !== "-" ? santriData.namaWali : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
         <DataItem label="No. WA Wali" field="noWaWali" icon={<Phone size={10} />} value={santriData.noWaWali !== "-" ? santriData.noWaWali : null} isEditing={isEditing} formData={formData} setFormData={setFormData} />
         <DataItem label="Gender" value={santriData.gender === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"} />
+      </DataGroup>
+
+      {/* Dokumen Pribadi */}
+      <DataGroup title="Dokumen Pribadi" icon={<FileText size={20} />}>
+        {santriData.fileAkteLahir && (
+          <div className="sm:col-span-1">
+            <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Akte Kelahiran</dt>
+            <dd className="text-sm">
+              <a href={santriData.fileAkteLahir.replace('export=view', 'export=download')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors">Unduh Dokumen</a>
+            </dd>
+          </div>
+        )}
+        {santriData.fileKtp && (
+          <div className="sm:col-span-1">
+            <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Foto KTP</dt>
+            <dd className="text-sm">
+              <a href={santriData.fileKtp.replace('export=view', 'export=download')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors">Unduh Dokumen</a>
+            </dd>
+          </div>
+        )}
+        {santriData.filePasFoto && (
+          <div className="sm:col-span-1">
+            <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Pas Foto Resmi</dt>
+            <dd className="text-sm">
+              <a href={santriData.filePasFoto.replace('export=view', 'export=download')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors">Unduh Dokumen</a>
+            </dd>
+          </div>
+        )}
       </DataGroup>
 
       {/* Riwayat Akademik */}

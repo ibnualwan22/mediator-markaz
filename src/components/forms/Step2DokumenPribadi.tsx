@@ -15,16 +15,18 @@ export default function Step2DokumenPribadi({
 }) {
   const [formData, setFormData] = useState({
     fileAkteLahir: initialData.fileAkteLahir || "",
+    fileKtp: initialData.fileKtp || "",
     filePasFoto: initialData.filePasFoto || "",
   });
 
   const [isUploading, setIsUploading] = useState({
     akte: false,
+    ktp: false,
     foto: false
   });
 
   // Mock Upload Function - to be replaced with actual Cloudinary Logic
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'fileAkteLahir' | 'filePasFoto', uploadKey: 'akte' | 'foto') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'fileAkteLahir' | 'fileKtp' | 'filePasFoto', uploadKey: 'akte' | 'ktp' | 'foto') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -68,7 +70,7 @@ export default function Step2DokumenPribadi({
       const fd = new FormData();
       fd.append("file", file);
       fd.append("santriName", initialData.namaLengkap || "Tanpa Nama");
-      fd.append("documentName", uploadKey === 'akte' ? "Akte Kelahiran" : "Pas Foto");
+      fd.append("documentName", uploadKey === 'akte' ? "Akte Kelahiran" : uploadKey === 'ktp' ? "KTP" : "Pas Foto");
 
       const driveRes = await fetch('/api/upload-drive', {
         method: "POST",
@@ -95,11 +97,11 @@ export default function Step2DokumenPribadi({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isUploading.akte || isUploading.foto) {
+    if (isUploading.akte || isUploading.ktp || isUploading.foto) {
       alert("Harap tunggu hingga proses unggah selesai.");
       return;
     }
-    if (!formData.fileAkteLahir || !formData.filePasFoto) {
+    if (!formData.fileAkteLahir || !formData.fileKtp || !formData.filePasFoto) {
       alert("Silakan upload semua dokumen yang diwajibkan.");
       return;
     }
@@ -143,6 +145,44 @@ export default function Step2DokumenPribadi({
                   className="hidden" 
                   onChange={(e) => handleFileUpload(e, 'fileAkteLahir', 'akte')}
                   disabled={isUploading.akte}
+                />
+              </label>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-text-secondary block">
+            Scan/Foto KTP <span className="text-danger">*</span>
+            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 5MB)</span>
+          </label>
+          <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
+            {formData.fileKtp ? (
+              <div className="flex flex-col items-center gap-2">
+                {formData.fileKtp.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.fileKtp.startsWith("data:image") ? (
+                  <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img src={formData.fileKtp} alt="Preview KTP" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
+                    <span className="text-xs font-bold uppercase">Dokumen</span>
+                  </div>
+                )}
+                <span className="text-success font-medium">✅ File berhasil diunggah</span>
+                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.fileKtp.split('/').pop()}</span>
+                <button type="button" onClick={() => setFormData(f => ({...f, fileKtp: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+              </div>
+            ) : (
+              <label className="cursor-pointer flex flex-col items-center">
+                <UploadCloud size={32} className="text-primary-light mb-2" />
+                <span className="text-sm font-medium">{isUploading.ktp ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
+                <input 
+                  type="file" 
+                  accept=".pdf,image/jpeg,image/jpg" 
+                  className="hidden" 
+                  onChange={(e) => handleFileUpload(e, 'fileKtp', 'ktp')}
+                  disabled={isUploading.ktp}
                 />
               </label>
             )}

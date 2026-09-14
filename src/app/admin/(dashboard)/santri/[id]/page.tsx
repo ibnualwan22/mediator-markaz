@@ -109,6 +109,12 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <DataItem label="Nomor WA Wali" value={santri.noWaWali} />
           </DataGroup>
 
+          <DataGroup title="2. Dokumen Pribadi" icon={<FileText size={20} />}>
+            <DataItem label="Akte Kelahiran" value={santri.fileAkteLahir} isFile={true} />
+            <DataItem label="Foto KTP" value={santri.fileKtp} isFile={true} />
+            <DataItem label="Pas Foto Resmi" value={santri.filePasFoto} isFile={true} />
+          </DataGroup>
+
           <DataGroup title="3. Riwayat Akademik" icon={<GraduationCap size={20} />}>
             <DataItem label="Pendidikan Terakhir" value={santri.riwayatAkademik === 'LAINNYA' ? santri.riwayatAkademikLainnya : santri.riwayatAkademik} />
             <DataItem label="Tahun Kelulusan" value={santri.tahunKelulusan} />
