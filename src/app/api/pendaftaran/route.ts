@@ -5,14 +5,19 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Find Active Gelombang
+    // Check if the applicant selected a Gelombang
+    if (!body.gelombangId) {
+      return NextResponse.json({ error: "Silakan pilih gelombang pendaftaran terlebih dahulu." }, { status: 400 });
+    }
+
+    // Find requested Gelombang
     const activeGelombang = await prisma.gelombang.findFirst({
-      where: { isActive: true },
+      where: { id: body.gelombangId, isActive: true },
       include: { periode: true }
     });
 
     if (!activeGelombang) {
-      return NextResponse.json({ error: "Pendaftaran saat ini sedang ditutup. Tidak ada gelombang aktif." }, { status: 400 });
+      return NextResponse.json({ error: "Gelombang tidak valid atau saat ini sedang ditutup." }, { status: 400 });
     }
 
     // Generate No Pendaftaran: MA-[Tahun]-XXXX

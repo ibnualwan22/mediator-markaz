@@ -14,7 +14,7 @@ const STEPS = [
   "Paspor ",
 ];
 
-export default function RegistrationWizard() {
+export default function RegistrationWizard({ activeGelombangs = [] }: { activeGelombangs?: any[] }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,6 +72,11 @@ export default function RegistrationWizard() {
       // TODO (PRODUCTION): Uncomment this validation before deploying to production
       // alert("⚠️ DATA DOKUMEN HILANG: Karena Anda baru memuat ulang (refresh) halaman, silakan kembali (Back) ke Step 2 & 3 untuk mengunggah ulang dokumen/foto Anda sebelum mencetak invoice.");
       // return;
+    }
+    
+    if (!completeData.gelombangId) {
+      alert("⚠️ ANDA BELUM MEMILIH GELOMBANG: Silakan kembali ke Step 1 untuk memilih Gelombang Pendaftaran.");
+      return;
     }
 
     setIsSubmitting(true);
@@ -150,7 +155,7 @@ export default function RegistrationWizard() {
 
       {/* Form Content */}
       <div className="mt-8">
-        {currentStep === 1 && <Step1DataPribadi initialData={formData} onNext={handleNext} />}
+        {currentStep === 1 && <Step1DataPribadi initialData={formData} activeGelombangs={activeGelombangs} onNext={handleNext} />}
         {currentStep === 2 && <Step2DokumenPribadi initialData={formData} onNext={handleNext} onBack={handleBack} />}
         {currentStep === 3 && <Step3Akademik initialData={formData} onNext={handleNext} onBack={handleBack} />}
         {currentStep === 4 && <Step4Paspor initialData={formData} onSubmit={handleSubmit} onBack={handleBack} isSubmitting={isSubmitting} />}

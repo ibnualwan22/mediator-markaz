@@ -1,6 +1,15 @@
 import RegistrationWizard from "@/components/forms/RegistrationWizard";
+import { prisma } from "@/lib/prisma";
 
-export default function DaftarPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DaftarPage() {
+  const activeGelombangs = await prisma.gelombang.findMany({
+    where: { isActive: true },
+    include: { periode: true },
+    orderBy: { createdAt: 'asc' }
+  });
+
   return (
     <div className="min-h-screen bg-bg-cream flex flex-col py-10 px-4 md:py-16">
       <div className="max-w-4xl mx-auto w-full">
@@ -14,7 +23,7 @@ export default function DaftarPage() {
         </div>
         
         <div className="bg-white rounded-3xl shadow-sm border border-primary-light/20 p-6 md:p-10">
-          <RegistrationWizard />
+          <RegistrationWizard activeGelombangs={activeGelombangs} />
         </div>
       </div>
     </div>

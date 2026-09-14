@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createPeriode, setPeriodeActive, createGelombang, setGelombangActive } from "@/app/admin/(dashboard)/periode/actions";
+import { createPeriode, setPeriodeActive, createGelombang, toggleGelombangActive, deletePeriode, deleteGelombang, editPeriode, editGelombang } from "@/app/admin/(dashboard)/periode/actions";
+import Swal from "sweetalert2";
+import { Edit2, Trash2 } from "lucide-react";
 
 export default function PeriodeManager({ periodes }: { periodes: any[] }) {
   const [newPeriode, setNewPeriode] = useState({ nama: "", tahunDibuka: new Date().getFullYear() });
@@ -21,6 +23,70 @@ export default function PeriodeManager({ periodes }: { periodes: any[] }) {
     setNewGelombang({ nama: "", periodeId: "", start: "", end: "" });
   };
 
+  const handleToggleGelombang = async (id: string, currentStatus: boolean, periodeId: string) => {
+    try {
+      await toggleGelombangActive(id, currentStatus, periodeId);
+    } catch (e: any) {
+      Swal.fire("Gagal", e.message || "Gagal mengubah status gelombang", "error");
+    }
+  };
+
+  const handleEditPeriode = async (id: string, oldName: string) => {
+    const { value: newName } = await Swal.fire({
+      title: "Edit Nama Periode",
+      input: "text",
+      inputValue: oldName,
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      cancelButtonText: "Batal"
+    });
+    if (newName && newName !== oldName) {
+      await editPeriode(id, newName);
+    }
+  };
+
+  const handleEditGelombang = async (id: string, oldName: string) => {
+    const { value: newName } = await Swal.fire({
+      title: "Edit Nama Gelombang",
+      input: "text",
+      inputValue: oldName,
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      cancelButtonText: "Batal"
+    });
+    if (newName && newName !== oldName) {
+      await editGelombang(id, newName);
+    }
+  };
+
+  const handleDeletePeriode = async (id: string) => {
+    const res = await Swal.fire({
+      title: "Hapus Periode?",
+      text: "Menghapus periode akan menghapus seluruh data gelombang dan santri pendaftar di dalamnya secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Ya, Hapus"
+    });
+    if (res.isConfirmed) {
+      await deletePeriode(id);
+    }
+  };
+
+  const handleDeleteGelombang = async (id: string) => {
+    const res = await Swal.fire({
+      title: "Hapus Gelombang?",
+      text: "Menghapus gelombang akan menghapus seluruh pendaftar yang mendaftar dalam gelombang ini secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Ya, Hapus"
+    });
+    if (res.isConfirmed) {
+      await deleteGelombang(id);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* List Periode */}
@@ -29,15 +95,25 @@ export default function PeriodeManager({ periodes }: { periodes: any[] }) {
           <div key={p.id} className={`p-6 rounded-2xl border ${p.isActive ? 'border-primary ring-1 ring-primary shadow-sm bg-primary/5' : 'border-primary-light/20 dark:border-gray-700 bg-white dark:bg-gray-900'}`}>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-xl font-heading font-bold text-text-primary dark:text-gray-100">{p.nama}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-heading font-bold text-text-primary dark:text-gray-100">{p.nama}</h3>
+                  <button onClick={() => handleEditPeriode(p.id, p.nama)} className="text-text-secondary hover:text-primary p-1">
+                    <Edit2 size={14} />
+                  </button>
+                </div>
                 <p className="text-sm text-text-secondary dark:text-gray-400">Tahun Periode: {p.tahunDibuka}</p>
               </div>
-              <button 
-                onClick={() => setPeriodeActive(p.id)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${p.isActive ? 'bg-primary text-white' : 'bg-bg-cream dark:bg-gray-800 text-text-secondary dark:text-gray-400 hover:bg-primary-light/20'}`}
-              >
-                {p.isActive ? "Aktif" : "Set Aktif"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPeriodeActive(p.id)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${p.isActive ? 'bg-primary text-white' : 'bg-bg-cream dark:bg-gray-800 text-text-secondary dark:text-gray-400 hover:bg-primary-light/20'}`}
+                >
+                  {p.isActive ? "Aktif" : "Set Aktif"}
+                </button>
+                <button onClick={() => handleDeletePeriode(p.id)} className="p-2 text-danger hover:bg-danger/10 rounded-full transition-colors bg-bg-cream dark:bg-gray-800">
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="mt-4 border-t border-primary-light/20 dark:border-gray-700 pt-4">
@@ -45,20 +121,30 @@ export default function PeriodeManager({ periodes }: { periodes: any[] }) {
               {p.gelombang.length > 0 ? (
                 <div className="space-y-2">
                   {p.gelombang.map((g: any) => (
-                    <div key={g.id} className="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-lg border border-primary-light/10 dark:border-gray-700 text-sm">
+                    <div key={g.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-white dark:bg-gray-900 p-3 rounded-lg border border-primary-light/10 dark:border-gray-700 text-sm gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="font-semibold">{g.nama}</span>
-                        <span className="text-xs text-text-secondary dark:text-gray-400">
+                        <span className="font-semibold flex items-center gap-2">
+                          {g.nama}
+                          <button onClick={() => handleEditGelombang(g.id, g.nama)} className="text-text-secondary hover:text-primary">
+                            <Edit2 size={12} />
+                          </button>
+                        </span>
+                        <span className="text-xs text-text-secondary dark:text-gray-400 hidden sm:block">
                           ({new Date(g.tanggalBuka).toLocaleDateString('en-GB')} - {new Date(g.tanggalTutup).toLocaleDateString('en-GB')})
                         </span>
                       </div>
-                      <button 
-                        onClick={() => p.isActive && setGelombangActive(g.id, p.id)}
-                        disabled={!p.isActive}
-                        className={`text-xs px-3 py-1 rounded-full font-medium ${!p.isActive ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : g.isActive ? 'bg-success text-white' : 'bg-gray-100 dark:bg-gray-800 hover:bg-success/20 text-text-secondary dark:text-gray-400'}`}
-                      >
-                        {g.isActive ? "Buka (Pendaftaran Aktif)" : "Buka Gelombang"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => p.isActive && handleToggleGelombang(g.id, g.isActive, p.id)}
+                          disabled={!p.isActive}
+                          className={`text-xs px-3 py-1 rounded-full font-medium ${!p.isActive ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : g.isActive ? 'bg-success text-white' : 'bg-gray-100 dark:bg-gray-800 hover:bg-success/20 text-text-secondary dark:text-gray-400'}`}
+                        >
+                          {g.isActive ? "Buka (Pendaftaran Aktif)" : "Buka Gelombang"}
+                        </button>
+                        <button onClick={() => handleDeleteGelombang(g.id)} className="p-1.5 text-danger hover:bg-danger/10 rounded-full transition-colors flex-shrink-0">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

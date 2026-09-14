@@ -8,7 +8,7 @@ const PROVINSI_INDONESIA = [
   "Maluku", "Maluku Utara", "Papua", "Papua Barat", "Papua Selatan", "Papua Tengah", "Papua Pegunungan", "Papua Barat Daya"
 ];
 
-export default function Step1DataPribadi({ initialData, onNext }: { initialData: any, onNext: (data: any) => void }) {
+export default function Step1DataPribadi({ initialData, activeGelombangs = [], onNext }: { initialData: any, activeGelombangs?: any[], onNext: (data: any) => void }) {
   const [formData, setFormData] = useState({
     namaLengkap: initialData.namaLengkap || "",
     namaArab: initialData.namaArab || "",
@@ -18,6 +18,7 @@ export default function Step1DataPribadi({ initialData, onNext }: { initialData:
     email: initialData.email || "",
     namaWali: initialData.namaWali || "",
     noWaWali: initialData.noWaWali || "",
+    gelombangId: initialData.gelombangId || "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -35,6 +36,24 @@ export default function Step1DataPribadi({ initialData, onNext }: { initialData:
       <h2 className="text-2xl font-heading font-bold text-text-primary mb-6">1. Data Pribadi</h2>
       
       <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-sm font-medium text-text-secondary">Pilih Gelombang Pendaftaran <span className="text-danger">*</span></label>
+          <select 
+            required
+            name="gelombangId"
+            value={formData.gelombangId}
+            onChange={handleChange}
+            className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white font-medium text-primary"
+          >
+            <option value="">-- Pilih Gelombang yang Tersedia --</option>
+            {activeGelombangs.map((g: any) => (
+              <option key={g.id} value={g.id}>
+                {g.periode.nama} - {g.nama}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-2">
           <label className="text-sm font-medium text-text-secondary">Nama Lengkap (Indonesia) <span className="text-danger">*</span></label>
           <input 
