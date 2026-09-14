@@ -328,6 +328,39 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
         </div>
       </DataGroup>
 
+      {/* Data Paspor */}
+      <DataGroup title="Data Paspor" icon={<Globe size={20} />}>
+        <div className="sm:col-span-1">
+          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            Nomor Paspor
+          </dt>
+          <dd className="text-sm text-text-primary font-semibold font-mono">
+             {santriData.nomorPaspor || <span className="text-text-secondary/40 italic font-normal font-sans">Belum diisi</span>}
+          </dd>
+        </div>
+        <div className="sm:col-span-1"></div>
+
+        <div className="sm:col-span-1">
+          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            <Calendar size={10} />
+            Tanggal Pembuatan
+          </dt>
+          <dd className="text-sm text-text-primary font-semibold">
+            {santriData.tanggalPembuatanPaspor ? new Date(santriData.tanggalPembuatanPaspor).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : "-"}
+          </dd>
+        </div>
+
+        <div className="sm:col-span-1">
+          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            <Calendar size={10} />
+            Tanggal Kadaluarsa
+          </dt>
+          <dd className="text-sm text-text-primary font-semibold">
+            {santriData.tanggalKadaluarsaPaspor ? new Date(santriData.tanggalKadaluarsaPaspor).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : "-"}
+          </dd>
+        </div>
+      </DataGroup>
+
       {/* Status Verifikasi */}
     </div>
   );

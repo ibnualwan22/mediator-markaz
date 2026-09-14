@@ -142,9 +142,9 @@ export default async function PemberkasanSantriPage() {
             total={kCount}
             defaultOpen={true}
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="grid grid-cols-1">
               {kItems.map((item, idx) => (
-                <div key={item.id} className={`p-4 sm:p-5 flex gap-4 hover:bg-bg-cream/50 transition-colors border-b border-primary-light/10 lg:odd:border-r`}>
+                <div key={item.id} className={`p-4 sm:p-5 flex gap-4 hover:bg-bg-cream/50 transition-colors border-b border-primary-light/10`}>
                   <div className="mt-0.5 relative shrink-0">
                     <div className={`w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors ${
                       item.sudahDikumpulkan 
@@ -161,7 +161,7 @@ export default async function PemberkasanSantriPage() {
                     {item.fileUrl && (
                       <div className="mt-2">
                         <a 
-                          href={item.fileUrl} 
+                          href={item.fileUrl.replace('export=view', 'export=download')} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"

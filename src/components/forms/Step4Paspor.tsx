@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { UploadCloud, AlertCircle } from "lucide-react";
 
-export default function Step4Paspor({ 
-  initialData, 
+export default function Step4Paspor({
+  initialData,
   onSubmit,
   onBack,
   isSubmitting
-}: { 
-  initialData: any, 
+}: {
+  initialData: any,
   onSubmit: (data: any) => void,
   onBack: (data: any) => void,
   isSubmitting: boolean
 }) {
   const [formData, setFormData] = useState({
     nomorPaspor: initialData.nomorPaspor || "",
+    tanggalPembuatanPaspor: initialData.tanggalPembuatanPaspor || "",
     tanggalKadaluarsaPaspor: initialData.tanggalKadaluarsaPaspor || "",
     filePaspor: initialData.filePaspor || "",
     setujuInvestasi: initialData.setujuInvestasi || false,
@@ -23,9 +24,9 @@ export default function Step4Paspor({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -81,9 +82,9 @@ export default function Step4Paspor({
       }
 
       const data = await driveRes.json();
-      setFormData(prev => ({ 
-        ...prev, 
-        filePaspor: data.secure_url 
+      setFormData(prev => ({
+        ...prev,
+        filePaspor: data.secure_url
       }));
     } catch (e: any) {
       alert("Error upload file: " + e.message);
@@ -96,16 +97,19 @@ export default function Step4Paspor({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (hasPassport && (!formData.tanggalKadaluarsaPaspor || !formData.filePaspor)) {
-      alert("Karena Anda mengisi Nomor Paspor, silakan lengkapi Tanggal Kadaluarsa dan Upload File Paspor.");
+    if (hasPassport && (!formData.tanggalPembuatanPaspor || !formData.tanggalKadaluarsaPaspor || !formData.filePaspor)) {
+      alert("Karena Anda mengisi Nomor Paspor, silakan lengkapi Tanggal Pembuatan, Kadaluarsa, dan Upload File Paspor.");
       return;
     }
-    
+
     // Parse date if exists
     const finalData = {
       ...formData,
-      tanggalKadaluarsaPaspor: hasPassport && formData.tanggalKadaluarsaPaspor 
-        ? new Date(formData.tanggalKadaluarsaPaspor).toISOString() 
+      tanggalPembuatanPaspor: hasPassport && formData.tanggalPembuatanPaspor
+        ? new Date(formData.tanggalPembuatanPaspor).toISOString()
+        : null,
+      tanggalKadaluarsaPaspor: hasPassport && formData.tanggalKadaluarsaPaspor
+        ? new Date(formData.tanggalKadaluarsaPaspor).toISOString()
         : null
     };
 
@@ -119,16 +123,16 @@ export default function Step4Paspor({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-2xl font-heading font-bold text-text-primary mb-6">4. Paspor & Konfirmasi</h2>
-      
+      <h2 className="text-2xl font-heading font-bold text-text-primary mb-6">4. Paspor </h2>
+
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2 md:col-span-2">
           <label className="text-sm font-medium text-text-secondary block">
-            Nomor Paspor 
+            Nomor Paspor
             <span className="block font-normal text-xs mt-1 text-text-secondary/70">(Kosongkan jika belum memiliki paspor)</span>
           </label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             name="nomorPaspor"
             value={formData.nomorPaspor}
             onChange={handleChange}
@@ -140,10 +144,22 @@ export default function Step4Paspor({
         {hasPassport && (
           <>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Tanggal Kadaluarsa Paspor <span className="text-danger">*</span></label>
-              <input 
+              <label className="text-sm font-medium text-text-secondary">Tanggal Pembuatan Paspor <span className="text-danger">*</span></label>
+              <input
                 required={hasPassport}
-                type="date" 
+                type="date"
+                name="tanggalPembuatanPaspor"
+                value={formData.tanggalPembuatanPaspor}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Tanggal Kadaluarsa Paspor <span className="text-danger">*</span></label>
+              <input
+                required={hasPassport}
+                type="date"
                 name="tanggalKadaluarsaPaspor"
                 value={formData.tanggalKadaluarsaPaspor}
                 onChange={handleChange}
@@ -161,8 +177,8 @@ export default function Step4Paspor({
                   <div className="flex flex-col items-center gap-2">
                     {formData.filePaspor.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.filePaspor.startsWith("data:image") ? (
                       <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
-                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                         <img src={formData.filePaspor} alt="Preview Paspor" className="w-full h-full object-cover" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={formData.filePaspor} alt="Preview Paspor" className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
@@ -171,16 +187,16 @@ export default function Step4Paspor({
                     )}
                     <span className="text-success font-medium">✅ File berhasil diunggah</span>
                     <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.filePaspor.split('/').pop()}</span>
-                    <button type="button" onClick={() => setFormData(f => ({...f, filePaspor: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+                    <button type="button" onClick={() => setFormData(f => ({ ...f, filePaspor: "" }))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
                   </div>
                 ) : (
                   <label className="cursor-pointer flex flex-col items-center">
                     <UploadCloud size={32} className="text-primary-light mb-2" />
                     <span className="text-sm font-medium">{isUploading ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-                    <input 
-                      type="file" 
-                      accept=".pdf,image/jpeg,image/jpg" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      accept=".pdf,image/jpeg,image/jpg"
+                      className="hidden"
                       onChange={handleFileUpload}
                       disabled={isUploading}
                     />
@@ -201,7 +217,7 @@ export default function Step4Paspor({
               <li>Investasi dana untuk fiksasi pendaftaran adalah senilai <strong>Rp. 1.000.000</strong> terlebih dahulu untuk booking kuota peserta.</li>
               <li>Investasi tersebut <strong>tidak bisa di-refund</strong> dengan alasan apapun.</li>
               <li>Kuota sangat terbatas. Pendaftaran ditutup jika kuota telah habis.</li>
-              <li>Biaya pendaftaran ditransfer ke rekening resmi:<br/>
+              <li>Biaya pendaftaran ditransfer ke rekening resmi:<br />
                 <strong className="text-primary text-base inline-block mt-1">BRI 055501049030500 a.n. Markaz Arabiyah</strong>
               </li>
             </ul>
@@ -209,8 +225,8 @@ export default function Step4Paspor({
         </div>
 
         <label className="flex items-start gap-3 mt-6 cursor-pointer p-4 bg-white/60 rounded-lg border border-warning/20">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             required
             name="setujuInvestasi"
             checked={formData.setujuInvestasi}
@@ -224,16 +240,16 @@ export default function Step4Paspor({
       </div>
 
       <div className="flex justify-between pt-6 border-t border-primary-light/20">
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={() => onBack(formData)}
           className="px-6 py-2.5 text-text-secondary font-medium hover:text-primary transition-colors"
           disabled={isSubmitting}
         >
           &larr; Kembali
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isSubmitting}
           className="px-8 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-light transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
         >

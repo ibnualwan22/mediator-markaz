@@ -14,6 +14,8 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   const [showUrutModal, setShowUrutModal] = useState(false);
   const router = useRouter();
 
+  const [isCopying, setIsCopying] = useState(false);
+
   const filteredData = santriList.filter(s => {
     const matchSearch = s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         s.noPendaftaran.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -23,6 +25,58 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
     
     return matchSearch && matchGelombang;
   });
+
+  const handleCopyIncompleteData = async () => {
+    setIsCopying(true);
+    let copyText = "Data santri yang data dirinya belum lengkap\n";
+    let incompleteCount = 0;
+
+    filteredData.forEach((s, idx) => {
+      const missingFields: string[] = [];
+
+      // Check default text fields
+      if (!s.namaArab || s.namaArab === "-" || s.namaArab === "") missingFields.push("Nama Arab");
+      if (!s.asalProvinsi || s.asalProvinsi === "-" || s.asalProvinsi === "") missingFields.push("Asal Provinsi");
+      if (!s.email || s.email === "-" || s.email === "") missingFields.push("Email");
+      if (!s.noWaSantri || s.noWaSantri === "-" || s.noWaSantri === "") missingFields.push("No. WA Santri");
+      if (!s.namaWali || s.namaWali === "-" || s.namaWali === "") missingFields.push("Nama Wali");
+      if (!s.noWaWali || s.noWaWali === "-" || s.noWaWali === "") missingFields.push("No. WA Wali");
+
+      // Check Akademik
+      // if riwayatAkademik is LAINNYA, then riwayatAkademikLainnya should not be empty
+      if (s.riwayatAkademik === "LAINNYA" && (!s.riwayatAkademikLainnya || s.riwayatAkademikLainnya === "-" || s.riwayatAkademikLainnya === "")) {
+        missingFields.push("Pendidikan Terakhir (Lainnya)");
+      }
+      if (!s.tahunKelulusan || s.tahunKelulusan === 0) missingFields.push("Tahun Kelulusan");
+
+      // Check Paspor
+      if (!s.nomorPaspor || s.nomorPaspor === "-" || s.nomorPaspor === "") missingFields.push("Nomor Paspor");
+
+      if (missingFields.length > 0) {
+        incompleteCount++;
+        copyText += `${incompleteCount}. ${s.namaLengkap}\n`;
+        missingFields.forEach(field => {
+          copyText += `- ${field}\n`;
+        });
+      }
+    });
+
+    if (incompleteCount === 0) {
+      alert("Semua santri pada filter ini sudah memiliki data lengkap.");
+      setIsCopying(false);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      alert(`Berhasil menyalin ${incompleteCount} santri dengan data belum lengkap ke clipboard!`);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      alert("Gagal menyalin ke clipboard.");
+    } finally {
+      setIsCopying(false);
+    }
+  };
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 overflow-hidden">
@@ -39,6 +93,17 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         </div>
         
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <button
+            onClick={handleCopyIncompleteData}
+            disabled={isCopying}
+            className={`flex items-center justify-center gap-2 px-4 py-2 ${isCopying ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-red-50 hover:bg-red-500 text-red-500 hover:text-white border border-red-200'} rounded-lg transition-all text-sm font-semibold whitespace-nowrap`}
+            title="Salin santri dengan profil belum lengkap"
+          >
+            <Filter size={16} /> {isCopying ? "Menyalin..." : "Salin Data Kosong"}
+          </button>
+          
+          <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
+          
           <button
             onClick={() => setShowPasporModal(true)}
             className="flex items-center justify-center gap-2 px-4 py-2 bg-warning/10 hover:bg-warning text-warning hover:text-white border border-warning/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"

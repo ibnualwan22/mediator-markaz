@@ -128,6 +128,8 @@ export async function deleteSantri(santriId: string) {
 
 export async function updateSantriData(santriId: string, data: any) {
   try {
+    const parseDate = (dString: any) => dString ? new Date(dString) : null;
+    
     await prisma.santri.update({
       where: { id: santriId },
       data: {
@@ -138,7 +140,10 @@ export async function updateSantriData(santriId: string, data: any) {
         noWaSantri: data.noWaSantri,
         namaWali: data.namaWali,
         noWaWali: data.noWaWali,
+        gender: data.gender,
         nomorPaspor: data.nomorPaspor,
+        tanggalPembuatanPaspor: parseDate(data.tanggalPembuatanPaspor),
+        tanggalKadaluarsaPaspor: parseDate(data.tanggalKadaluarsaPaspor),
         nis: data.nis,
         nomorUrut: data.nomorUrut,
       }

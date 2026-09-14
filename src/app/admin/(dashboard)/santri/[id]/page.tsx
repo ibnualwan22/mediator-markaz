@@ -114,7 +114,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <DataItem label="Tahun Kelulusan" value={santri.tahunKelulusan} />
           </DataGroup>
 
-          <DataGroup title="4. Paspor & Konfirmasi" icon={<Globe size={20} />}>
+          <DataGroup title="4. Paspor " icon={<Globe size={20} />}>
             <DataItem label="Nomor Paspor" value={santri.nomorPaspor} />
             <DataItem label="Tanggal Kadaluarsa" value={santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toLocaleDateString() : null} />
           </DataGroup>

@@ -49,6 +49,7 @@ export async function POST(req: Request) {
         fileIjazah: body.fileIjazah,
 
         nomorPaspor: body.nomorPaspor || null,
+        tanggalPembuatanPaspor: body.tanggalPembuatanPaspor ? new Date(body.tanggalPembuatanPaspor) : null,
         tanggalKadaluarsaPaspor: body.tanggalKadaluarsaPaspor ? new Date(body.tanggalKadaluarsaPaspor) : null,
         filePaspor: body.filePaspor || null,
 

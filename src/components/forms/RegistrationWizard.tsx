@@ -11,7 +11,7 @@ const STEPS = [
   "Data Pribadi",
   "Dokumen Pribadi",
   "Riwayat Akademik",
-  "Paspor & Konfirmasi",
+  "Paspor ",
 ];
 
 export default function RegistrationWizard() {
@@ -24,10 +24,10 @@ export default function RegistrationWizard() {
     const savedData = localStorage.getItem("ma_registration_data");
     const savedStep = localStorage.getItem("ma_registration_step");
     if (savedData) {
-      try { setFormData(JSON.parse(savedData)); } catch(e) {}
+      try { setFormData(JSON.parse(savedData)); } catch (e) { }
     }
     if (savedStep) {
-      try { setCurrentStep(parseInt(savedStep, 10)); } catch(e) {}
+      try { setCurrentStep(parseInt(savedStep, 10)); } catch (e) { }
     }
     setIsMounted(true);
   }, []);
@@ -66,7 +66,7 @@ export default function RegistrationWizard() {
 
   const handleSubmit = async (finalData: any) => {
     const completeData = { ...formData, ...finalData };
-    
+
     // Validasi final sebelum fetch (melindungi dari data bolong akibat refresh halaman)
     if (!completeData.fileAkteLahir || !completeData.filePasFoto || !completeData.fileIjazah) {
       // TODO (PRODUCTION): Uncomment this validation before deploying to production
@@ -75,7 +75,7 @@ export default function RegistrationWizard() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // POST to /api/pendaftaran
       const res = await fetch("/api/pendaftaran", {
@@ -92,7 +92,7 @@ export default function RegistrationWizard() {
       }
 
       const result = await res.json();
-      
+
       // Bersihkan cache jika berhasil
       localStorage.removeItem("ma_registration_data");
       localStorage.removeItem("ma_registration_step");
@@ -119,23 +119,23 @@ export default function RegistrationWizard() {
         <div className="flex items-center justify-between relative">
           {/* Progress bar line */}
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-primary-light/20 -z-10 rounded-full"></div>
-          <div 
+          <div
             className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary -z-10 rounded-full transition-all duration-300"
             style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
           ></div>
-          
+
           {STEPS.map((step, index) => {
             const stepNumber = index + 1;
             const isActive = currentStep === stepNumber;
             const isPast = currentStep > stepNumber;
-            
+
             return (
               <div key={step} className="flex flex-col items-center gap-2">
-                <div 
+                <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-2
-                    ${isActive ? "bg-bg-cream border-primary text-primary shadow-sm" : 
-                      isPast ? "bg-primary border-primary text-white" : 
-                      "bg-white border-primary-light/30 text-text-secondary/50"}`}
+                    ${isActive ? "bg-bg-cream border-primary text-primary shadow-sm" :
+                      isPast ? "bg-primary border-primary text-white" :
+                        "bg-white border-primary-light/30 text-text-secondary/50"}`}
                 >
                   {isPast ? <Check size={18} /> : stepNumber}
                 </div>

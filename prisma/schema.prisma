@@ -88,6 +88,7 @@ model Santri {
 
   // Paspor
   nomorPaspor           String?
+  tanggalPembuatanPaspor DateTime?
   tanggalKadaluarsaPaspor DateTime?
   filePaspor            String?      // Cloudinary URL
 

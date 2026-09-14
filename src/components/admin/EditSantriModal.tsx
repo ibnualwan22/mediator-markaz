@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Save, Edit3, Loader2 } from "lucide-react";
 import { updateSantriData } from "@/app/admin/(dashboard)/santri/actions";
 import Swal from "sweetalert2";
@@ -17,10 +17,34 @@ export default function EditSantriModal({ santri }: { santri: any }) {
     noWaSantri: santri.noWaSantri || "",
     namaWali: santri.namaWali || "",
     noWaWali: santri.noWaWali || "",
+    gender: santri.gender || "LAKI_LAKI",
     nomorPaspor: santri.nomorPaspor || "",
+    tanggalPembuatanPaspor: santri.tanggalPembuatanPaspor ? new Date(santri.tanggalPembuatanPaspor).toISOString().split('T')[0] : "",
+    tanggalKadaluarsaPaspor: santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toISOString().split('T')[0] : "",
     nis: santri.nis || "",
     nomorUrut: santri.nomorUrut || "",
   });
+
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        namaLengkap: santri.namaLengkap || "",
+        namaArab: santri.namaArab || "",
+        email: santri.email || "",
+        asalProvinsi: santri.asalProvinsi || "",
+        noWaSantri: santri.noWaSantri || "",
+        namaWali: santri.namaWali || "",
+        noWaWali: santri.noWaWali || "",
+        gender: santri.gender || "LAKI_LAKI",
+        nomorPaspor: santri.nomorPaspor || "",
+        tanggalPembuatanPaspor: santri.tanggalPembuatanPaspor ? new Date(santri.tanggalPembuatanPaspor).toISOString().split('T')[0] : "",
+        tanggalKadaluarsaPaspor: santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toISOString().split('T')[0] : "",
+        nis: santri.nis || "",
+        nomorUrut: santri.nomorUrut || "",
+      });
+    }
+  }, [isOpen, santri]);
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -78,6 +102,13 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                     <input type="text" name="namaArab" value={formData.namaArab} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
                   </div>
                   <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Jenis Kelamin</label>
+                    <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all">
+                      <option value="LAKI_LAKI">Laki-laki</option>
+                      <option value="PEREMPUAN">Perempuan</option>
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">NIC Lengkap</label>
                     <input type="text" name="nis" value={formData.nis} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all font-mono text-primary font-bold" />
                   </div>
@@ -100,6 +131,14 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Nomor Paspor</label>
                     <input type="text" name="nomorPaspor" value={formData.nomorPaspor} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all font-mono" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal Pembuatan Paspor</label>
+                    <input type="date" name="tanggalPembuatanPaspor" value={formData.tanggalPembuatanPaspor} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal Kadaluarsa Paspor</label>
+                    <input type="date" name="tanggalKadaluarsaPaspor" value={formData.tanggalKadaluarsaPaspor} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
                   </div>
                   
                   <div className="sm:col-span-2 pt-4 pb-2 border-t border-gray-100">

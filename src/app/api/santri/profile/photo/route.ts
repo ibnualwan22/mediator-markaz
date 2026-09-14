@@ -57,8 +57,44 @@ export async function POST(req: Request) {
 
     const updatedSantri = await prisma.santri.update({
       where: { id: session.santriId },
-      data: { fotoProfil: url }
+      data: { 
+        fotoProfil: url,
+        filePasFoto: url // Sinkronisasi dengan pas foto di form
+      }
     });
+
+    // Cari item pemberkasan untuk "Pas Photo" atau "Pas Foto" di periode ini
+    const itemPemberkasan = await prisma.itemPemberkasan.findFirst({
+      where: {
+        periodeId: santri.gelombang.periodeId,
+        OR: [
+          { nama: { contains: 'Pas Photo', mode: 'insensitive' } },
+          { nama: { contains: 'Pas Foto', mode: 'insensitive' } },
+          { nama: { contains: 'Foto', mode: 'insensitive' } }
+        ]
+      }
+    });
+
+    if (itemPemberkasan) {
+      await prisma.pemberkasanSantri.upsert({
+        where: {
+          santriId_itemPemberkasanId: {
+            santriId: session.santriId,
+            itemPemberkasanId: itemPemberkasan.id
+          }
+        },
+        create: {
+          santriId: session.santriId,
+          itemPemberkasanId: itemPemberkasan.id,
+          sudahDikumpulkan: true,
+          fileUrl: url
+        },
+        update: {
+          sudahDikumpulkan: true,
+          fileUrl: url
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
