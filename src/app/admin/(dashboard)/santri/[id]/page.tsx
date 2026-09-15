@@ -108,11 +108,6 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <DataItem label="Nama Wali" value={santri.namaWali} />
             <DataItem label="Nomor WA Wali" value={santri.noWaWali} />
           </DataGroup>
-
-          <DataGroup title="2. Dokumen Pribadi" icon={<FileText size={20} />}>
-            <DataItem label="Foto KTP" value={santri.fileKtp} isFile={true} />
-          </DataGroup>
-
           <DataGroup title="3. Riwayat Akademik" icon={<GraduationCap size={20} />}>
             <DataItem label="Pesan Jurusan / Program Studi" value={
               santri.jurusan === "LUGHAH" ? "Lughah" :

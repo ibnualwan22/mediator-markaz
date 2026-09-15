@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     const wsData: any[][] = [
       [
         "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
-        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor"
+        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
       ]
     ];
 
@@ -52,6 +52,12 @@ export async function GET(req: Request) {
       if (ra === "SMA") return "SMA";
       if (ra === "SMK") return "SMK";
       return ra;
+    }
+
+    function formattanggal(dateString: any) {
+      if (!dateString) return "-";
+      const d = new Date(dateString);
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
     santriData.forEach(s => {
@@ -67,7 +73,9 @@ export async function GET(req: Request) {
         s.noWaWali || "-",
         s.riwayatAkademik ? formatRiwayatAkademik(s.riwayatAkademik) : "-",
         s.tahunKelulusan || "",
-        s.nomorPaspor || "-"
+        s.nomorPaspor || "-",
+        formattanggal(s.tanggalPembuatanPaspor),
+        formattanggal(s.tanggalKadaluarsaPaspor)
       ]);
     });
 
@@ -85,7 +93,9 @@ export async function GET(req: Request) {
       { wch: 15 }, // No. WA Wali
       { wch: 20 }, // Riwayat Akademik
       { wch: 15 }, // Tahun Kelulusan
-      { wch: 20 }  // Nomor Paspor
+      { wch: 20 }, // Nomor Paspor
+      { wch: 25 }, // Tanggal Pembuatan Paspor
+      { wch: 25 }  // Tanggal Kadaluarsa Paspor
     ];
 
     xlsx.utils.book_append_sheet(wb, ws, "Data Santri");

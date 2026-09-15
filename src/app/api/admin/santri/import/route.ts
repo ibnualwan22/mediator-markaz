@@ -2,6 +2,26 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import * as xlsx from "xlsx";
 
+function parseExcelDate(val: any): Date | null {
+  if (val === undefined || val === null || val === '') return null;
+  if (typeof val === 'number') {
+    return new Date(Math.round((val - 25569) * 86400 * 1000));
+  }
+  const str = String(val).trim();
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+  const date = new Date(val);
+  return isNaN(date.getTime()) ? null : date;
+}
+
 // Removed unused normalizeName
 
 // Helper: Cek apakah value dari Excel terisi (bukan kosong / placeholder)
@@ -146,6 +166,28 @@ export async function POST(req: Request) {
 
       if (hasValue(row["Nomor Paspor"])) {
         updateData.nomorPaspor = String(row["Nomor Paspor"]);
+      }
+
+      if (hasValue(row["Tanggal Pembuatan Paspor"])) {
+        const parsedDate = parseExcelDate(row["Tanggal Pembuatan Paspor"]);
+        if (parsedDate) {
+          updateData.tanggalPembuatanPaspor = parsedDate;
+        } else {
+          errors.push(`Baris ${rowNum}: Format Tanggal Pembuatan Paspor tidak valid untuk ${namaLengkap}`);
+          failedCount++;
+          continue;
+        }
+      }
+
+      if (hasValue(row["Tanggal Kadaluarsa Paspor"])) {
+        const parsedDate = parseExcelDate(row["Tanggal Kadaluarsa Paspor"]);
+        if (parsedDate) {
+          updateData.tanggalKadaluarsaPaspor = parsedDate;
+        } else {
+          errors.push(`Baris ${rowNum}: Format Tanggal Kadaluarsa Paspor tidak valid untuk ${namaLengkap}`);
+          failedCount++;
+          continue;
+        }
       }
 
       // Jika tidak ada field yang terisi, skip
