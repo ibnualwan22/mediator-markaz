@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, Eye, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Search, Filter, Eye, FileSpreadsheet, Loader2, X } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
 import { useRouter } from "next/navigation";
 
@@ -15,6 +15,15 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   const router = useRouter();
 
   const [isCopying, setIsCopying] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+
+  const COPY_FIELDS = [
+    "Nama Arab", "Asal Provinsi", "Email", "No. WA Santri", 
+    "Nama Wali", "No. WA Wali", "Pendidikan Terakhir (Lainnya)", 
+    "Tahun Kelulusan", "Foto Profil (Backgroun Merah)", 
+    "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
+  ];
+  const [selectedCopyFields, setSelectedCopyFields] = useState<string[]>(COPY_FIELDS);
 
   const filteredData = santriList.filter(s => {
     const matchSearch = s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,33 +63,40 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   };
 
   const handleCopyIncompleteData = async () => {
+    if (selectedCopyFields.length === 0) {
+       alert("Pilih minimal 1 jenis data untuk dicek kekosongannya!");
+       return;
+    }
+
     setIsCopying(true);
-    let copyText = "Data santri yang data dirinya belum lengkap\n";
+    let copyText = "Data santri yang data dirinya belum lengkap:\n\n";
     let incompleteCount = 0;
 
     filteredData.forEach((s, idx) => {
       const missingFields: string[] = [];
 
       // Check default text fields
-      if (!s.namaArab || s.namaArab === "-" || s.namaArab === "") missingFields.push("Nama Arab");
-      if (!s.asalProvinsi || s.asalProvinsi === "-" || s.asalProvinsi === "") missingFields.push("Asal Provinsi");
-      if (!s.email || s.email === "-" || s.email === "") missingFields.push("Email");
-      if (!s.noWaSantri || s.noWaSantri === "-" || s.noWaSantri === "") missingFields.push("No. WA Santri");
-      if (!s.namaWali || s.namaWali === "-" || s.namaWali === "") missingFields.push("Nama Wali");
-      if (!s.noWaWali || s.noWaWali === "-" || s.noWaWali === "") missingFields.push("No. WA Wali");
+      if (selectedCopyFields.includes("Nama Arab") && (!s.namaArab || s.namaArab === "-" || s.namaArab === "")) missingFields.push("Nama Arab");
+      if (selectedCopyFields.includes("Asal Provinsi") && (!s.asalProvinsi || s.asalProvinsi === "-" || s.asalProvinsi === "")) missingFields.push("Asal Provinsi");
+      if (selectedCopyFields.includes("Email") && (!s.email || s.email === "-" || s.email === "")) missingFields.push("Email");
+      if (selectedCopyFields.includes("No. WA Santri") && (!s.noWaSantri || s.noWaSantri === "-" || s.noWaSantri === "")) missingFields.push("No. WA Santri");
+      if (selectedCopyFields.includes("Nama Wali") && (!s.namaWali || s.namaWali === "-" || s.namaWali === "")) missingFields.push("Nama Wali");
+      if (selectedCopyFields.includes("No. WA Wali") && (!s.noWaWali || s.noWaWali === "-" || s.noWaWali === "")) missingFields.push("No. WA Wali");
 
       // Check Akademik
       // if riwayatAkademik is LAINNYA, then riwayatAkademikLainnya should not be empty
-      if (s.riwayatAkademik === "LAINNYA" && (!s.riwayatAkademikLainnya || s.riwayatAkademikLainnya === "-" || s.riwayatAkademikLainnya === "")) {
+      if (selectedCopyFields.includes("Pendidikan Terakhir (Lainnya)") && s.riwayatAkademik === "LAINNYA" && (!s.riwayatAkademikLainnya || s.riwayatAkademikLainnya === "-" || s.riwayatAkademikLainnya === "")) {
         missingFields.push("Pendidikan Terakhir (Lainnya)");
       }
-      if (!s.tahunKelulusan || s.tahunKelulusan === 0) missingFields.push("Tahun Kelulusan");
+      if (selectedCopyFields.includes("Tahun Kelulusan") && (!s.tahunKelulusan || s.tahunKelulusan === 0)) missingFields.push("Tahun Kelulusan");
 
       // Check Foto Profil (Profil Santri)
-      if (!s.fotoProfil || s.fotoProfil === "-" || s.fotoProfil === "") missingFields.push("Foto Profil (Backgroun Merah)");
+      if (selectedCopyFields.includes("Foto Profil (Backgroun Merah)") && (!s.fotoProfil || s.fotoProfil === "-" || s.fotoProfil === "")) missingFields.push("Foto Profil (Backgroun Merah)");
 
       // Check Paspor
-      if (!s.nomorPaspor || s.nomorPaspor === "-" || s.nomorPaspor === "") missingFields.push("Nomor Paspor");
+      if (selectedCopyFields.includes("Nomor Paspor") && (!s.nomorPaspor || s.nomorPaspor === "-" || s.nomorPaspor === "")) missingFields.push("Nomor Paspor");
+      if (selectedCopyFields.includes("Tanggal Pembuatan Paspor") && !s.tanggalPembuatanPaspor) missingFields.push("Tanggal Pembuatan Paspor");
+      if (selectedCopyFields.includes("Tanggal Kadaluarsa Paspor") && !s.tanggalKadaluarsaPaspor) missingFields.push("Tanggal Kadaluarsa Paspor");
 
       if (missingFields.length > 0) {
         incompleteCount++;
@@ -88,18 +104,21 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         missingFields.forEach(field => {
           copyText += `- ${field}\n`;
         });
+        copyText += '\n';
       }
     });
 
     if (incompleteCount === 0) {
       alert("Semua santri pada filter ini sudah memiliki data lengkap.");
       setIsCopying(false);
+      setShowCopyModal(false);
       return;
     }
 
     try {
       await navigator.clipboard.writeText(copyText);
       alert(`Berhasil menyalin ${incompleteCount} santri dengan data belum lengkap ke clipboard!`);
+      setShowCopyModal(false);
     } catch (err) {
       console.error("Failed to copy text: ", err);
       alert("Gagal menyalin ke clipboard.");
@@ -124,12 +143,11 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
-            onClick={handleCopyIncompleteData}
-            disabled={isCopying}
-            className={`flex items-center justify-center gap-2 px-4 py-2 ${isCopying ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-red-50 hover:bg-red-500 text-red-500 hover:text-white border border-red-200'} rounded-lg transition-all text-sm font-semibold whitespace-nowrap`}
-            title="Salin santri dengan profil belum lengkap"
+            onClick={() => setShowCopyModal(true)}
+            className={`flex items-center justify-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white border border-red-200 rounded-lg transition-all text-sm font-semibold whitespace-nowrap`}
+            title="Saring santri dengan data tidak lengkap"
           >
-            <Filter size={16} /> {isCopying ? "Menyalin..." : "Salin Data Kosong"}
+            <Filter size={16} /> Pilih Data Kosong
           </button>
 
           <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
@@ -252,6 +270,47 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
         templateUrl="/api/admin/santri/nis/template"
         showGelombang={false}
       />
+
+      {showCopyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+             <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
+                <h2 className="text-xl font-heading font-bold text-gray-800 dark:text-gray-100">Filter Salin Data Kosong</h2>
+                <button onClick={() => setShowCopyModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:bg-gray-800 rounded-lg transition-colors">
+                  <X size={20} />
+                </button>
+             </div>
+             <div className="p-6 overflow-y-auto w-full">
+               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">Bapak ingin mensurvey data field mana saja yang saat ini masih KOSONG pada rentang filter tabel ini:</p>
+               <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/30">
+                    {COPY_FIELDS.map(col => (
+                      <label key={col} className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                        <input 
+                          type="checkbox"
+                          checked={selectedCopyFields.includes(col)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedCopyFields([...selectedCopyFields, col]);
+                            else setSelectedCopyFields(selectedCopyFields.filter(c => c !== col));
+                          }}
+                          className="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary focus:ring-offset-0 h-4 w-4 outline-none cursor-pointer"
+                        />
+                        <span className="truncate">{col}</span>
+                      </label>
+                    ))}
+               </div>
+               
+               <button
+                  onClick={handleCopyIncompleteData}
+                  disabled={isCopying}
+                  className="w-full mt-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 shadow-sm"
+               >
+                 {isCopying ? <Loader2 size={18} className="animate-spin" /> : <Filter size={18} />}
+                 {isCopying ? "Menyalin..." : "Salin ke Clipboard"}
+               </button>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
