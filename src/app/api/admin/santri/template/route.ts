@@ -9,15 +9,15 @@ export async function GET() {
     // Data header template dan 1 contoh data
     const wsData = [
       [
-        "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
+        "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
         "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor"
       ],
       [
-        "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jawa Barat", "08123456789", 
+        "MA-26-0001", "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jawa Barat", "08123456789", 
         "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", 2026, "A1234567"
       ],
       [
-        "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Jawa Tengah", "08129876543", 
+        "", "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Jawa Tengah", "08129876543", 
         "fulanah@example.com", "Bapak Fulan", "08987654321", "Ijazah Pesantren", 2026, ""
       ]
     ];
@@ -27,6 +27,7 @@ export async function GET() {
 
     // Atur lebar kolom agar rapi
     ws['!cols'] = [
+      { wch: 15 }, // NIC
       { wch: 30 }, // Nama Lengkap
       { wch: 30 }, // Nama Arab
       { wch: 15 }, // Gender

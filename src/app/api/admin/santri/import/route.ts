@@ -2,15 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import * as xlsx from "xlsx";
 
-// Helper: Normalisasi nama untuk fuzzy matching
-// Menghapus simbol, tanda baca, spasi berlebih, dan lowercase
-function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/gi, '') // hapus simbol & tanda baca
-    .replace(/\s+/g, ' ')          // hapus spasi berlebih
-    .trim();
-}
+// Removed unused normalizeName
 
 // Helper: Cek apakah value dari Excel terisi (bukan kosong / placeholder)
 function hasValue(val: any): boolean {
@@ -54,37 +46,38 @@ export async function POST(req: Request) {
     let successCount = 0;
     let failedCount = 0;
 
-    // Ambil semua santri sekali untuk fuzzy matching (efisien)
+    // Ambil semua santri yang memiliki NIS (NIC)
     const allSantri = await prisma.santri.findMany({
-      select: { id: true, namaLengkap: true, noPendaftaran: true }
+      where: { nis: { not: null } },
+      select: { id: true, namaLengkap: true, noPendaftaran: true, nis: true }
     });
 
-    // Buat lookup map: normalized name -> santri record
+    // Buat lookup map: nis -> santri record
     const santriMap = new Map<string, typeof allSantri[0]>();
     for (const s of allSantri) {
-      santriMap.set(normalizeName(s.namaLengkap), s);
+      if (s.nis) santriMap.set(s.nis, s);
     }
 
     // Process each row
     for (let i = 0; i < rawData.length; i++) {
       const row = rawData[i];
+      const nic = row["NIC"];
       const namaLengkap = row["Nama Lengkap"];
       
       const rowNum = i + 2; // +1 untuk header, +1 karena array 0-indexed
 
       // Validation
-      if (!namaLengkap) {
-        errors.push(`Baris ${rowNum}: Nama Lengkap wajib diisi`);
+      if (!nic) {
+        errors.push(`Baris ${rowNum}: NIC wajib diisi untuk deteksi profil`);
         failedCount++;
         continue;
       }
 
-      // Fuzzy match: cari santri berdasarkan nama yang sudah dinormalisasi
-      const normalizedInput = normalizeName(String(namaLengkap));
-      const matchedSantri = santriMap.get(normalizedInput);
+      // Match berdasarkan NIC
+      const matchedSantri = santriMap.get(String(nic).trim());
 
       if (!matchedSantri) {
-        errors.push(`Baris ${rowNum}: Santri dengan nama "${namaLengkap}" tidak ditemukan`);
+        errors.push(`Baris ${rowNum}: Santri dengan NIC "${nic}" tidak ditemukan`);
         failedCount++;
         continue;
       }

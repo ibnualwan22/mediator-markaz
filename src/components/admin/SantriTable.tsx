@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, Eye, FileSpreadsheet } from "lucide-react";
+import { Search, Filter, Eye, FileSpreadsheet, Loader2 } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
 import { useRouter } from "next/navigation";
 
@@ -10,8 +10,8 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGelombang, setFilterGelombang] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showPasporModal, setShowPasporModal] = useState(false);
   const [showUrutModal, setShowUrutModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const router = useRouter();
 
   const [isCopying, setIsCopying] = useState(false);
@@ -25,6 +25,33 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
 
     return matchSearch && matchGelombang;
   });
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const url = new URL("/api/admin/santri/export", window.location.origin);
+      if (searchTerm) url.searchParams.set("search", searchTerm);
+      if (filterGelombang) url.searchParams.set("gelombangId", filterGelombang);
+      
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error("Transfer gagal");
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `Data_Santri_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengekspor data");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleCopyIncompleteData = async () => {
     setIsCopying(true);
@@ -108,10 +135,12 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
 
           <button
-            onClick={() => setShowPasporModal(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-warning/10 hover:bg-warning text-warning hover:text-white border border-warning/20 rounded-lg transition-all text-sm font-semibold whitespace-nowrap"
+            onClick={handleExport}
+            disabled={isExporting}
+            className={`flex items-center justify-center gap-2 px-4 py-2 ${isExporting ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20'} rounded-lg transition-all text-sm font-semibold whitespace-nowrap`}
           >
-            <FileSpreadsheet size={16} /> Import Paspor
+            {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileSpreadsheet size={16} />}
+            {isExporting ? "Mengeksport..." : "Export Data"}
           </button>
           <button
             onClick={() => setShowUrutModal(true)}
@@ -208,19 +237,6 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
           setShowImportModal(false);
           router.refresh();
         }}
-        showGelombang={false}
-      />
-
-      <ImportExcelModal
-        isOpen={showPasporModal}
-        onClose={() => setShowPasporModal(false)}
-        gelombangList={gelombangList}
-        onSuccess={() => {
-          setShowPasporModal(false);
-          router.refresh();
-        }}
-        uploadUrl="/api/admin/santri/paspor/import"
-        templateUrl="/api/admin/santri/paspor/template"
         showGelombang={false}
       />
 
