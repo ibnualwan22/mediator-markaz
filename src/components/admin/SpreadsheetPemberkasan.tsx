@@ -4,6 +4,7 @@ import { useState, useTransition, useCallback } from "react";
 import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
 import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
 
 export default function SpreadsheetPemberkasan({
   santriList,
@@ -165,16 +166,10 @@ export default function SpreadsheetPemberkasan({
           </select>
         </div>
         
-        <form className="relative flex-1 max-w-sm">
-          <input 
-            type="text" 
-            name="q"
-            defaultValue={query}
-            placeholder="Cari NIC atau Nama..." 
-            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
-          />
-          <input type="hidden" name="gelombangId" value={selectedGelombangId} />
-        </form>
+        <SearchAutocomplete 
+          periodeId={selectedPeriodeId} 
+          currentQuery={query}
+        />
       </div>
 
       {/* Summary Card Collapsible */}

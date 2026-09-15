@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { searchSantriGlobal } from "@/app/admin/(dashboard)/progres/actions";
 import { Search, Loader2 } from "lucide-react";
 
@@ -10,6 +10,7 @@ type SearchResult = {
   namaLengkap: string;
   nis: string | null;
   gelombangId: string;
+  paketPembayaranId: string | null;
   gelombangNama: string;
 };
 
@@ -22,6 +23,7 @@ export default function SearchAutocomplete({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [query, setQuery] = useState(currentQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,26 +76,31 @@ export default function SearchAutocomplete({
     const params = new URLSearchParams(searchParams.toString());
     params.set("q", santri.namaLengkap);
     params.set("gelombangId", santri.gelombangId);
+    if (santri.paketPembayaranId) {
+      params.set("paketId", santri.paketPembayaranId);
+    }
     
-    router.push(`/admin/progres?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleSubmit = () => {
+    setIsOpen(false);
+    const params = new URLSearchParams(searchParams.toString());
+    if (query) params.set("q", query);
+    else params.delete("q");
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      setIsOpen(false);
-      
-      const params = new URLSearchParams(searchParams.toString());
-      if (query) params.set("q", query);
-      else params.delete("q");
-      
-      router.push(`/admin/progres?${params.toString()}`);
+      handleSubmit();
     }
   };
 
   return (
     <div className="relative flex-1 max-w-sm" ref={dropdownRef}>
-      <div className="relative">
+      <div className="relative flex">
         <input 
           type="text" 
           value={query}
@@ -101,12 +108,18 @@ export default function SearchAutocomplete({
           onKeyDown={handleKeyDown}
           onFocus={() => { if (results.length > 0) setIsOpen(true); }}
           placeholder="Cari NIC atau Nama..." 
-          className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm shadow-sm transition-colors"
+          className="w-full pl-4 pr-10 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 outline-none focus:border-primary text-sm shadow-sm transition-colors rounded-l-lg border-r-0"
         />
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
         {loading && (
-          <Loader2 className="absolute right-3 top-2.5 text-gray-400 animate-spin" size={16} />
+          <Loader2 className="absolute right-12 top-2.5 text-gray-400 animate-spin" size={16} />
         )}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="px-3 bg-primary text-white hover:bg-primary-dark transition-colors flex items-center justify-center shrink-0 rounded-r-lg border border-primary"
+        >
+          <Search size={16} />
+        </button>
       </div>
 
       {isOpen && (results.length > 0 || error) && (

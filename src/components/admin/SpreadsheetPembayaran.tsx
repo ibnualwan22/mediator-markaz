@@ -6,7 +6,7 @@ import { updatePembayaranDL, bulkUpdatePembayaranDL, updateDarulLughohMeta, waiv
 import { CheckCircle2, AlertCircle, CalendarRange, X, Save, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ImportExcelModal from "@/components/admin/ImportExcelModal";
-
+import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
 // Utility formatting
 const fmt = (num: number) => `Rp ${num.toLocaleString('id-ID')}`;
 
@@ -328,16 +328,10 @@ export default function SpreadsheetPembayaran({
           </select>
         </div>
 
-        <form className="relative flex-1 max-w-sm">
-          <input
-            type="text"
-            name="q"
-            defaultValue={query}
-            placeholder="Cari NIC atau Nama..."
-            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
-          />
-          <input type="hidden" name="gelombangId" value={selectedGelombangId} />
-        </form>
+        <SearchAutocomplete 
+          periodeId={selectedPeriodeId} 
+          currentQuery={query}
+        />
 
         <button
           onClick={async () => {
@@ -396,8 +390,8 @@ export default function SpreadsheetPembayaran({
 
                         {/* Header Row 2: Sub-columns */}
                         <tr className="text-text-secondary dark:text-gray-400 text-xs border-b border-primary-light/20 dark:border-gray-700">
-                          <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[90px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
-                          <th className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[170px] sticky left-[90px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+                          <th className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[170px] max-w-[180px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+                          <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-[90px] z-20">NIC</th>
 
                           {tahap1 && tahap1.poinTahap.map((poin: any) => (
                             <th key={poin.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 min-w-[160px] group" title={poin.nama}>
@@ -497,8 +491,7 @@ export default function SpreadsheetPembayaran({
                           return (
                             <tr key={santri.id} className="border-b border-primary-light/10 dark:border-gray-700 hover:bg-[#faf9f5] dark:bg-gray-800 transition-colors group">
                               {/* Fixed Left Info */}
-                              <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono text-xs text-primary align-top whitespace-nowrap sticky left-0 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.nis}</td>
-                              <td className="p-2 border-r border-primary-light/20 dark:border-gray-700 sticky left-[90px] z-10 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 min-w-[170px] max-w-[180px] align-top shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
+                              <td className="p-2 border-r border-primary-light/20 dark:border-gray-700 sticky left-0 z-10 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 min-w-[170px] max-w-[180px] align-top shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
                                 <div className="font-bold text-text-primary dark:text-gray-100 text-sm truncate" title={santri.namaLengkap}>{santri.namaLengkap}</div>
                                 <select
                                   className="text-sm mt-1 w-full border border-primary-light/30 dark:border-gray-700 rounded px-1 py-0.5 bg-gray-50 dark:bg-gray-800 outline-none text-text-secondary dark:text-gray-400 cursor-pointer hover:border-primary/50"
@@ -511,6 +504,7 @@ export default function SpreadsheetPembayaran({
                                   ))}
                                 </select>
                               </td>
+                              <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono text-xs text-primary align-top whitespace-nowrap z-0">{santri.nis}</td>
 
                               {/* TAHAP 1 CELLS */}
                               {tahap1 && tahap1.poinTahap.map((poin: any) => {

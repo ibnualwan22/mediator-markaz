@@ -147,6 +147,7 @@ export async function searchSantriGlobal(query: string, periodeId: string) {
       namaLengkap: true,
       nis: true,
       gelombangId: true,
+      paketPembayaranId: true,
       gelombang: {
         select: { nama: true }
       }
@@ -182,6 +183,7 @@ export async function searchSantriGlobal(query: string, periodeId: string) {
     namaLengkap: s.namaLengkap,
     nis: s.nis,
     gelombangId: s.gelombangId,
+    paketPembayaranId: s.paketPembayaranId,
     gelombangNama: s.gelombang?.nama || "Unknown"
   }));
 }
