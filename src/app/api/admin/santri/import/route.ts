@@ -240,6 +240,27 @@ export async function POST(req: Request) {
         }
       }
 
+      if (hasValue(row["Pilihan Jurusan"])) {
+        const jurusanStr = String(row["Pilihan Jurusan"]).toUpperCase().trim();
+        if (jurusanStr.includes("LUGHAH")) {
+          updateData.jurusan = "LUGHAH";
+        } else if (jurusanStr.includes("SYARIAH ISLAMIYYAH") || jurusanStr.includes("ISLAMIYAH") && jurusanStr.includes("SYARIAH")) {
+          updateData.jurusan = "SYARIAH_ISLAMIYYAH";
+        } else if (jurusanStr.includes("SYARIAH") || jurusanStr.includes("QONUN")) {
+          updateData.jurusan = "SYARIAH";
+        } else if (jurusanStr.includes("USHULUDDIN") || jurusanStr.includes("USULUDIN")) {
+          updateData.jurusan = "USHULUDDIN";
+        } else if (jurusanStr.includes("DIRASAT") || jurusanStr.includes("DIROSAT")) {
+          updateData.jurusan = "DIRASAT";
+        } else if (jurusanStr.includes("ULUM")) {
+          updateData.jurusan = "ULUM";
+        } else {
+          errors.push(`Baris ${rowNum}: Format Pilihan Jurusan tidak valid untuk ${namaLengkap}. Harus Lughah, Syariah, Ushuluddin, Dirasat, atau Ulum`);
+          failedCount++;
+          continue;
+        }
+      }
+
       // Jika tidak ada field yang terisi, skip
       if (Object.keys(updateData).length === 0) {
         errors.push(`Baris ${rowNum}: Tidak ada data yang perlu diupdate untuk ${namaLengkap}`);

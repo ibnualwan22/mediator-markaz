@@ -60,6 +60,7 @@ enum RiwayatAkademik {
 enum JurusanType {
   LUGHAH
   SYARIAH
+  SYARIAH_ISLAMIYYAH
   USHULUDDIN
   DIRASAT
   ULUM

@@ -21,7 +21,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
     "Nama Arab", "Asal Provinsi", "Email", "No. WA Santri", 
     "Nama Wali", "No. WA Wali", "Pendidikan Terakhir (Lainnya)", 
     "Tahun Kelulusan", "Foto Profil (Backgroun Merah)", 
-    "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
+    "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor", "Pilihan Jurusan"
   ];
   const [selectedCopyFields, setSelectedCopyFields] = useState<string[]>(COPY_FIELDS);
 
@@ -97,6 +97,9 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
       if (selectedCopyFields.includes("Nomor Paspor") && (!s.nomorPaspor || s.nomorPaspor === "-" || s.nomorPaspor === "")) missingFields.push("Nomor Paspor");
       if (selectedCopyFields.includes("Tanggal Pembuatan Paspor") && !s.tanggalPembuatanPaspor) missingFields.push("Tanggal Pembuatan Paspor");
       if (selectedCopyFields.includes("Tanggal Kadaluarsa Paspor") && !s.tanggalKadaluarsaPaspor) missingFields.push("Tanggal Kadaluarsa Paspor");
+
+      // Check Jurusan
+      if (selectedCopyFields.includes("Pilihan Jurusan") && !s.jurusan) missingFields.push("Pilihan Jurusan");
 
       if (missingFields.length > 0) {
         incompleteCount++;

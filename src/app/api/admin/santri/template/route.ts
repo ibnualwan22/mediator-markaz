@@ -10,15 +10,15 @@ export async function GET() {
     const wsData = [
       [
         "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
-        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
+        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor", "Pilihan Jurusan"
       ],
       [
         "MA-26-0001", "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jawa Barat", "08123456789", 
-        "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", 2026, "A1234567", "01/01/2023", "01/01/2028"
+        "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", 2026, "A1234567", "01/01/2023", "01/01/2028", "LUGHAH"
       ],
       [
         "", "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Jawa Tengah", "08129876543", 
-        "fulanah@example.com", "Bapak Fulan", "08987654321", "Ijazah Pesantren", 2026, "", "", ""
+        "fulanah@example.com", "Bapak Fulan", "08987654321", "Ijazah Pesantren", 2026, "", "", "", ""
       ]
     ];
 
@@ -40,7 +40,8 @@ export async function GET() {
       { wch: 15 }, // Tahun Kelulusan
       { wch: 20 }, // Nomor Paspor
       { wch: 25 }, // Tanggal Pembuatan Paspor
-      { wch: 25 }  // Tanggal Kadaluarsa Paspor
+      { wch: 25 }, // Tanggal Kadaluarsa Paspor
+      { wch: 20 }  // Pilihan Jurusan
     ];
 
     // Tambahkan worksheet ke workbook

@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     const wsData: any[][] = [
       [
         "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
-        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
+        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor", "Pilihan Jurusan"
       ]
     ];
 
@@ -60,6 +60,16 @@ export async function GET(req: Request) {
       return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
+    function formatJurusan(j: any) {
+      if (j === "LUGHAH") return "Lughah";
+      if (j === "SYARIAH") return "Syariah wal qonun";
+      if (j === "SYARIAH_ISLAMIYYAH") return "Syariah Islamiyyah";
+      if (j === "USHULUDDIN") return "Ushuluddin";
+      if (j === "DIRASAT") return "Dirosat Islamiyah";
+      if (j === "ULUM") return "Kulliyatul Ulum";
+      return j || "";
+    }
+
     santriData.forEach(s => {
       wsData.push([
         s.nis || "",
@@ -75,7 +85,8 @@ export async function GET(req: Request) {
         s.tahunKelulusan || "",
         s.nomorPaspor || "-",
         formattanggal(s.tanggalPembuatanPaspor),
-        formattanggal(s.tanggalKadaluarsaPaspor)
+        formattanggal(s.tanggalKadaluarsaPaspor),
+        formatJurusan(s.jurusan)
       ]);
     });
 
@@ -95,7 +106,8 @@ export async function GET(req: Request) {
       { wch: 15 }, // Tahun Kelulusan
       { wch: 20 }, // Nomor Paspor
       { wch: 25 }, // Tanggal Pembuatan Paspor
-      { wch: 25 }  // Tanggal Kadaluarsa Paspor
+      { wch: 25 }, // Tanggal Kadaluarsa Paspor
+      { wch: 20 }  // Pilihan Jurusan
     ];
 
     xlsx.utils.book_append_sheet(wb, ws, "Data Santri");

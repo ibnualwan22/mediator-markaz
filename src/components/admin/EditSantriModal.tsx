@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 export default function EditSantriModal({ santri }: { santri: any }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     namaLengkap: santri.namaLengkap || "",
     namaArab: santri.namaArab || "",
@@ -67,7 +67,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
 
   return (
     <>
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="flex flex-shrink-0 items-center justify-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-semibold rounded-lg hover:bg-black dark:hover:bg-white transition-colors"
       >
@@ -114,11 +114,12 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Jurusan / Program</label>
                     <select name="jurusan" value={formData.jurusan} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all text-primary font-semibold">
                       <option value="">- Kosong / Belum diisi -</option>
-                      <option value="LUGHAH">Lughawi</option>
-                      <option value="SYARIAH">Syariah</option>
+                      <option value="LUGHAH">Lughah</option>
+                      <option value="SYARIAH">Syariah wal qonun</option>
+                      <option value="SYARIAH_ISLAMIYYAH">Syariah Islamiyyah</option>
                       <option value="USHULUDDIN">Ushuluddin</option>
-                      <option value="DIRASAT">Dirasat</option>
-                      <option value="ULUM">Ulumul Quran</option>
+                      <option value="DIRASAT">Dirosat Islamiyah</option>
+                      <option value="ULUM">Kulliyatul Ulum</option>
                     </select>
                   </div>
                   <div>
@@ -153,11 +154,11 @@ export default function EditSantriModal({ santri }: { santri: any }) {
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal Kadaluarsa Paspor</label>
                     <input type="date" name="tanggalKadaluarsaPaspor" value={formData.tanggalKadaluarsaPaspor} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
                   </div>
-                  
+
                   <div className="sm:col-span-2 pt-4 pb-2 border-t border-gray-100">
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Data Wali</h4>
                   </div>
-                  
+
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Wali</label>
                     <input type="text" name="namaWali" value={formData.namaWali} onChange={handleChange} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm transition-all" />
@@ -171,7 +172,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
             </div>
 
             <div className="p-5 border-t border-gray-100 bg-gray-50 dark:bg-gray-800 flex gap-3 flex-shrink-0">
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsOpen(false)}
                 disabled={isLoading}
@@ -179,7 +180,7 @@ export default function EditSantriModal({ santri }: { santri: any }) {
               >
                 Batal
               </button>
-              <button 
+              <button
                 type="submit"
                 form="editSantriForm"
                 disabled={isLoading || !formData.namaLengkap}

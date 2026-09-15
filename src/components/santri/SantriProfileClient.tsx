@@ -290,17 +290,19 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
               >
                 <option value="">Pilih Jurusan</option>
                 <option value="LUGHAH">Lughah</option>
-                <option value="SYARIAH">Syariah</option>
+                <option value="SYARIAH">Syariah wal qonun</option>
+                <option value="SYARIAH_ISLAMIYYAH">Syariah Islamiyyah</option>
                 <option value="USHULUDDIN">Ushuluddin</option>
-                <option value="DIRASAT">Dirasat</option>
-                <option value="ULUM">Ulum</option>
+                <option value="DIRASAT">Dirosat Islamiyah</option>
+                <option value="ULUM">Kulliyatul Ulum</option>
               </select>
             ) : (
               santriData.jurusan === "LUGHAH" ? "Lughah" :
-                santriData.jurusan === "SYARIAH" ? "Syariah" :
-                  santriData.jurusan === "USHULUDDIN" ? "Ushuluddin" :
-                    santriData.jurusan === "DIRASAT" ? "Dirasat" :
-                      santriData.jurusan === "ULUM" ? "Ulum" :
+                santriData.jurusan === "SYARIAH" ? "Syariah wal qonun" :
+                  santriData.jurusan === "SYARIAH_ISLAMIYYAH" ? "Syariah Islamiyyah" :
+                    santriData.jurusan === "USHULUDDIN" ? "Ushuluddin" :
+                      santriData.jurusan === "DIRASAT" ? "Dirosat Islamiyah" :
+                        santriData.jurusan === "ULUM" ? "Kulliyatul Ulum" :
                         <span className="text-text-secondary/40 italic font-normal">Belum diisi</span>
             )}
           </dd>
