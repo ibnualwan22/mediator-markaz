@@ -2,6 +2,26 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import * as xlsx from "xlsx";
 
+function levenshteinDistance(s: string, t: string): number {
+  if (!s.length) return t.length;
+  if (!t.length) return s.length;
+  const arr: number[][] = [];
+  for (let i = 0; i <= t.length; i++) {
+    arr[i] = [i];
+    for (let j = 1; j <= s.length; j++) {
+      arr[i][j] =
+        i === 0
+          ? j
+          : Math.min(
+              arr[i - 1][j] + 1,
+              arr[i][j - 1] + 1,
+              arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
+            );
+    }
+  }
+  return arr[t.length][s.length];
+}
+
 function parseExcelDate(val: any): Date | null {
   if (val === undefined || val === null || val === '') return null;
   if (typeof val === 'number') {
@@ -62,7 +82,8 @@ export async function POST(req: Request) {
 
     const currentYear = new Date().getFullYear();
     const newSantriList = [];
-    const errors = [];
+    const errors: string[] = [];
+    const successLogs: string[] = [];
     let successCount = 0;
     let failedCount = 0;
 
@@ -87,17 +108,46 @@ export async function POST(req: Request) {
       const rowNum = i + 2; // +1 untuk header, +1 karena array 0-indexed
 
       // Validation
-      if (!nic) {
-        errors.push(`Baris ${rowNum}: NIC wajib diisi untuk deteksi profil`);
+      if (!nic && !namaLengkap) {
+        errors.push(`Baris ${rowNum}: NIC dan Nama Lengkap kosong`);
         failedCount++;
         continue;
       }
 
-      // Match berdasarkan NIC
-      const matchedSantri = santriMap.get(String(nic).trim());
+      // Match berdasarkan NIC atau Nama (Fallback)
+      let matchedSantri = null;
+      let matchedBy = "";
+      
+      if (nic && santriMap.has(String(nic).trim())) {
+        matchedSantri = santriMap.get(String(nic).trim());
+        matchedBy = `NIC ${nic}`;
+      } else if (namaLengkap) {
+        // Fallback fuzzy search by namaLengkap
+        let bestMatch = null;
+        let bestDist = Infinity;
+        const TARGET = String(namaLengkap).trim().toLowerCase();
+        
+        for (const s of allSantri) {
+          if (!s.namaLengkap) continue;
+          const sName = String(s.namaLengkap).trim().toLowerCase();
+          const dist = levenshteinDistance(TARGET, sName);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestMatch = s;
+          }
+        }
+        
+        // threshold: misal maksimum 3 typo
+        // toleransi 80% mirip -> distance max 20% dari length
+        const maxAllowedDist = Math.max(2, Math.floor(TARGET.length * 0.2)); 
+        if (bestMatch && bestDist <= maxAllowedDist) {
+          matchedSantri = bestMatch;
+          matchedBy = bestDist === 0 ? "Nama Persis" : `Nama mirip`;
+        }
+      }
 
       if (!matchedSantri) {
-        errors.push(`Baris ${rowNum}: Santri dengan NIC "${nic}" tidak ditemukan`);
+        errors.push(`Baris ${rowNum}: Santri tidak ditemukan (NIC salah dan Nama tidak cocok: ${namaLengkap || nic})`);
         failedCount++;
         continue;
       }
@@ -203,6 +253,7 @@ export async function POST(req: Request) {
           data: updateData
         });
         successCount++;
+        successLogs.push(`Baris ${rowNum}: Berhasil update ${matchedSantri.namaLengkap} (Cocok via ${matchedBy})`);
         newSantriList.push({ id: santri.id, namaLengkap: santri.namaLengkap, noPendaftaran: santri.noPendaftaran });
       } catch (err: any) {
         console.error(`Gagal import baris ${rowNum}:`, err);
@@ -217,7 +268,8 @@ export async function POST(req: Request) {
         total: rawData.length,
         success: successCount,
         failed: failedCount,
-        errors
+        errors,
+        successLogs
       },
       data: newSantriList
     });

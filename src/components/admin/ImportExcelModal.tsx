@@ -261,6 +261,23 @@ export default function ImportExcelModal({
                  </div>
                )}
 
+               {result.summary?.successLogs?.length > 0 && (
+                 <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
+                   <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200">
+                     <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                       <CheckCircle2 size={14} className="text-success"/> Log Berhasil
+                     </h4>
+                   </div>
+                   <div className="p-4 max-h-40 overflow-y-auto bg-white dark:bg-gray-900">
+                     <ul className="text-xs text-success space-y-1.5 font-mono">
+                       {result.summary.successLogs.map((log: string, i: number) => (
+                         <li key={i}>• {log}</li>
+                       ))}
+                     </ul>
+                   </div>
+                 </div>
+               )}
+
                <button 
                  onClick={result.success ? handleClose : resetForm}
                  className="w-full py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors mt-6"
