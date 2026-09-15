@@ -274,17 +274,6 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
         <DataItem label="Gender" value={santriData.gender === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"} />
       </DataGroup>
 
-      {/* Dokumen Pribadi */}
-      <DataGroup title="Dokumen Pribadi" icon={<FileText size={20} />}>
-        {santriData.fileKtp && (
-          <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1.5 flex items-center gap-1.5">Foto KTP</dt>
-            <dd className="text-sm">
-              <a href={santriData.fileKtp.replace('export=view', 'export=download')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors">Unduh Dokumen</a>
-            </dd>
-          </div>
-        )}
-      </DataGroup>
 
       {/* Riwayat Akademik */}
       <DataGroup title="Riwayat Akademik" icon={<GraduationCap size={20} />}>
@@ -394,25 +383,6 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
           </dd>
         </div>
         <div className="sm:col-span-1"></div>
-
-        <div className="sm:col-span-1">
-          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-            <Calendar size={10} />
-            Tanggal Pembuatan
-          </dt>
-          <dd className="text-sm text-text-primary font-semibold">
-            {isEditing ? (
-              <input
-                type="date"
-                value={formData.tanggalPembuatanPaspor}
-                onChange={(e) => setFormData({ ...formData, tanggalPembuatanPaspor: e.target.value })}
-                className="w-full px-3 py-2 border border-primary-light/30 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-normal"
-              />
-            ) : (
-              santriData.tanggalPembuatanPaspor ? new Date(santriData.tanggalPembuatanPaspor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"
-            )}
-          </dd>
-        </div>
 
         <div className="sm:col-span-1">
           <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
