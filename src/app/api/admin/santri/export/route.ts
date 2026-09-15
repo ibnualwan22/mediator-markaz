@@ -4,9 +4,10 @@ import * as xlsx from "xlsx";
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
+    const searchParams = new URL(req.url).searchParams;
     const search = searchParams.get("search") || "";
     const gelombangId = searchParams.get("gelombangId") || "";
+    const periodeId = searchParams.get("periodeId") || "";
 
     // Build Prisma query based on filters
     const whereClause: any = {};
@@ -19,6 +20,10 @@ export async function GET(req: Request) {
     }
     if (gelombangId) {
       whereClause.gelombangId = gelombangId;
+    } else if (periodeId) {
+      whereClause.gelombang = {
+        periodeId: periodeId
+      };
     }
 
     // Ambil data dari database

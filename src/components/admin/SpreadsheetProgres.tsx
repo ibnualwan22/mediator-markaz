@@ -114,7 +114,10 @@ export default function SpreadsheetProgres({
             value={selectedPeriodeId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              if (e.target.value) params.set('periodeId', e.target.value);
+              if (e.target.value) {
+                params.set('periodeId', e.target.value);
+                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
+              }
               else params.delete('periodeId');
               
               params.delete('gelombangId'); // reset gelombang when changing periode

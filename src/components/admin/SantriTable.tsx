@@ -4,11 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, Filter, Eye, FileSpreadsheet, Loader2, X } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
+import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
 import { useRouter } from "next/navigation";
 
-export default function SantriTable({ santriList, gelombangList }: { santriList: any[], gelombangList: any[] }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterGelombang, setFilterGelombang] = useState("");
+export default function SantriTable({ 
+  santriList, 
+  gelombangs,
+  periodes,
+  query,
+  selectedGelombangId,
+  selectedPeriodeId
+}: { 
+  santriList: any[],
+  gelombangs: any[],
+  periodes: any[],
+  query: string,
+  selectedGelombangId: string,
+  selectedPeriodeId: string
+}) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showUrutModal, setShowUrutModal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -25,22 +38,13 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   ];
   const [selectedCopyFields, setSelectedCopyFields] = useState<string[]>(COPY_FIELDS);
 
-  const filteredData = santriList.filter(s => {
-    const matchSearch = s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.noPendaftaran.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.nis && s.nis.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchGelombang = filterGelombang ? s.gelombangId === filterGelombang : true;
-
-    return matchSearch && matchGelombang;
-  });
-
   const handleExport = async () => {
     setIsExporting(true);
     try {
       const url = new URL("/api/admin/santri/export", window.location.origin);
-      if (searchTerm) url.searchParams.set("search", searchTerm);
-      if (filterGelombang) url.searchParams.set("gelombangId", filterGelombang);
+      if (query) url.searchParams.set("search", query);
+      if (selectedGelombangId !== "all") url.searchParams.set("gelombangId", selectedGelombangId);
+      url.searchParams.set("periodeId", selectedPeriodeId);
       
       const response = await fetch(url.toString());
       if (!response.ok) throw new Error("Transfer gagal");
@@ -72,7 +76,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
     let copyText = "Data santri yang data dirinya belum lengkap:\n\n";
     let incompleteCount = 0;
 
-    filteredData.forEach((s, idx) => {
+    santriList.forEach((s, idx) => {
       const missingFields: string[] = [];
 
       // Check default text fields
@@ -133,14 +137,47 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 overflow-hidden">
       <div className="p-4 md:p-6 border-b border-primary-light/20 dark:border-gray-700 flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full sm:w-72">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary dark:text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Cari nama, No. Daftar, NIC..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-bg-cream dark:bg-gray-800 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full max-w-2xl">
+          {/* PERIODE FILTER */}
+          <select
+            className="w-full sm:w-auto px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-full sm:max-w-[200px]"
+            value={selectedPeriodeId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) {
+                params.set('periodeId', e.target.value);
+                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
+              }
+              else params.delete('periodeId');
+
+              params.delete('gelombangId'); // reset gelombang when changing periode
+              router.push(`/admin/santri?${params.toString()}`);
+            }}
+          >
+            <option value="" disabled>Pilih Periode</option>
+            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+
+          {/* GELOMBANG FILTER */}
+          <select
+            className="w-full sm:w-auto px-3 py-1.5 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm font-medium text-text-secondary dark:text-gray-400"
+            value={selectedGelombangId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
+              else params.delete('gelombangId');
+              router.push(`?${params.toString()}`);
+            }}
+          >
+            <option value="all">Semua Gelombang</option>
+            {gelombangs.map(g => (
+              <option key={g.id} value={g.id}>{g.nama}</option>
+            ))}
+          </select>
+
+          <SearchAutocomplete 
+            periodeId={selectedPeriodeId} 
+            currentQuery={query}
           />
         </div>
 
@@ -176,17 +213,6 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
             <FileSpreadsheet size={16} /> Import Bio
           </button>
           <div className="w-px h-6 bg-primary-light/30 mx-1 hidden sm:block"></div>
-          <Filter size={18} className="text-text-secondary dark:text-gray-400" />
-          <select
-            value={filterGelombang}
-            onChange={e => setFilterGelombang(e.target.value)}
-            className="w-full sm:w-48 px-3 py-2 bg-bg-cream dark:bg-gray-800 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
-          >
-            <option value="">Semua Gelombang</option>
-            {gelombangList.map(g => (
-              <option key={g.id} value={g.id}>{g.periode.nama} - {g.nama}</option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -203,7 +229,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
             </tr>
           </thead>
           <tbody className="text-sm">
-            {filteredData.length > 0 ? filteredData.map((s, index) => (
+            {santriList.length > 0 ? santriList.map((s, index) => (
               <tr key={s.id} className={`border-b border-primary-light/10 dark:border-gray-700 hover:bg-bg-cream dark:bg-gray-800 transition-colors ${s.isWithdrawn ? 'opacity-60 bg-red-50/50' : ''}`}>
                 <td className="p-4 text-center font-medium text-text-secondary dark:text-gray-400">{index + 1}</td>
                 <td className="p-4">
@@ -253,7 +279,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
       <ImportExcelModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
-        gelombangList={gelombangList}
+        gelombangList={gelombangs}
         onSuccess={() => {
           setShowImportModal(false);
           router.refresh();
@@ -264,7 +290,7 @@ export default function SantriTable({ santriList, gelombangList }: { santriList:
       <ImportExcelModal
         isOpen={showUrutModal}
         onClose={() => setShowUrutModal(false)}
-        gelombangList={gelombangList}
+        gelombangList={gelombangs}
         onSuccess={() => {
           setShowUrutModal(false);
           router.refresh();

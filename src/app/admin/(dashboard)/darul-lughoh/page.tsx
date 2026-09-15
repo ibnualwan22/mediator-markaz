@@ -2,15 +2,24 @@ import { prisma } from "@/lib/prisma";
 import { getSettingDL } from "./actions";
 import SpreadsheetDarulLughoh from "@/components/admin/SpreadsheetDarulLughoh";
 
+import { cookies } from "next/headers";
+
 export default async function DarulLughohPage({ searchParams }: { searchParams: Promise<{ q?: string, gelombangId?: string, periodeId?: string }> }) {
   const resolvedSearchParams = await searchParams;
   const query = resolvedSearchParams.q || "";
   const filterPeriodeId = resolvedSearchParams.periodeId || "";
   const filterGelombangId = resolvedSearchParams.gelombangId || "";
 
+  const cookieStore = await cookies();
+  const cookiePeriodeId = cookieStore.get('admin_active_periode')?.value;
+
   const periodes = await prisma.periode.findMany({ orderBy: { tahunDibuka: 'desc' } });
   const activePeriode = periodes.find(p => p.isActive) || periodes[0];
-  const selectedPeriodeId = filterPeriodeId || (activePeriode ? activePeriode.id : "");
+  
+  const storedPeriode = cookiePeriodeId ? periodes.find(p => p.id === cookiePeriodeId) : null;
+  const defaultPeriodeId = storedPeriode ? storedPeriode.id : (activePeriode ? activePeriode.id : "");
+  
+  const selectedPeriodeId = filterPeriodeId || defaultPeriodeId;
 
   const gelombangs = selectedPeriodeId ? await prisma.gelombang.findMany({
     where: { periodeId: selectedPeriodeId },

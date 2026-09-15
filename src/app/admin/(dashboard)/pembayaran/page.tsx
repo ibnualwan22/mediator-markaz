@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Search, Settings } from "lucide-react";
 import SpreadsheetPembayaran from "@/components/admin/SpreadsheetPembayaran";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function AdminPembayaranPage({ searchParams }: { searchParams: Promise<{ q?: string, periodeId?: string, gelombangId?: string, paketId?: string }> }) {
@@ -11,9 +12,16 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
   const filterGelombangId = resolvedSearchParams.gelombangId || "";
   const filterPaketId = resolvedSearchParams.paketId || "";
 
+  const cookieStore = await cookies();
+  const cookiePeriodeId = cookieStore.get('admin_active_periode')?.value;
+
   const periodes = await prisma.periode.findMany({ orderBy: { tahunDibuka: 'desc' } });
   const activePeriode = periodes.find(p => p.isActive) || periodes[0];
-  const selectedPeriodeId = filterPeriodeId || (activePeriode ? activePeriode.id : "");
+  
+  const storedPeriode = cookiePeriodeId ? periodes.find(p => p.id === cookiePeriodeId) : null;
+  const defaultPeriodeId = storedPeriode ? storedPeriode.id : (activePeriode ? activePeriode.id : "");
+  
+  const selectedPeriodeId = filterPeriodeId || defaultPeriodeId;
   
   const gelombangs = selectedPeriodeId ? await prisma.gelombang.findMany({
     where: { periodeId: selectedPeriodeId },

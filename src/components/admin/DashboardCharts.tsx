@@ -54,6 +54,7 @@ export default function DashboardCharts({
     const params = new URLSearchParams(window.location.search);
     if (newPeriodeId) {
       params.set('periodeId', newPeriodeId);
+      document.cookie = `admin_active_periode=${newPeriodeId}; path=/; max-age=31536000`;
     } else {
       params.delete('periodeId');
     }

@@ -2,15 +2,24 @@ import { prisma } from "@/lib/prisma";
 import DashboardCharts from "@/components/admin/DashboardCharts";
 import { Users, UserCheck, CalendarDays, Activity } from "lucide-react";
 
+import { cookies } from "next/headers";
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ periodeId?: string }> }) {
   const resolvedSearchParams = await searchParams;
   const filterPeriodeId = resolvedSearchParams.periodeId || "";
 
+  const cookieStore = await cookies();
+  const cookiePeriodeId = cookieStore.get('admin_active_periode')?.value;
+
   const periodes = await prisma.periode.findMany({ orderBy: { tahunDibuka: 'desc' } });
   const activePeriode = periodes.find(p => p.isActive) || periodes[0];
-  const selectedPeriodeId = filterPeriodeId || (activePeriode ? activePeriode.id : "");
+  
+  const storedPeriode = cookiePeriodeId ? periodes.find(p => p.id === cookiePeriodeId) : null;
+  const defaultPeriodeId = storedPeriode ? storedPeriode.id : (activePeriode ? activePeriode.id : "");
+  const selectedPeriodeId = filterPeriodeId || defaultPeriodeId;
+  
   const selectedPeriode = periodes.find(p => p.id === selectedPeriodeId);
 
   // Stats for the selected periode

@@ -99,7 +99,7 @@ export default function SearchAutocomplete({
   };
 
   return (
-    <div className="relative flex-1 max-w-sm" ref={dropdownRef}>
+    <div className="relative flex-1 w-full min-w-[200px] sm:max-w-sm" ref={dropdownRef}>
       <div className="relative flex">
         <input 
           type="text" 
@@ -123,7 +123,7 @@ export default function SearchAutocomplete({
       </div>
 
       {isOpen && (results.length > 0 || error) && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden max-h-64 overflow-y-auto custom-scrollbar">
+        <div className="absolute z-50 w-full min-w-[280px] sm:min-w-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden max-h-64 overflow-y-auto custom-scrollbar">
           {error ? (
             <div className="p-3 text-sm text-red-500 text-center">{error}</div>
           ) : results.length > 0 ? (
@@ -136,7 +136,7 @@ export default function SearchAutocomplete({
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100 pr-2 line-clamp-2 leading-snug">
                         {santri.namaLengkap}
                       </div>
                       {santri.nis && (

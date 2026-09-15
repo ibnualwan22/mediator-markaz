@@ -10,6 +10,7 @@ import {
 } from "@/app/admin/(dashboard)/darul-lughoh/actions";
 import { Settings, Save, AlertTriangle, CheckCircle2, Upload, Download, RotateCcw, Trash2 } from "lucide-react";
 import ImportExcelModal from "./ImportExcelModal";
+import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
 import Swal from "sweetalert2";
 
 export default function SpreadsheetDarulLughoh({
@@ -175,14 +176,17 @@ export default function SpreadsheetDarulLughoh({
 
       {/* Top Bar (Filter + Settings) */}
       <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex flex-wrap gap-4 justify-between items-center bg-bg-cream dark:bg-gray-800/30">
-        <div className="flex gap-2 flex-1">
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
           {/* PERIODE FILTER */}
           <select
             className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-[200px]"
             value={selectedPeriodeId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              if (e.target.value) params.set('periodeId', e.target.value);
+              if (e.target.value) {
+                params.set('periodeId', e.target.value);
+                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
+              }
               else params.delete('periodeId');
 
               params.delete('gelombangId'); // reset gelombang when changing periode
@@ -210,16 +214,10 @@ export default function SpreadsheetDarulLughoh({
             ))}
           </select>
 
-          <form className="relative flex-1 max-w-sm">
-            <input
-              type="text"
-              name="q"
-              defaultValue={query}
-              placeholder="Cari NIC atau Nama..."
-              className="w-full px-4 py-1.5 bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-lg outline-none focus:border-primary text-sm"
-            />
-            <input type="hidden" name="gelombangId" value={selectedGelombangId} />
-          </form>
+          <SearchAutocomplete 
+            periodeId={selectedPeriodeId} 
+            currentQuery={query}
+          />
         </div>
 
         <div className="flex items-center gap-2">
