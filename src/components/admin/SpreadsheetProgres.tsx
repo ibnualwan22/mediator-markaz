@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
-import { UploadCloud, CheckCircle2, Loader2, Trash2 } from "lucide-react";
+import { useState, useTransition, useCallback, useMemo } from "react";
+import { UploadCloud, CheckCircle2, Loader2, Trash2, X } from "lucide-react";
 import { toggleCheckboxProgres, updateProgresFileUrl } from "@/app/admin/(dashboard)/progres/actions";
 import { useRouter } from "next/navigation";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
@@ -27,6 +27,29 @@ export default function SpreadsheetProgres({
   const [loadingCells, setLoadingCells] = useState<Set<string>>(new Set());
   const [optimisticData, setOptimisticData] = useState<Record<string, { selesai?: boolean; fileUrl?: string | null }>>({}); 
   const [isPending, startTransition] = useTransition();
+  const [modalTahap, setModalTahap] = useState<any | null>(null);
+
+  const tahapStats = useMemo(() => {
+    const stats: Record<string, { selesai: any[], belum: any[] }> = {};
+    tahaps.forEach(tahap => {
+      stats[tahap.id] = { selesai: [], belum: [] };
+    });
+    
+    santriList.forEach(santri => {
+      tahaps.forEach(tahap => {
+        const record = santri.progresSantri.find((p: any) => p.tahapProgresId === tahap.id);
+        const opt = record ? optimisticData[record.id] : undefined;
+        const isSelesai = opt?.selesai ?? record?.selesai ?? false;
+
+        if (isSelesai) {
+          stats[tahap.id].selesai.push(santri);
+        } else {
+          stats[tahap.id].belum.push(santri);
+        }
+      });
+    });
+    return stats;
+  }, [santriList, tahaps, optimisticData]);
 
   const activeTahaps = tahaps.filter(t => t.isActive);
   const inactiveTahapsCount = tahaps.length - activeTahaps.length;
@@ -148,6 +171,34 @@ export default function SpreadsheetProgres({
           currentQuery={query}
         />
       </div>
+
+      {/* Summary Cards */}
+      {tahaps.length > 0 && santriList.length > 0 && (
+        <div className="flex gap-4 overflow-x-auto p-4 border-b border-primary-light/10 dark:border-gray-800 custom-scrollbar bg-bg-cream/50 dark:bg-gray-800/20">
+          {tahaps.map(tahap => {
+            const stat = tahapStats[tahap.id];
+            const total = stat.selesai.length + stat.belum.length;
+            const progress = total === 0 ? 0 : Math.round((stat.selesai.length / total) * 100);
+            
+            return (
+              <div 
+                key={tahap.id} 
+                onClick={() => setModalTahap(tahap)}
+                className="flex-shrink-0 w-60 bg-white dark:bg-gray-900 border border-primary-light/20 dark:border-gray-700 rounded-xl p-3 shadow-sm cursor-pointer hover:border-primary/50 hover:shadow-md transition-all"
+              >
+                <h3 className="font-bold text-sm text-text-primary dark:text-gray-100 truncate" title={tahap.nama}>{tahap.nama}</h3>
+                <div className="flex justify-between mt-2 text-xs">
+                  <span className="text-success font-semibold">Selesai: {stat.selesai.length}</span>
+                  <span className="text-danger font-semibold">Belum: {stat.belum.length}</span>
+                </div>
+                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                  <div className="bg-success h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Spreadsheet Table */}
       <div className="flex-1 overflow-auto custom-scrollbar">
@@ -284,6 +335,149 @@ export default function SpreadsheetProgres({
             )}
           </tbody>
         </table>
+      </div>
+
+      {modalTahap && (
+        <ProgresStatsModal
+          tahap={modalTahap}
+          stats={tahapStats[modalTahap.id]}
+          onClose={() => setModalTahap(null)}
+          optimisticData={optimisticData}
+          loadingCells={loadingCells}
+          handleToggle={handleToggle}
+          handleUploadFile={handleUploadFile}
+          handleDeleteFile={handleDeleteFile}
+        />
+      )}
+    </div>
+  );
+}
+
+function ProgresStatsModal({ 
+  tahap, 
+  stats, 
+  onClose,
+  optimisticData,
+  loadingCells,
+  handleToggle,
+  handleUploadFile,
+  handleDeleteFile
+}: { 
+  tahap: any, 
+  stats: { selesai: any[], belum: any[] },
+  onClose: () => void,
+  optimisticData: Record<string, any>,
+  loadingCells: Set<string>,
+  handleToggle: (id: string, current: boolean) => void,
+  handleUploadFile: (e: any, id: string, santriName: string, docName: string, gName?: string, pName?: string) => void,
+  handleDeleteFile: (id: string) => void
+}) {
+  const [tab, setTab] = useState<'SELESAI' | 'BELUM'>('SELESAI');
+  const list = tab === 'SELESAI' ? stats.selesai : stats.belum;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
+          <div>
+            <h2 className="text-lg font-heading font-bold text-gray-800 dark:text-gray-100 pr-4">{tahap.nama}</h2>
+            <p className="text-xs text-text-secondary mt-0.5">Daftar santri pada progres ini</p>
+          </div>
+          <button onClick={onClose} className="p-2 shrink-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 rounded-lg transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="flex border-b border-gray-200 dark:border-gray-700 text-sm">
+          <button 
+             onClick={() => setTab('SELESAI')}
+             className={`flex-1 py-3 font-semibold text-center transition-colors ${tab === 'SELESAI' ? 'text-success border-b-2 border-success bg-success/5' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+          >
+            Selesai ({stats.selesai.length})
+          </button>
+          <button 
+             onClick={() => setTab('BELUM')}
+             className={`flex-1 py-3 font-semibold text-center transition-colors ${tab === 'BELUM' ? 'text-danger border-b-2 border-danger bg-danger/5' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+          >
+            Belum ({stats.belum.length})
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar min-h-[300px]">
+          {list.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400 h-full">
+              <CheckCircle2 size={32} className="mb-2 opacity-20" />
+              <p className="text-sm font-medium">Kosong</p>
+              <p className="text-xs">Tidak ada santri dengan status ini pada filter tabel aktif.</p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {list.map((s: any, idx: number) => {
+                const record = s.progresSantri.find((p: any) => p.tahapProgresId === tahap.id);
+                const opt = record ? optimisticData[record.id] : undefined;
+                const isSelesai = opt?.selesai ?? record?.selesai ?? false;
+                const cellFileUrl = opt?.fileUrl ?? record?.fileUrl ?? null;
+                const cellLoading = record ? loadingCells.has(record.id) : false;
+
+                return (
+                  <li key={s.id} className="flex gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <div className="font-mono text-xs font-bold text-gray-400 w-6 text-right mt-0.5">{idx + 1}.</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-sm text-gray-900 dark:text-gray-100 truncate w-full" title={s.namaLengkap}>{s.namaLengkap}</div>
+                      <div className="text-xs text-primary font-mono font-medium mt-0.5">{s.nis || s.noPendaftaran}</div>
+                    </div>
+                    
+                    {record && (
+                      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                        <label className={`inline-flex items-center gap-2 cursor-pointer ${cellLoading ? 'opacity-50' : 'hover:bg-primary-light/10'} p-1.5 rounded transition-colors`}>
+                          {cellLoading ? (
+                            <Loader2 size={16} className="animate-spin text-primary" />
+                          ) : (
+                            <input 
+                               type="checkbox" 
+                               checked={isSelesai}
+                               onChange={() => handleToggle(record.id, isSelesai)}
+                               className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-success focus:ring-success"
+                            />
+                          )}
+                        </label>
+                        
+                        <div className="flex items-center w-[120px] sm:w-[150px] justify-end">
+                          {!cellFileUrl ? (
+                            <label className={`text-xs font-bold text-white bg-primary px-2 py-1 rounded cursor-pointer opacity-80 hover:opacity-100 flex items-center justify-center gap-1 w-full max-w-[120px] whitespace-nowrap ${cellLoading ? 'pointer-events-none opacity-50' : ''}`}>
+                               <UploadCloud size={12} className="shrink-0" /> <span className="hidden sm:inline">Upload</span>
+                               <input 
+                                 type="file" 
+                                 className="hidden" 
+                                 accept=".pdf,.jpg,.jpeg,.png"
+                                 onChange={(e) => handleUploadFile(e, record.id, s.namaLengkap, tahap.nama, s.gelombang?.nama, s.gelombang?.periode?.nama)}
+                                 disabled={cellLoading}
+                               />
+                            </label>
+                          ) : (
+                            <div className="flex items-stretch justify-center h-full gap-0.5 w-full">
+                              <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
+                                <span className="truncate hidden sm:inline">Diupload</span> <CheckCircle2 size={12} className="shrink-0" />
+                              </a>
+                              <button 
+                                onClick={() => handleDeleteFile(record.id)}
+                                disabled={cellLoading}
+                                title="Hapus Dokumen"
+                                className="bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger-dark px-2 py-1.5 rounded-r-md transition-colors disabled:opacity-50 flex items-center justify-center border-l border-white shrink-0"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

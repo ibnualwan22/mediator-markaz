@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useMemo } from "react";
 import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
 import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2 } from "lucide-react";
@@ -28,7 +28,6 @@ export default function SpreadsheetPemberkasan({
   const [optimisticData, setOptimisticData] = useState<Record<string, { sudahDikumpulkan?: boolean; fileUrl?: string | null }>>({});
   const [isPending, startTransition] = useTransition();
   const [bulkLoading, setBulkLoading] = useState<Set<string>>(new Set());
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState<any | null>(null);
   const [itemModalView, setItemModalView] = useState<'MISSING' | 'ARSIP'>('MISSING');
 
@@ -36,6 +35,28 @@ export default function SpreadsheetPemberkasan({
   
   const indoCount = visibleItems.filter(i => i.kategori === 'INDONESIA').length;
   const mesirCount = visibleItems.filter(i => i.kategori === 'MESIR').length;
+
+  const itemStats = useMemo(() => {
+    const stats: Record<string, { sudah: any[], belum: any[] }> = {};
+    visibleItems.forEach(item => {
+      stats[item.id] = { sudah: [], belum: [] };
+    });
+    
+    santriList.forEach(santri => {
+      visibleItems.forEach(item => {
+        const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === item.id);
+        const opt = record ? optimisticData[record.id] : undefined;
+        const isChecked = opt?.sudahDikumpulkan ?? record?.sudahDikumpulkan ?? false;
+
+        if (isChecked) {
+          stats[item.id].sudah.push(santri);
+        } else {
+          stats[item.id].belum.push(santri);
+        }
+      });
+    });
+    return stats;
+  }, [santriList, visibleItems, optimisticData]);
 
   const addLoading = (id: string) => setLoadingCells(prev => new Set(prev).add(id));
   const removeLoading = (id: string) => setLoadingCells(prev => { const next = new Set(prev); next.delete(id); return next; });
@@ -175,67 +196,36 @@ export default function SpreadsheetPemberkasan({
         />
       </div>
 
-      {/* Summary Card Collapsible */}
-      <div className="border-b border-primary-light/20 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0">
-        <div 
-          className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 dark:bg-gray-800 transition-colors"
-          onClick={() => setSummaryExpanded(!summaryExpanded)}
-        >
-          <div className="flex items-center gap-2">
-            <h2 className="font-bold text-primary text-sm flex items-center gap-2">
-              <FileText size={16} /> Ringkasan Dokumen
-            </h2>
-            <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-              {visibleItems.length} Dokumen
-            </span>
-          </div>
-          {summaryExpanded ? <ChevronUp size={20} className="text-text-secondary dark:text-gray-400" /> : <ChevronDown size={20} className="text-text-secondary dark:text-gray-400" />}
-        </div>
-        
-        {summaryExpanded && (
-          <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[20vh] md:max-h-[25vh] overflow-y-auto custom-scrollbar">
-            {visibleItems.map(item => {
-              // Hitung jumlah santri yang BELUM lengkap untuk item ini
-              const belumLengkap = santriList.filter(santri => {
-                const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === item.id);
-                return !record || !record.sudahDikumpulkan;
-              }).length;
-
-              return (
-                <div 
-                  key={item.id} 
-                  onClick={() => {
-                    setActiveItemModal(item);
-                    setItemModalView('MISSING');
-                  }}
-                  className="bg-white dark:bg-gray-900 border border-primary-light/30 dark:border-gray-700 rounded-xl p-3 shadow-sm hover:shadow hover:border-primary/50 transition-all cursor-pointer flex flex-col justify-between min-h-[90px]"
-                >
-                  <div className="flex justify-between items-start gap-2 mb-2">
-                    <h3 className="font-semibold text-text-primary dark:text-gray-100 leading-tight text-sm flex-1" title={item.nama}>
-                      {item.nama}
-                    </h3>
-                    {belumLengkap > 0 ? (
-                      <span className="bg-danger/10 text-danger px-1.5 py-0.5 rounded text-sm font-bold whitespace-nowrap">
-                        {belumLengkap} Kurang
-                      </span>
-                    ) : (
-                      <span className="bg-success/10 text-success px-1.5 py-0.5 rounded text-sm font-bold whitespace-nowrap">
-                        Lengkap
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-text-secondary dark:text-gray-400 flex justify-between items-center mt-auto">
-                    <span className="truncate max-w-[120px]">{item.kategori === 'INDONESIA' ? 'Dalam Negeri' : 'Luar Negeri'}</span>
-                    <span className="text-primary font-semibold flex items-center gap-1 hover:underline">
-                      Detail <ChevronDown size={10} className="-rotate-90" />
-                    </span>
-                  </div>
+      {/* Summary Cards */}
+      {visibleItems.length > 0 && santriList.length > 0 && (
+        <div className="flex gap-4 overflow-x-auto p-4 border-b border-primary-light/10 dark:border-gray-800 custom-scrollbar bg-bg-cream/50 dark:bg-gray-800/20">
+          {visibleItems.map(item => {
+            const stat = itemStats[item.id];
+            const total = stat.sudah.length + stat.belum.length;
+            const progress = total === 0 ? 0 : Math.round((stat.sudah.length / total) * 100);
+            
+            return (
+              <div 
+                key={item.id} 
+                onClick={() => {
+                  setActiveItemModal(item);
+                  setItemModalView('MISSING');
+                }}
+                className="flex-shrink-0 w-60 bg-white dark:bg-gray-900 border border-primary-light/20 dark:border-gray-700 rounded-xl p-3 shadow-sm cursor-pointer hover:border-primary/50 hover:shadow-md transition-all"
+              >
+                <h3 className="font-bold text-sm text-text-primary dark:text-gray-100 truncate" title={item.nama}>{item.nama}</h3>
+                <div className="flex justify-between mt-2 text-xs">
+                  <span className="text-success font-semibold">Lengkap: {stat.sudah.length}</span>
+                  <span className="text-danger font-semibold">Kurang: {stat.belum.length}</span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                  <div className="bg-success h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Item Modal (Popup Detail Ringkasan) */}
       {activeItemModal && (
@@ -277,7 +267,7 @@ export default function SpreadsheetPemberkasan({
                     <th className="p-3 border-b border-primary-light/20 dark:border-gray-700">Nama Camaba</th>
                     <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Periode & Gelombang</th>
                     <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Status Lapor</th>
-                    {itemModalView === 'ARSIP' && <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Aksi / File</th>}
+                    <th className="p-3 border-b border-primary-light/20 dark:border-gray-700 text-center">Aksi / File</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-primary-light/10">
@@ -325,51 +315,49 @@ export default function SpreadsheetPemberkasan({
                               );
                             })()}
                           </td>
-                          {itemModalView === 'ARSIP' && (
-                            <td className="p-3 text-center">
-                              {record ? (
-                                (() => {
-                                  const opt = optimisticData[record.id];
-                                  const cellFileUrl = opt?.fileUrl ?? record.fileUrl;
-                                  const cellLoading = loadingCells.has(record.id);
-                                  return (
-                                    <div className="flex flex-col items-center gap-2">
-                                      {cellFileUrl ? (
-                                        <div className="flex items-stretch w-full max-w-[150px]">
-                                          <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-l-md hover:bg-blue-100 transition-colors w-full min-w-0">
-                                            <span className="truncate">Sudah Diupload</span> <CheckCircle2 size={12} className="shrink-0" />
-                                          </a>
-                                          <button 
-                                            onClick={() => handleDeleteFile(record.id)}
-                                            disabled={cellLoading}
-                                            title="Hapus Dokumen"
-                                            className="bg-danger/10 text-danger hover:bg-danger/20 px-2 py-1.5 rounded-r-md transition-colors disabled:opacity-50 border-l border-white shrink-0 flex items-center justify-center"
-                                          >
-                                            <Trash2 size={12} />
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <div className="text-sm text-text-secondary dark:text-gray-400 w-full">Belum Upload</div>
-                                      )}
-                                      
-                                      <label className={`text-sm bg-primary text-white px-2 py-1 rounded cursor-pointer hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 w-full max-w-[120px] ${cellLoading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                        {cellLoading ? <Loader2 size={12} className="animate-spin" /> : <UploadCloud size={12} />} {cellFileUrl ? 'Ganti File' : 'Upload Dokumen'}
-                                        <input 
-                                          type="file" 
-                                          className="hidden" 
-                                          accept=".pdf,.jpg,.jpeg,.png"
-                                          onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, activeItemModal.nama, santri.gelombang?.nama, santri.gelombang?.periode?.nama)}
+                          <td className="p-3 text-center">
+                            {record ? (
+                              (() => {
+                                const opt = optimisticData[record.id];
+                                const cellFileUrl = opt?.fileUrl ?? record.fileUrl;
+                                const cellLoading = loadingCells.has(record.id);
+                                return (
+                                  <div className="flex flex-col items-center gap-2">
+                                    {cellFileUrl ? (
+                                      <div className="flex items-stretch w-full max-w-[150px]">
+                                        <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-l-md hover:bg-blue-100 transition-colors w-full min-w-0">
+                                          <span className="truncate">Sudah Diupload</span> <CheckCircle2 size={12} className="shrink-0" />
+                                        </a>
+                                        <button 
+                                          onClick={() => handleDeleteFile(record.id)}
                                           disabled={cellLoading}
-                                        />
-                                      </label>
-                                    </div>
-                                  );
-                                })()
-                              ) : (
-                                <span className="text-gray-300 text-sm italic">No record</span>
-                              )}
-                            </td>
-                          )}
+                                          title="Hapus Dokumen"
+                                          className="bg-danger/10 text-danger hover:bg-danger/20 px-2 py-1.5 rounded-r-md transition-colors disabled:opacity-50 border-l border-white shrink-0 flex items-center justify-center"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-text-secondary dark:text-gray-400 w-full">Belum Upload</div>
+                                    )}
+                                    
+                                    <label className={`text-sm bg-primary text-white px-2 py-1 rounded cursor-pointer hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 w-full max-w-[120px] ${cellLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                      {cellLoading ? <Loader2 size={12} className="animate-spin" /> : <UploadCloud size={12} />} {cellFileUrl ? 'Ganti File' : 'Upload Dokumen'}
+                                      <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={(e) => handleUploadFile(e, record.id, santri.namaLengkap, activeItemModal.nama, santri.gelombang?.nama, santri.gelombang?.periode?.nama)}
+                                        disabled={cellLoading}
+                                      />
+                                    </label>
+                                  </div>
+                                );
+                              })()
+                            ) : (
+                              <span className="text-gray-300 text-sm italic">No record</span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
