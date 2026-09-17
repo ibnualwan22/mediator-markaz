@@ -97,8 +97,8 @@ export default function Step4Paspor({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (hasPassport && (!formData.tanggalPembuatanPaspor || !formData.tanggalKadaluarsaPaspor || !formData.filePaspor)) {
-      alert("Karena Anda mengisi Nomor Paspor, silakan lengkapi Tanggal Pembuatan, Kadaluarsa, dan Upload File Paspor.");
+    if (hasPassport && (!formData.tanggalKadaluarsaPaspor || !formData.filePaspor)) {
+      alert("Karena Anda mengisi Nomor Paspor, silakan lengkapi Tanggal Kadaluarsa, dan Upload File Paspor.");
       return;
     }
 
@@ -143,6 +143,7 @@ export default function Step4Paspor({
 
         {hasPassport && (
           <>
+            {/*
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-secondary">Tanggal Pembuatan Paspor <span className="text-danger">*</span></label>
               <input
@@ -154,6 +155,7 @@ export default function Step4Paspor({
                 className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
               />
             </div>
+            */}
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-secondary">Tanggal Kadaluarsa Paspor <span className="text-danger">*</span></label>
