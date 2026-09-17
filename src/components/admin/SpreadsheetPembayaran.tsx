@@ -409,10 +409,15 @@ export default function SpreadsheetPembayaran({
                                   h = pt.nominalIjazah;
                                 }
                               }
-                              calcHarusList[pt.id] = h;
-
                               const dibayar = ps?.nominalDibayar || 0;
                               const isLunasTagihan = (dibayar >= h && (h > 0 || !pt.isBebas)) || ps?.isLunas === true;
+                              
+                              if (isLunasTagihan && dibayar < h) {
+                                h = dibayar;
+                              }
+                              
+                              calcHarusList[pt.id] = h;
+
                               if (!isLunasTagihan) {
                                 globalKekurangan += Math.max(0, h - dibayar);
                               }
@@ -423,9 +428,17 @@ export default function SpreadsheetPembayaran({
                             const dlArray = getDLRecords(santri, lvl);
                             if (dlArray) {
                               dlArray.forEach((dl: any) => {
-                                const isLunasDLTagihan = (dl.nominalDibayar >= dl.nominalHarus && dl.nominalHarus > 0) || dl.isLunas === true;
+                                const dibayarDL = dl.nominalDibayar;
+                                let harusDL = dl.nominalHarus;
+                                const isLunasDLTagihan = (dibayarDL >= harusDL && harusDL > 0) || dl.isLunas === true;
+                                
+                                if (isLunasDLTagihan && dibayarDL < harusDL) {
+                                  harusDL = dibayarDL;
+                                  dl.nominalHarus = harusDL;
+                                }
+
                                 if (!isLunasDLTagihan) {
-                                  globalKekurangan += Math.max(0, dl.nominalHarus - dl.nominalDibayar);
+                                  globalKekurangan += Math.max(0, harusDL - dibayarDL);
                                 }
                               });
                             }
