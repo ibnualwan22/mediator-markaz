@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { upsertCicilanPembayaran, changePaketSantri, bulkUpsertCicilanPembayaran, updatePembayaranSantriMeta } from "@/app/admin/(dashboard)/pembayaran/actions";
-import { updatePembayaranDL, bulkUpdatePembayaranDL, updateDarulLughohMeta, waivePembayaranDL, resetTagihanDL } from "@/app/admin/(dashboard)/darul-lughoh/actions";
+import { upsertCicilanPembayaran, changePaketSantri, markAsLunas, updatePembayaranSantriMeta } from "@/app/admin/(dashboard)/pembayaran/actions";
+import { updatePembayaranDL, markAsLunasDL, updateDarulLughohMeta, waivePembayaranDL, resetTagihanDL } from "@/app/admin/(dashboard)/darul-lughoh/actions";
 import { CheckCircle2, AlertCircle, CalendarRange, X, Save, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ImportExcelModal from "@/components/admin/ImportExcelModal";
@@ -149,52 +149,7 @@ export default function SpreadsheetPembayaran({
     return records;
   };
 
-  const handleSetLunasAllTahap = async (poin: any, isIjazahBased: boolean, santris: any[]) => {
-    const updates: any[] = [];
-    santris.forEach(santri => {
-      let harus = poin.nominal;
-      if (isIjazahBased && poin.nominalIjazah) {
-        if (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN') {
-          harus = poin.nominalIjazah;
-        }
-      }
-      const ps = santri.pembayaranSantri.find((s: any) => s.poinTahapId === poin.id);
-      const dibayar = ps?.nominalDibayar || 0;
-      if (dibayar < harus) { // Only if not lunas
-        updates.push({
-          santriId: santri.id,
-          poinTahapId: poin.id,
-          nominalHarus: harus
-        });
-      }
-    });
-
-    if (updates.length > 0) {
-      setIsLoading(true);
-      await bulkUpsertCicilanPembayaran(updates);
-      setIsLoading(false);
-    }
-  };
-
-  const handleSetLunasAllDL = async (level: number, santris: any[]) => {
-    const updates: any[] = [];
-    santris.forEach(santri => {
-      const attempts = getDLRecords(santri, level);
-      if (attempts) {
-        attempts.forEach((dl: any) => {
-          if (dl.nominalHarus > 0 && dl.nominalDibayar < dl.nominalHarus) {
-            updates.push({ id: dl.id, nominalDibayar: dl.nominalHarus });
-          }
-        });
-      }
-    });
-
-    if (updates.length > 0) {
-      setIsLoading(true);
-      await bulkUpdatePembayaranDL(updates);
-      setIsLoading(false);
-    }
-  };
+  // Removed handleSetLunasAllTahap and handleSetLunasAllDL
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-140px)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
@@ -407,26 +362,12 @@ export default function SpreadsheetPembayaran({
                               <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
                                 {tahap1.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
                               </div>
-                              <button
-                                onClick={() => handleSetLunasAllTahap(poin, tahap1.isIjazahBased, pktSantris)}
-                                disabled={isLoading || pktSantris.length === 0}
-                                className="mt-1.5 w-full text-xs bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
-                              >
-                                SET LUNAS ALL
-                              </button>
                             </th>
                           ))}
 
                           {dlLevels.map((lvl) => (
                             <th key={lvl} className="p-2 border-r border-primary-light/10 dark:border-gray-700 min-w-[140px] bg-amber-50 text-amber-600 font-bold group">
                               <div className="text-center w-full">Level {lvl}</div>
-                              <button
-                                onClick={() => handleSetLunasAllDL(lvl, pktSantris)}
-                                disabled={isLoading || pktSantris.length === 0}
-                                className="mt-1.5 w-full text-xs bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
-                              >
-                                SET LUNAS ALL
-                              </button>
                             </th>
                           ))}
 
@@ -439,18 +380,11 @@ export default function SpreadsheetPembayaran({
                                   </div>
                                   {t.isIjazahBased && <span className="bg-warning text-white text-xs px-1.5 py-0.5 rounded shrink-0">Ijazah</span>}
                                 </div>
-                                <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
-                                  {t.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
-                                </div>
-                                <button
-                                  onClick={() => handleSetLunasAllTahap(poin, t.isIjazahBased, pktSantris)}
-                                  disabled={isLoading || pktSantris.length === 0}
-                                  className="mt-1.5 w-full text-xs bg-success/10 text-success hover:bg-success/20 border border-success/20 px-1 py-1 rounded transition-colors font-bold whitespace-nowrap outline-none disabled:opacity-50"
-                                >
-                                  SET LUNAS ALL
-                                </button>
-                              </th>
-                            ))
+                                  <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
+                                    {t.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
+                                  </div>
+                                </th>
+                              ))
                           )}
                           <th className="p-2 bg-white dark:bg-gray-900 border-l border-primary-light/20 dark:border-gray-700 min-w-[100px] text-center">Status</th>
                         </tr>
@@ -478,7 +412,10 @@ export default function SpreadsheetPembayaran({
                               calcHarusList[pt.id] = h;
 
                               const dibayar = ps?.nominalDibayar || 0;
-                              globalKekurangan += Math.max(0, h - dibayar);
+                              const isLunasTagihan = (dibayar >= h && (h > 0 || !pt.isBebas)) || ps?.isLunas === true;
+                              if (!isLunasTagihan) {
+                                globalKekurangan += Math.max(0, h - dibayar);
+                              }
                             });
                           });
 
@@ -486,7 +423,10 @@ export default function SpreadsheetPembayaran({
                             const dlArray = getDLRecords(santri, lvl);
                             if (dlArray) {
                               dlArray.forEach((dl: any) => {
-                                globalKekurangan += Math.max(0, dl.nominalHarus - dl.nominalDibayar);
+                                const isLunasDLTagihan = (dl.nominalDibayar >= dl.nominalHarus && dl.nominalHarus > 0) || dl.isLunas === true;
+                                if (!isLunasDLTagihan) {
+                                  globalKekurangan += Math.max(0, dl.nominalHarus - dl.nominalDibayar);
+                                }
                               });
                             }
                           });
@@ -516,7 +456,7 @@ export default function SpreadsheetPembayaran({
                                 const dibayar = ps?.nominalDibayar || 0;
                                 const k = `${santri.id}-${poin.id}`;
                                 const displayVal = localCicilan[k] !== undefined ? localCicilan[k] : dibayar;
-                                const isInputLunas = displayVal >= harus && (harus > 0 || !poin.isBebas || (ps?.isLunas));
+                                const isInputLunas = (displayVal >= harus && (harus > 0 || !poin.isBebas)) || ps?.isLunas === true;
                                 const displayStr = displayVal === 0 ? '' : displayVal.toLocaleString('id-ID');
 
                                 const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
@@ -545,13 +485,16 @@ export default function SpreadsheetPembayaran({
                                           {!isInputLunas ? (
                                             <button
                                               type="button"
-                                              onClick={() => {
-                                                handleCicilanChange(k, String(harus));
-                                                handleBlur(santri.id, poin.id, harus, dibayar, harus);
+                                              onClick={async () => {
+                                                setIsLoading(true);
+                                                await markAsLunas(santri.id, poin.id, displayVal, harus);
+                                                setIsLoading(false);
+                                                setLocalCicilan(prev => { const next = {...prev}; delete next[k]; return next; });
+                                                router.refresh();
                                               }}
-                                              className="text-xs bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
+                                              className="text-[10px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold whitespace-nowrap"
                                             >
-                                              SET LUNAS
+                                              ✓ TANDAI LUNAS
                                             </button>
                                           ) : <div />}
                                           <button
@@ -648,7 +591,7 @@ export default function SpreadsheetPembayaran({
 
                                         const k = `dl-${dl.id}`;
                                         const displayVal = localCicilan[k] !== undefined ? localCicilan[k] : dl.nominalDibayar;
-                                        const isInputLunas = displayVal >= dl.nominalHarus;
+                                        const isInputLunas = (displayVal >= dl.nominalHarus && dl.nominalHarus > 0) || dl.isLunas === true;
                                         const displayStr = displayVal === 0 ? '' : displayVal.toLocaleString('id-ID');
                                         const isOverdueDL = !isInputLunas && dl.tanggalJatuhTempo && new Date(dl.tanggalJatuhTempo) < now;
                                         const borderClassDL = isInputLunas ? 'border-success/30 focus:border-success text-success' : isOverdueDL ? 'border-danger focus:border-danger text-danger bg-danger/5 ring-1 ring-danger/30' : 'border-warning/30 focus:border-warning text-danger';
@@ -679,13 +622,16 @@ export default function SpreadsheetPembayaran({
                                                     <div className="flex items-center gap-1">
                                                       <button
                                                         type="button"
-                                                        onClick={() => {
-                                                          handleCicilanChange(k, String(dl.nominalHarus));
-                                                          handleBlurDL(dl.id, dl.nominalHarus, dl.nominalDibayar, dl.nominalHarus);
+                                                        onClick={async () => {
+                                                          setIsLoading(true);
+                                                          await markAsLunasDL(dl.id, displayVal);
+                                                          setIsLoading(false);
+                                                          setLocalCicilan(prev => { const next = {...prev}; delete next[k]; return next; });
+                                                          router.refresh();
                                                         }}
                                                         className="text-[10px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold whitespace-nowrap"
                                                       >
-                                                        SET LUNAS
+                                                        ✓ TANDAI LUNAS
                                                       </button>
                                                       <button
                                                         type="button"
@@ -742,7 +688,7 @@ export default function SpreadsheetPembayaran({
                                   const dibayar = ps?.nominalDibayar || 0;
                                   const k = `${santri.id}-${poin.id}`;
                                   const displayVal = localCicilan[k] !== undefined ? localCicilan[k] : dibayar;
-                                  const isInputLunas = displayVal >= harus && (harus > 0 || !poin.isBebas || (ps?.isLunas));
+                                  const isInputLunas = (displayVal >= harus && (harus > 0 || !poin.isBebas)) || ps?.isLunas === true;
                                   const displayStr = displayVal === 0 ? '' : displayVal.toLocaleString('id-ID');
 
                                   const isOverdue = !isInputLunas && ps?.tanggalJatuhTempo && new Date(ps.tanggalJatuhTempo) < now;
@@ -767,13 +713,16 @@ export default function SpreadsheetPembayaran({
                                             {!isInputLunas ? (
                                               <button
                                                 type="button"
-                                                onClick={() => {
-                                                  handleCicilanChange(k, String(harus));
-                                                  handleBlur(santri.id, poin.id, harus, dibayar, harus);
+                                                onClick={async () => {
+                                                  setIsLoading(true);
+                                                  await markAsLunas(santri.id, poin.id, displayVal, harus);
+                                                  setIsLoading(false);
+                                                  setLocalCicilan(prev => { const next = {...prev}; delete next[k]; return next; });
+                                                  router.refresh();
                                                 }}
-                                                className="text-xs bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold"
+                                                className="text-[10px] bg-success/20 text-success hover:bg-success/30 px-1 py-0.5 rounded transition-colors font-bold whitespace-nowrap"
                                               >
-                                                SET LUNAS
+                                                ✓ TANDAI LUNAS
                                               </button>
                                             ) : <div />}
                                             <button

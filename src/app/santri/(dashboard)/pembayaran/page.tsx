@@ -81,6 +81,11 @@ export default async function PembayaranSantriPage() {
       let dibayar = paymentRecord ? paymentRecord.nominalDibayar : 0;
       let status = paymentRecord?.isLunas ? 'LUNAS' : 'BELUM';
 
+      // Override harus ke dibayar jika dilunasi secara manual dengan nominal berbeda
+      if (status === 'LUNAS' && dibayar < harus) {
+        harus = dibayar;
+      }
+
       tahapHarus += harus;
       tahapDibayar += dibayar;
 
@@ -117,15 +122,23 @@ export default async function PembayaranSantriPage() {
     let dlDibayar = 0;
 
     const poinList = santri.darulLughoh.map(dl => {
-      dlHarus += dl.nominalHarus;
-      dlDibayar += dl.nominalDibayar;
+      let harus = dl.nominalHarus;
+      let dibayar = dl.nominalDibayar;
+      
+      // Override harus ke dibayar jika dilunasi secara manual dengan nominal berbeda
+      if (dl.isLunas && dibayar < harus) {
+        harus = dibayar;
+      }
+
+      dlHarus += harus;
+      dlDibayar += dibayar;
 
       const isRemidi = dl.percobaan > 1;
       return {
         id: dl.id,
         nama: `Pelunasan Level ${dl.level}${isRemidi ? ` (Remidi Percobaan ke-${dl.percobaan})` : ''}`,
-        harus: dl.nominalHarus,
-        dibayar: dl.nominalDibayar,
+        harus,
+        dibayar,
         status: dl.isLunas ? 'LUNAS' : 'BELUM',
         terakhirUpdate: dl.updatedAt,
       };

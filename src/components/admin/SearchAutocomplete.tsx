@@ -81,6 +81,7 @@ export default function SearchAutocomplete({
     }
     
     router.push(`${pathname}?${params.toString()}`);
+    setQuery("");
   };
 
   const handleSubmit = () => {
@@ -89,6 +90,7 @@ export default function SearchAutocomplete({
     if (query) params.set("q", query);
     else params.delete("q");
     router.push(`${pathname}?${params.toString()}`);
+    setQuery("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

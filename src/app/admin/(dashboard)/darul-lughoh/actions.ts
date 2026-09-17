@@ -125,20 +125,14 @@ export async function updateDarulLughohMeta(id: string, tanggalJatuhTempo: Date 
   revalidatePath("/admin/pembayaran");
 }
 
-export async function bulkUpdatePembayaranDL(updates: { id: string, nominalDibayar: number }[]) {
-  const ops = updates.map(update => {
-    return prisma.darulLughohSantri.update({
-      where: { id: update.id },
-      data: { nominalDibayar: update.nominalDibayar, isLunas: true } // Since we only bulk update to Set Lunas
-    });
+export async function markAsLunasDL(dlId: string, currentNominal: number) {
+  await prisma.darulLughohSantri.update({
+    where: { id: dlId },
+    data: { isLunas: true, nominalDibayar: currentNominal }
   });
-
-  if (ops.length > 0) {
-    await prisma.$transaction(ops);
-  }
-
   revalidatePath("/admin/darul-lughoh");
   revalidatePath("/admin/pembayaran");
+  return { success: true };
 }
 
 export async function updateStatusUjianDL(id: string, status: string) {
