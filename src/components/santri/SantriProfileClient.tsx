@@ -36,6 +36,8 @@ const DataItem = ({ label, field, icon, value, isEditing, formData, setFormData 
             onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
             placeholder={`Masukkan ${label}`}
           />
+        ) : isArabic && value ? (
+          <div className="font-arabic text-xl mt-1 text-right" dir="rtl">{value}</div>
         ) : (
           value || <span className="text-text-secondary/40 italic font-normal">Belum diisi</span>
         )}
