@@ -5,9 +5,12 @@ import { revalidatePath } from "next/cache";
 
 // ============ PAKET PEMBAYARAN CRUD ============
 
-export async function createPaket(data: { nama: string; urutan: number; isDefault: boolean }) {
-  const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
-  const periodeId = activePeriode ? activePeriode.id : (await prisma.periode.findFirst())?.id || "default";
+export async function createPaket(data: { nama: string; urutan: number; isDefault: boolean; periodeId?: string }) {
+  let periodeId = data.periodeId;
+  if (!periodeId) {
+    const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
+    periodeId = activePeriode ? activePeriode.id : (await prisma.periode.findFirst())?.id || "default";
+  }
 
   // If new is default, unset others first
   if (data.isDefault) {

@@ -4,9 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { deleteFileFromDrive } from "@/lib/googleDrive";
 
-export async function createItemPemberkasan(data: { nama: string; tipe: string; isWajib: boolean; urutan: number }) {
-  const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
-  const periodeId = activePeriode ? activePeriode.id : (await prisma.periode.findFirst())?.id || "default";
+export async function createItemPemberkasan(data: { nama: string; tipe: string; isWajib: boolean; urutan: number; periodeId?: string }) {
+  let periodeId = data.periodeId;
+  if (!periodeId) {
+    const activePeriode = await prisma.periode.findFirst({ where: { isActive: true } });
+    periodeId = activePeriode ? activePeriode.id : (await prisma.periode.findFirst())?.id || "default";
+  }
 
   await prisma.itemPemberkasan.create({
     data: {

@@ -20,7 +20,7 @@ export default function MasterItemManager({ items, periodes, currentPeriodeId }:
     e.preventDefault();
     if (!formData.nama) return;
     setIsLoading(true);
-    await createItemPemberkasan(formData);
+    await createItemPemberkasan({ ...formData, periodeId: currentPeriodeId });
     setFormData(f => ({ ...f, nama: "", urutan: f.urutan + 1 }));
     setIsLoading(false);
     Swal.fire({ title: 'Tersimpan!', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });

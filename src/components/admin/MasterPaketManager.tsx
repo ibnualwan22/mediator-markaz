@@ -24,7 +24,7 @@ export default function MasterPaketManager({ pakets, periodes, currentPeriodeId 
   const handleCreatePaket = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await createPaket(paketForm);
+    await createPaket({ ...paketForm, periodeId: currentPeriodeId });
     setPaketForm({ nama: "", urutan: pakets.length + 1, isDefault: false });
     setIsLoading(false);
   };
