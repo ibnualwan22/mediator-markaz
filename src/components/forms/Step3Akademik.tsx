@@ -37,9 +37,9 @@ export default function Step3Akademik({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(`Ukuran file terlalu besar. Maksimal 5MB.`);
+      alert(`Ukuran file terlalu besar. Maksimal 10MB.`);
       return;
     }
 
@@ -179,7 +179,7 @@ export default function Step3Akademik({
         <div className="space-y-3 md:col-span-2 mt-4">
           <label className="text-sm font-medium text-text-secondary block">
             Scan Ijazah <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 5MB)</span>
+            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
           </label>
           <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
             {formData.fileIjazah ? (

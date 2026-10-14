@@ -36,9 +36,9 @@ export default function Step2DokumenPribadi({
     }
 
     // Kini ukurannya bisa dikembalikan ke 5MB karena me-bypass batas Vercel (Direct to Cloudinary)
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(`Ukuran file terlalu besar. Maksimal 5MB.`);
+      alert(`Ukuran file terlalu besar. Maksimal 10MB.`);
       return;
     }
 
@@ -116,7 +116,7 @@ export default function Step2DokumenPribadi({
         <div className="space-y-3">
           <label className="text-sm font-medium text-text-secondary block">
             Scan Akte Kelahiran <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 5MB)</span>
+            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
           </label>
           <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
             {formData.fileAkteLahir ? (
@@ -154,7 +154,7 @@ export default function Step2DokumenPribadi({
         <div className="space-y-3">
           <label className="text-sm font-medium text-text-secondary block">
             Scan/Foto KTP <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 5MB)</span>
+            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
           </label>
           <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
             {formData.fileKtp ? (
@@ -192,7 +192,7 @@ export default function Step2DokumenPribadi({
         <div className="space-y-3">
           <label className="text-sm font-medium text-text-secondary block">
             Pas Foto (Background Merah) <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Hanya format JPG. Maksimal 5MB)</span>
+            <span className="block font-normal text-xs mt-1">(Hanya format JPG. Maksimal 10MB)</span>
           </label>
           <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
             {formData.filePasFoto ? (

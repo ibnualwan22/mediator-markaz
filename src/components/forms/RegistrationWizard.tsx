@@ -33,9 +33,11 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
   }, []);
 
   const saveToCache = (data: any, step: number) => {
-    const { fileAkteLahir, filePasFoto, fileIjazah, filePaspor, ...lightweightData } = data;
+    // URL dokumen (fileAkteLahir, filePasFoto, dll) SENGAJA disimpan —
+    // isinya hanya string URL Google Drive (kecil), bukan file binary.
+    // Ini agar dokumen yang sudah diupload tidak hilang saat halaman di-refresh.
     try {
-      localStorage.setItem("ma_registration_data", JSON.stringify(lightweightData));
+      localStorage.setItem("ma_registration_data", JSON.stringify(data));
       localStorage.setItem("ma_registration_step", step.toString());
     } catch (error) {
       console.warn("Gagal menyimpan cache lokal:", error);
