@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, Info } from "lucide-react";
 
-// Helper component for Cloudinary File Upload will be integrated later
-// For now, this is a skeleton accepting string URLs after mock upload
+type UploadField = 'fileAkteLahir' | 'fileKtp' | 'fileKK' | 'filePasFoto' | 'filePaspor';
+
+const DOCUMENT_NAMES: Record<UploadField, string> = {
+  fileAkteLahir: "Akte Kelahiran",
+  fileKtp: "KTP",
+  fileKK: "Kartu Keluarga",
+  filePasFoto: "Pas Foto",
+  filePaspor: "Paspor",
+};
 
 export default function Step2DokumenPribadi({ 
   initialData, 
@@ -13,64 +20,44 @@ export default function Step2DokumenPribadi({
   onNext: (data: any) => void,
   onBack: (data: any) => void
 }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<UploadField, string>>({
     fileAkteLahir: initialData.fileAkteLahir || "",
     fileKtp: initialData.fileKtp || "",
+    fileKK: initialData.fileKK || "",
     filePasFoto: initialData.filePasFoto || "",
+    filePaspor: initialData.filePaspor || "",
   });
 
-  const [isUploading, setIsUploading] = useState({
-    akte: false,
-    ktp: false,
-    foto: false
+  const [isUploading, setIsUploading] = useState<Record<UploadField, boolean>>({
+    fileAkteLahir: false,
+    fileKtp: false,
+    fileKK: false,
+    filePasFoto: false,
+    filePaspor: false,
   });
 
-  // Mock Upload Function - to be replaced with actual Cloudinary Logic
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'fileAkteLahir' | 'fileKtp' | 'filePasFoto', uploadKey: 'akte' | 'ktp' | 'foto') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (fieldName === 'filePasFoto' && !file.type.includes('jpeg') && !file.type.includes('jpg')) {
+    if (field === 'filePasFoto' && !file.type.includes('jpeg') && !file.type.includes('jpg')) {
       alert("Pas foto harus berformat JPG/JPEG");
       return;
     }
 
-    // Kini ukurannya bisa dikembalikan ke 5MB karena me-bypass batas Vercel (Direct to Cloudinary)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       alert(`Ukuran file terlalu besar. Maksimal 10MB.`);
       return;
     }
 
-    setIsUploading(prev => ({ ...prev, [uploadKey]: true }));
+    setIsUploading(prev => ({ ...prev, [field]: true }));
     try {
-      /* === CLOUDINARY LOGIC (DISABLED) ===
-      const signRes = await fetch('/api/cloudinary-sign', { method: 'POST' });
-      if (!signRes.ok) throw new Error("Gagal terhubung ke Secure Server");
-      
-      const { timestamp, signature, apiKey, cloudName } = await signRes.json();
-      
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("api_key", apiKey);
-      fd.append("timestamp", timestamp.toString());
-      fd.append("signature", signature);
-      
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-        method: "POST",
-        body: fd
-      });
-      
-      if (!cloudRes.ok) throw new Error("Gagal menyimpan ke Cloudinary");
-      
-      const data = await cloudRes.json();
-      */
-
       // === GOOGLE DRIVE LOGIC ===
       const fd = new FormData();
       fd.append("file", file);
       fd.append("santriName", initialData.namaLengkap || "Tanpa Nama");
-      fd.append("documentName", uploadKey === 'akte' ? "Akte Kelahiran" : uploadKey === 'ktp' ? "KTP" : "Pas Foto");
+      fd.append("documentName", DOCUMENT_NAMES[field]);
 
       const driveRes = await fetch('/api/upload-drive', {
         method: "POST",
@@ -86,18 +73,18 @@ export default function Step2DokumenPribadi({
 
       setFormData(prev => ({ 
         ...prev, 
-        [fieldName]: data.secure_url 
+        [field]: data.secure_url 
       }));
     } catch (e: any) {
       alert("Error upload file: " + e.message);
     } finally {
-      setIsUploading(prev => ({ ...prev, [uploadKey]: false }));
+      setIsUploading(prev => ({ ...prev, [field]: false }));
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isUploading.akte || isUploading.ktp || isUploading.foto) {
+    if (Object.values(isUploading).some(Boolean)) {
       alert("Harap tunggu hingga proses unggah selesai.");
       return;
     }
@@ -108,118 +95,73 @@ export default function Step2DokumenPribadi({
     onNext(formData);
   };
 
+  const renderUploadBox = (
+    field: UploadField,
+    label: string,
+    opts: { required?: boolean; accept?: string; hint?: string; notice?: string } = {}
+  ) => {
+    const { required = true, accept = ".pdf,image/jpeg,image/jpg", hint = "(Format PDF/JPG. Maksimal 10MB)", notice } = opts;
+    return (
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-text-secondary block">
+          {label} {required && <span className="text-danger">*</span>}
+          <span className="block font-normal text-xs mt-1">{hint}</span>
+        </label>
+        {notice && (
+          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+            <Info size={16} className="shrink-0 mt-0.5" />
+            <span>{notice}</span>
+          </div>
+        )}
+        <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
+          {formData[field] ? (
+            <div className="flex flex-col items-center gap-2">
+              {formData[field].match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData[field].startsWith("data:image") ? (
+                <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
+                   {/* eslint-disable-next-line @next/next/no-img-element */}
+                   <img src={formData[field]} alt={`Preview ${label}`} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
+                  <span className="text-xs font-bold uppercase">Dokumen</span>
+                </div>
+              )}
+              <span className="text-success font-medium">✅ File berhasil diunggah</span>
+              <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData[field].split('/').pop()}</span>
+              <button type="button" onClick={() => setFormData(f => ({...f, [field]: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+            </div>
+          ) : (
+            <label className="cursor-pointer flex flex-col items-center">
+              <UploadCloud size={32} className="text-primary-light mb-2" />
+              <span className="text-sm font-medium">{isUploading[field] ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
+              <input 
+                type="file" 
+                accept={accept}
+                className="hidden" 
+                onChange={(e) => handleFileUpload(e, field)}
+                disabled={isUploading[field]}
+              />
+            </label>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <h2 className="text-2xl font-heading font-bold text-text-primary mb-6">2. Dokumen Pribadi</h2>
       
       <div className="space-y-8">
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-text-secondary block">
-            Scan Akte Kelahiran <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
-          </label>
-          <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
-            {formData.fileAkteLahir ? (
-              <div className="flex flex-col items-center gap-2">
-                {formData.fileAkteLahir.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.fileAkteLahir.startsWith("data:image") ? (
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src={formData.fileAkteLahir} alt="Preview Akte" className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
-                    <span className="text-xs font-bold uppercase">Dokumen</span>
-                  </div>
-                )}
-                <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.fileAkteLahir.split('/').pop()}</span>
-                <button type="button" onClick={() => setFormData(f => ({...f, fileAkteLahir: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
-              </div>
-            ) : (
-              <label className="cursor-pointer flex flex-col items-center">
-                <UploadCloud size={32} className="text-primary-light mb-2" />
-                <span className="text-sm font-medium">{isUploading.akte ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-                <input 
-                  type="file" 
-                  accept=".pdf,image/jpeg,image/jpg" 
-                  className="hidden" 
-                  onChange={(e) => handleFileUpload(e, 'fileAkteLahir', 'akte')}
-                  disabled={isUploading.akte}
-                />
-              </label>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-text-secondary block">
-            Scan/Foto KTP <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
-          </label>
-          <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
-            {formData.fileKtp ? (
-              <div className="flex flex-col items-center gap-2">
-                {formData.fileKtp.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.fileKtp.startsWith("data:image") ? (
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src={formData.fileKtp} alt="Preview KTP" className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
-                    <span className="text-xs font-bold uppercase">Dokumen</span>
-                  </div>
-                )}
-                <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.fileKtp.split('/').pop()}</span>
-                <button type="button" onClick={() => setFormData(f => ({...f, fileKtp: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
-              </div>
-            ) : (
-              <label className="cursor-pointer flex flex-col items-center">
-                <UploadCloud size={32} className="text-primary-light mb-2" />
-                <span className="text-sm font-medium">{isUploading.ktp ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-                <input 
-                  type="file" 
-                  accept=".pdf,image/jpeg,image/jpg" 
-                  className="hidden" 
-                  onChange={(e) => handleFileUpload(e, 'fileKtp', 'ktp')}
-                  disabled={isUploading.ktp}
-                />
-              </label>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-text-secondary block">
-            Pas Foto (Background Merah) <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Hanya format JPG. Maksimal 10MB)</span>
-          </label>
-          <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
-            {formData.filePasFoto ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
-                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                   <img src={formData.filePasFoto} alt="Preview Pas Foto" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.filePasFoto.split('/').pop()}</span>
-                <button type="button" onClick={() => setFormData(f => ({...f, filePasFoto: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
-              </div>
-            ) : (
-              <label className="cursor-pointer flex flex-col items-center">
-                <UploadCloud size={32} className="text-primary-light mb-2" />
-                <span className="text-sm font-medium">{isUploading.foto ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-                <input 
-                  type="file" 
-                  accept="image/jpeg,image/jpg" 
-                  className="hidden" 
-                  onChange={(e) => handleFileUpload(e, 'filePasFoto', 'foto')}
-                  disabled={isUploading.foto}
-                />
-              </label>
-            )}
-          </div>
-        </div>
+        {renderUploadBox('fileAkteLahir', 'Scan Akte Kelahiran')}
+        {renderUploadBox('fileKtp', 'Scan/Foto KTP')}
+        {renderUploadBox('fileKK', 'Scan Kartu Keluarga (KK)')}
+        {renderUploadBox('filePasFoto', 'Pas Foto (Background Putih)', {
+          accept: "image/jpeg,image/jpg",
+          hint: "(Hanya format JPG. Maksimal 10MB)",
+          notice: "Pas foto wajib menggunakan background putih.",
+        })}
+        {renderUploadBox('filePaspor', 'Scan Paspor', { required: false })}
       </div>
 
       <div className="flex justify-between pt-6 border-t border-primary-light/20">

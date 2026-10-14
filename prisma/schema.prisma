@@ -77,6 +77,7 @@ model Santri {
   // Data Pribadi
   namaLengkap       String
   namaArab          String
+  tempatLahir       String?
   asalProvinsi      String
   noWaSantri        String
   gender            GenderType
@@ -87,6 +88,7 @@ model Santri {
   // Dokumen
   fileAkteLahir     String           // Cloudinary URL
   fileKtp           String?          // Google Drive URL
+  fileKK            String?          // Google Drive URL - Scan Kartu Keluarga
   filePasFoto       String           // Dokumen resmi (syarat)
   fotoProfil        String?          // Foto profil portal kasual
 
@@ -95,10 +97,13 @@ model Santri {
   riwayatAkademikLainnya String?     // Jika pilih LAINNYA
   tahunKelulusan        Int
   fileIjazah            String       // Cloudinary URL
+  fileIjazahAsli        String?      // Google Drive URL - Scan ijazah asli
+  fileTranskrip         String?      // Google Drive URL - Scan transkrip nilai
   jurusan               JurusanType?
 
   // Paspor
   nomorPaspor           String?
+  kantorPenerbitPaspor  String?
   tanggalPembuatanPaspor DateTime?
   tanggalKadaluarsaPaspor DateTime?
   filePaspor            String?      // Cloudinary URL

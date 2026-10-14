@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { UploadCloud } from "lucide-react";
 
+type UploadField = 'fileIjazah' | 'fileIjazahAsli' | 'fileTranskrip';
+
 export default function Step3Akademik({ 
   initialData, 
   onNext,
@@ -15,15 +17,19 @@ export default function Step3Akademik({
     riwayatAkademikLainnya: initialData.riwayatAkademikLainnya || "",
     tahunKelulusan: initialData.tahunKelulusan || "",
     fileIjazah: initialData.fileIjazah || "",
+    fileIjazahAsli: initialData.fileIjazahAsli || "",
+    fileTranskrip: initialData.fileTranskrip || "",
   });
 
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploading, setUploading] = useState<Record<UploadField, boolean>>({
+    fileIjazah: false,
+    fileIjazahAsli: false,
+    fileTranskrip: false,
+  });
 
   // Kalkulasi tahun kelulusan dinamis (CurrentYear - 2 s/d CurrentYear + 1)
   // Berdasarkan spec: dibuka 2026, opsi 2024-2027
   const years = useMemo(() => {
-    // Ideally this comes from Periode.tahunDibuka fetched from backend
-    // For now we assume the current year or explicit 2026 if it's currently 2026
     const baseYear = 2026; 
     return [baseYear - 2, baseYear - 1, baseYear, baseYear + 1];
   }, []);
@@ -33,7 +39,13 @@ export default function Step3Akademik({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const documentNames: Record<UploadField, string> = {
+    fileIjazah: "Ijazah",
+    fileIjazahAsli: "Ijazah Asli",
+    fileTranskrip: "Transkrip Nilai",
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -43,35 +55,13 @@ export default function Step3Akademik({
       return;
     }
 
-    setIsUploading(true);
+    setUploading(prev => ({ ...prev, [field]: true }));
     try {
-      /* === CLOUDINARY LOGIC (DISABLED) ===
-      const signRes = await fetch('/api/cloudinary-sign', { method: 'POST' });
-      if (!signRes.ok) throw new Error("Gagal terhubung ke Secure Server");
-      
-      const { timestamp, signature, apiKey, cloudName } = await signRes.json();
-      
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("api_key", apiKey);
-      fd.append("timestamp", timestamp.toString());
-      fd.append("signature", signature);
-      
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-        method: "POST",
-        body: fd
-      });
-      
-      if (!cloudRes.ok) throw new Error("Gagal menyimpan ke Cloudinary");
-      
-      const data = await cloudRes.json();
-      */
-
       // === GOOGLE DRIVE LOGIC ===
       const fd = new FormData();
       fd.append("file", file);
       fd.append("santriName", initialData.namaLengkap || "Tanpa Nama");
-      fd.append("documentName", "Ijazah");
+      fd.append("documentName", documentNames[field]);
 
       const driveRes = await fetch('/api/upload-drive', {
         method: "POST",
@@ -86,19 +76,32 @@ export default function Step3Akademik({
       const data = await driveRes.json();
       setFormData(prev => ({ 
         ...prev, 
-        fileIjazah: data.secure_url 
+        [field]: data.secure_url 
       }));
     } catch (e: any) {
       alert("Error upload file: " + e.message);
     } finally {
-      setIsUploading(false);
+      setUploading(prev => ({ ...prev, [field]: false }));
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const anyUploading = Object.values(uploading).some(Boolean);
+    if (anyUploading) {
+      alert("Harap tunggu hingga proses unggah selesai.");
+      return;
+    }
     if (!formData.fileIjazah) {
       alert("Silakan upload scan ijazah.");
+      return;
+    }
+    if (!formData.fileIjazahAsli) {
+      alert("Silakan upload scan ijazah asli.");
+      return;
+    }
+    if (!formData.fileTranskrip) {
+      alert("Silakan upload scan transkrip nilai.");
       return;
     }
     if (formData.riwayatAkademik === "LAINNYA" && !formData.riwayatAkademikLainnya) {
@@ -110,12 +113,52 @@ export default function Step3Akademik({
       ...formData,
       tahunKelulusan: parseInt(formData.tahunKelulusan, 10),
     };
-    if (isUploading) {
-      alert("Harap tunggu hingga proses unggah selesai.");
-      return;
-    }
     onNext(finalData);
   };
+
+  const renderUploadBox = (
+    field: UploadField,
+    label: string,
+    required: boolean = true
+  ) => (
+    <div className="space-y-3 md:col-span-2 mt-4">
+      <label className="text-sm font-medium text-text-secondary block">
+        {label} {required && <span className="text-danger">*</span>}
+        <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
+      </label>
+      <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
+        {formData[field] ? (
+          <div className="flex flex-col items-center gap-2">
+            {formData[field].match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData[field].startsWith("data:image") ? (
+              <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                 <img src={formData[field]} alt={`Preview ${label}`} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
+                <span className="text-xs font-bold uppercase">Dokumen</span>
+              </div>
+            )}
+            <span className="text-success font-medium">✅ File berhasil diunggah</span>
+            <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData[field].split('/').pop()}</span>
+            <button type="button" onClick={() => setFormData(f => ({...f, [field]: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+          </div>
+        ) : (
+          <label className="cursor-pointer flex flex-col items-center">
+            <UploadCloud size={32} className="text-primary-light mb-2" />
+            <span className="text-sm font-medium">{uploading[field] ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
+            <input 
+              type="file" 
+              accept=".pdf,image/jpeg,image/jpg" 
+              className="hidden" 
+              onChange={(e) => handleFileUpload(e, field)}
+              disabled={uploading[field]}
+            />
+          </label>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -132,16 +175,11 @@ export default function Step3Akademik({
             className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
           >
             <option value="">Pilih Riwayat Pendidikan</option>
-            <optgroup label="Kelompok A (Biaya Tahap 3: Rp 3.850.000)">
-              <option value="MA">MA (Madrasah Aliyah)</option>
-              <option value="IJAZAH_PESANTREN">Ijazah Pesantren</option>
-            </optgroup>
-            <optgroup label="Kelompok B (Biaya Tahap 3: Rp 4.850.000)">
-              <option value="SMA">SMA</option>
-              <option value="SMK">SMK</option>
-              <option value="PAKET_C">Paket C</option>
-              <option value="LAINNYA">Lainnya...</option>
-            </optgroup>
+            <option value="MA">MA (Madrasah Aliyah)</option>
+            <option value="IJAZAH_PESANTREN">Ijazah Pesantren</option>
+            <option value="SMA">SMA</option>
+            <option value="PAKET_C">Paket C</option>
+            <option value="LAINNYA">Lainnya...</option>
           </select>
         </div>
 
@@ -176,43 +214,9 @@ export default function Step3Akademik({
           </select>
         </div>
 
-        <div className="space-y-3 md:col-span-2 mt-4">
-          <label className="text-sm font-medium text-text-secondary block">
-            Scan Ijazah <span className="text-danger">*</span>
-            <span className="block font-normal text-xs mt-1">(Format PDF/JPG. Maksimal 10MB)</span>
-          </label>
-          <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
-            {formData.fileIjazah ? (
-              <div className="flex flex-col items-center gap-2">
-                {formData.fileIjazah.match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData.fileIjazah.startsWith("data:image") ? (
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src={formData.fileIjazah} alt="Preview Ijazah" className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex items-center justify-center text-text-secondary">
-                    <span className="text-xs font-bold uppercase">Dokumen</span>
-                  </div>
-                )}
-                <span className="text-success font-medium">✅ File berhasil diunggah</span>
-                <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData.fileIjazah.split('/').pop()}</span>
-                <button type="button" onClick={() => setFormData(f => ({...f, fileIjazah: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
-              </div>
-            ) : (
-              <label className="cursor-pointer flex flex-col items-center">
-                <UploadCloud size={32} className="text-primary-light mb-2" />
-                <span className="text-sm font-medium">{isUploading ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-                <input 
-                  type="file" 
-                  accept=".pdf,image/jpeg,image/jpg" 
-                  className="hidden" 
-                  onChange={handleFileUpload}
-                  disabled={isUploading}
-                />
-              </label>
-            )}
-          </div>
-        </div>
+        {renderUploadBox('fileIjazah', 'Scan Ijazah')}
+        {renderUploadBox('fileIjazahAsli', 'Scan Ijazah Asli')}
+        {renderUploadBox('fileTranskrip', 'Scan Transkrip Nilai')}
       </div>
 
       <div className="flex justify-between pt-6 border-t border-primary-light/20">

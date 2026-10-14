@@ -74,6 +74,18 @@ export default async function PemberkasanSantriPage() {
     INDONESIA: mappedItems.filter(i => i.kategori === 'INDONESIA'),
   };
 
+  // Dokumen yang diupload saat pendaftaran — bisa dilihat/download kapan saja
+  const dokumenPendaftaran = [
+    { field: "fileAkteLahir", label: "Scan Akte Kelahiran", url: santri.fileAkteLahir },
+    { field: "fileKK", label: "Scan Kartu Keluarga (KK)", url: santri.fileKK },
+    { field: "fileKtp", label: "Scan/Foto KTP", url: santri.fileKtp },
+    { field: "filePasFoto", label: "Pas Foto", url: santri.filePasFoto },
+    { field: "fileIjazah", label: "Scan Ijazah", url: santri.fileIjazah },
+    { field: "fileIjazahAsli", label: "Scan Ijazah Asli", url: santri.fileIjazahAsli },
+    { field: "fileTranskrip", label: "Scan Transkrip Nilai", url: santri.fileTranskrip },
+    { field: "filePaspor", label: "Scan Paspor", url: santri.filePaspor },
+  ];
+
   return (
     <div className="max-w-7xl space-y-6 pb-20">
       <div>
@@ -198,6 +210,63 @@ export default async function PemberkasanSantriPage() {
           </CollapsibleCategory>
         );
       })}
+
+      {/* Dokumen yang diupload saat pendaftaran */}
+      <CollapsibleCategory
+        kategori="DOKUMEN PENDAFTARAN"
+        isComplete={true}
+        collected={dokumenPendaftaran.filter(d => d.url).length}
+        total={dokumenPendaftaran.length}
+        defaultOpen={true}
+      >
+        <div className="grid grid-cols-1">
+          {dokumenPendaftaran.map((doc) => (
+            <div key={doc.field} className="p-4 sm:p-5 flex gap-4 hover:bg-bg-cream/50 transition-colors border-b border-primary-light/10">
+              <div className="mt-0.5 relative shrink-0">
+                <div className={`w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors ${
+                  doc.url 
+                    ? 'bg-success border-success text-white' 
+                    : 'bg-bg-subtle border-text-secondary/30 text-transparent'
+                }`}>
+                  <CheckCircle2 size={14} className={doc.url ? 'opacity-100' : 'opacity-0'} />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium ${doc.url ? 'text-text-primary' : 'text-text-secondary'}`}>
+                  {doc.label}
+                </p>
+                {doc.url && (
+                  <div className="mt-2 flex gap-2">
+                    <a 
+                      href={doc.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"
+                    >
+                      Lihat Dokumen
+                    </a>
+                    <a 
+                      href={doc.url.replace('export=view', 'export=download')} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-cream text-text-secondary rounded-lg text-xs font-bold hover:bg-primary-light/20 border border-primary-light/20 transition-colors"
+                    >
+                      <Download size={14} /> Download
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div className="shrink-0 text-xs font-medium uppercase tracking-wider">
+                {doc.url ? (
+                  <span className="text-success bg-success/10 px-2 py-1 rounded">Ada</span>
+                ) : (
+                  <span className="text-text-secondary bg-bg-cream px-2 py-1 rounded">Kosong</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CollapsibleCategory>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
   const [formData, setFormData] = useState({
     namaLengkap: initialData.namaLengkap || "",
     namaArab: initialData.namaArab || "",
+    tempatLahir: initialData.tempatLahir || "",
     asalProvinsi: initialData.asalProvinsi || "",
     noWaSantri: initialData.noWaSantri || "",
     gender: initialData.gender || "",
@@ -19,6 +20,10 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
     namaWali: initialData.namaWali || "",
     noWaWali: initialData.noWaWali || "",
     gelombangId: initialData.gelombangId || "",
+    nomorPaspor: initialData.nomorPaspor || "",
+    kantorPenerbitPaspor: initialData.kantorPenerbitPaspor || "",
+    tanggalPembuatanPaspor: initialData.tanggalPembuatanPaspor || "",
+    tanggalKadaluarsaPaspor: initialData.tanggalKadaluarsaPaspor || "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -78,6 +83,19 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
             onChange={handleChange}
             className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-arabic text-lg"
             placeholder="الاسم باللغة العربية"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-text-secondary">Tempat Lahir <span className="text-danger">*</span></label>
+          <input 
+            required
+            type="text" 
+            name="tempatLahir"
+            value={formData.tempatLahir}
+            onChange={handleChange}
+            className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+            placeholder="Kota tempat lahir"
           />
         </div>
 
@@ -164,6 +182,58 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
             className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
             placeholder="Contoh: 08123456789"
           />
+        </div>
+      </div>
+
+      {/* Data Paspor */}
+      <div className="pt-4 border-t border-primary-light/20">
+        <h3 className="text-lg font-heading font-bold text-text-primary mb-4">Data Paspor</h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Nomor Paspor</label>
+            <input 
+              type="text" 
+              name="nomorPaspor"
+              value={formData.nomorPaspor}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+              placeholder="Contoh: X1234567"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Kantor yang Mengeluarkan Paspor</label>
+            <input 
+              type="text" 
+              name="kantorPenerbitPaspor"
+              value={formData.kantorPenerbitPaspor}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+              placeholder="Contoh: Kanim Jakarta Selatan"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Tanggal Terbit Paspor</label>
+            <input 
+              type="date" 
+              name="tanggalPembuatanPaspor"
+              value={formData.tanggalPembuatanPaspor}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Tanggal Expired Paspor</label>
+            <input 
+              type="date" 
+              name="tanggalKadaluarsaPaspor"
+              value={formData.tanggalKadaluarsaPaspor}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
+            />
+          </div>
         </div>
       </div>
 

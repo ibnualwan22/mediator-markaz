@@ -5,13 +5,11 @@ import { Check } from "lucide-react";
 import Step1DataPribadi from "./Step1DataPribadi";
 import Step2DokumenPribadi from "./Step2DokumenPribadi";
 import Step3Akademik from "./Step3Akademik";
-import Step4Paspor from "./Step4Paspor";
 
 const STEPS = [
   "Data Pribadi",
   "Dokumen Pribadi",
   "Riwayat Akademik",
-  "Paspor ",
 ];
 
 export default function RegistrationWizard({ activeGelombangs = [] }: { activeGelombangs?: any[] }) {
@@ -47,11 +45,14 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
   const handleNext = (stepData: any) => {
     const newData = { ...formData, ...stepData };
     setFormData(newData);
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       saveToCache(newData, nextStep);
       window.scrollTo(0, 0);
+    } else {
+      // Step terakhir (3) → langsung submit pendaftaran
+      handleSubmit(stepData);
     }
   };
 
@@ -70,8 +71,16 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
     const completeData = { ...formData, ...finalData };
 
     // Validasi final sebelum fetch (melindungi dari data bolong akibat refresh halaman)
-    if (!completeData.fileAkteLahir || !completeData.filePasFoto || !completeData.fileIjazah) {
-      alert("⚠️ DATA DOKUMEN HILANG: Karena Anda baru memuat ulang (refresh) halaman, silakan kembali (Back) ke Step 2 & 3 untuk mengunggah ulang dokumen/foto Anda sebelum mencetak invoice.");
+    const dokumenWajib = [
+      ["fileAkteLahir", "akta kelahiran"],
+      ["filePasFoto", "pas foto"],
+      ["fileIjazah", "scan ijazah"],
+      ["fileIjazahAsli", "scan ijazah asli"],
+      ["fileTranskrip", "scan transkrip nilai"],
+    ];
+    const dokumenHilang = dokumenWajib.filter(([field]) => !completeData[field]);
+    if (dokumenHilang.length > 0) {
+      alert(`⚠️ DATA DOKUMEN HILANG (${dokumenHilang.map(([, label]) => label).join(", ")}): Karena Anda baru memuat ulang (refresh) halaman, silakan kembali (Back) ke Step 2 & 3 untuk mengunggah ulang dokumen/foto Anda sebelum mendaftar.`);
       return;
     }
     
@@ -127,7 +136,7 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-primary-light/20 -z-10 rounded-full"></div>
           <div
             className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary -z-10 rounded-full transition-all duration-300"
-            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+            style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
           ></div>
 
           {STEPS.map((step, index) => {
@@ -159,7 +168,6 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
         {currentStep === 1 && <Step1DataPribadi initialData={formData} activeGelombangs={activeGelombangs} onNext={handleNext} />}
         {currentStep === 2 && <Step2DokumenPribadi initialData={formData} onNext={handleNext} onBack={handleBack} />}
         {currentStep === 3 && <Step3Akademik initialData={formData} onNext={handleNext} onBack={handleBack} />}
-        {currentStep === 4 && <Step4Paspor initialData={formData} onSubmit={handleSubmit} onBack={handleBack} isSubmitting={isSubmitting} />}
       </div>
     </>
   );

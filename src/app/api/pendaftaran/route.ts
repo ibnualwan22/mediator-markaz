@@ -61,6 +61,7 @@ export async function POST(req: Request) {
 
       namaLengkap: body.namaLengkap,
       namaArab: body.namaArab,
+      tempatLahir: body.tempatLahir || null,
       asalProvinsi: body.asalProvinsi,
       noWaSantri: body.noWaSantri,
       gender: body.gender,
@@ -70,14 +71,18 @@ export async function POST(req: Request) {
 
       fileAkteLahir: body.fileAkteLahir,
       fileKtp: body.fileKtp || null,
+      fileKK: body.fileKK || null,
       filePasFoto: body.filePasFoto,
 
       riwayatAkademik: body.riwayatAkademik,
       riwayatAkademikLainnya: body.riwayatAkademikLainnya,
       tahunKelulusan: body.tahunKelulusan,
       fileIjazah: body.fileIjazah,
+      fileIjazahAsli: body.fileIjazahAsli || null,
+      fileTranskrip: body.fileTranskrip || null,
 
       nomorPaspor: body.nomorPaspor || null,
+      kantorPenerbitPaspor: body.kantorPenerbitPaspor || null,
       tanggalPembuatanPaspor: body.tanggalPembuatanPaspor ? new Date(body.tanggalPembuatanPaspor) : null,
       tanggalKadaluarsaPaspor: body.tanggalKadaluarsaPaspor ? new Date(body.tanggalKadaluarsaPaspor) : null,
       filePaspor: body.filePaspor || null,
