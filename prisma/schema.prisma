@@ -78,6 +78,7 @@ model Santri {
   namaLengkap       String
   namaArab          String
   tempatLahir       String?
+  tanggalLahir      DateTime?
   asalProvinsi      String
   noWaSantri        String
   gender            GenderType
@@ -96,8 +97,7 @@ model Santri {
   riwayatAkademik       RiwayatAkademik
   riwayatAkademikLainnya String?     // Jika pilih LAINNYA
   tahunKelulusan        Int
-  fileIjazah            String       // Cloudinary URL
-  fileIjazahAsli        String?      // Google Drive URL - Scan ijazah asli
+  fileIjazah            String       // Cloudinary URL - Scan ijazah asli
   fileTranskrip         String?      // Google Drive URL - Scan transkrip nilai
   jurusan               JurusanType?
 

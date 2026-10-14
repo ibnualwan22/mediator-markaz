@@ -92,6 +92,11 @@ export default function Step2DokumenPribadi({
       alert("Silakan upload semua dokumen yang diwajibkan.");
       return;
     }
+    // Upload paspor wajib hanya jika pendaftar menyatakan punya paspor di Step 1
+    if (initialData.punyaPaspor && !formData.filePaspor) {
+      alert("Anda menyatakan sudah memiliki paspor. Silakan upload scan paspor.");
+      return;
+    }
     onNext(formData);
   };
 
@@ -161,7 +166,12 @@ export default function Step2DokumenPribadi({
           hint: "(Hanya format JPG. Maksimal 10MB)",
           notice: "Pas foto wajib menggunakan background putih.",
         })}
-        {renderUploadBox('filePaspor', 'Scan Paspor', { required: false })}
+        {renderUploadBox('filePaspor', 'Scan Paspor', { 
+          required: !!initialData.punyaPaspor,
+          notice: initialData.punyaPaspor 
+            ? undefined 
+            : "Wajib diisi jika Anda sudah memiliki paspor (centang di Step 1).",
+        })}
       </div>
 
       <div className="flex justify-between pt-6 border-t border-primary-light/20">

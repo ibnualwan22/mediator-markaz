@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { UploadCloud } from "lucide-react";
 
-type UploadField = 'fileIjazah' | 'fileIjazahAsli' | 'fileTranskrip';
+type UploadField = 'fileIjazah' | 'fileTranskrip';
 
 export default function Step3Akademik({ 
   initialData, 
@@ -17,13 +17,11 @@ export default function Step3Akademik({
     riwayatAkademikLainnya: initialData.riwayatAkademikLainnya || "",
     tahunKelulusan: initialData.tahunKelulusan || "",
     fileIjazah: initialData.fileIjazah || "",
-    fileIjazahAsli: initialData.fileIjazahAsli || "",
     fileTranskrip: initialData.fileTranskrip || "",
   });
 
   const [uploading, setUploading] = useState<Record<UploadField, boolean>>({
     fileIjazah: false,
-    fileIjazahAsli: false,
     fileTranskrip: false,
   });
 
@@ -40,8 +38,7 @@ export default function Step3Akademik({
   };
 
   const documentNames: Record<UploadField, string> = {
-    fileIjazah: "Ijazah",
-    fileIjazahAsli: "Ijazah Asli",
+    fileIjazah: "Ijazah Asli",
     fileTranskrip: "Transkrip Nilai",
   };
 
@@ -94,10 +91,6 @@ export default function Step3Akademik({
     }
     if (!formData.fileIjazah) {
       alert("Silakan upload scan ijazah.");
-      return;
-    }
-    if (!formData.fileIjazahAsli) {
-      alert("Silakan upload scan ijazah asli.");
       return;
     }
     if (!formData.fileTranskrip) {
@@ -214,8 +207,7 @@ export default function Step3Akademik({
           </select>
         </div>
 
-        {renderUploadBox('fileIjazah', 'Scan Ijazah')}
-        {renderUploadBox('fileIjazahAsli', 'Scan Ijazah Asli')}
+        {renderUploadBox('fileIjazah', 'Scan Ijazah Asli')}
         {renderUploadBox('fileTranskrip', 'Scan Transkrip Nilai')}
       </div>
 

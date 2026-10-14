@@ -74,8 +74,7 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
     const dokumenWajib = [
       ["fileAkteLahir", "akta kelahiran"],
       ["filePasFoto", "pas foto"],
-      ["fileIjazah", "scan ijazah"],
-      ["fileIjazahAsli", "scan ijazah asli"],
+      ["fileIjazah", "scan ijazah asli"],
       ["fileTranskrip", "scan transkrip nilai"],
     ];
     const dokumenHilang = dokumenWajib.filter(([field]) => !completeData[field]);

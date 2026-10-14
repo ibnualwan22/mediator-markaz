@@ -41,6 +41,15 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    // Normalisasi nomor WA ke format 628xxx (untuk otomatisasi).
+    // Terima 08xxx, 628xxx, +628xxx, dengan/tanpa spasi & strip.
+    const normalizePhone = (phone: any): string => {
+      const digits = String(phone || "").replace(/\D/g, "");
+      if (digits.startsWith("08")) return "62" + digits.slice(1);
+      if (digits.startsWith("8")) return "62" + digits;
+      return digits;
+    };
+
     // Check if the applicant selected a Gelombang
     if (!body.gelombangId) {
       return NextResponse.json({ error: "Silakan pilih gelombang pendaftaran terlebih dahulu." }, { status: 400 });
@@ -62,12 +71,13 @@ export async function POST(req: Request) {
       namaLengkap: body.namaLengkap,
       namaArab: body.namaArab,
       tempatLahir: body.tempatLahir || null,
+      tanggalLahir: body.tanggalLahir ? new Date(body.tanggalLahir) : null,
       asalProvinsi: body.asalProvinsi,
-      noWaSantri: body.noWaSantri,
+      noWaSantri: normalizePhone(body.noWaSantri),
       gender: body.gender,
       email: body.email,
       namaWali: body.namaWali,
-      noWaWali: body.noWaWali,
+      noWaWali: normalizePhone(body.noWaWali),
 
       fileAkteLahir: body.fileAkteLahir,
       fileKtp: body.fileKtp || null,
@@ -78,7 +88,6 @@ export async function POST(req: Request) {
       riwayatAkademikLainnya: body.riwayatAkademikLainnya,
       tahunKelulusan: body.tahunKelulusan,
       fileIjazah: body.fileIjazah,
-      fileIjazahAsli: body.fileIjazahAsli || null,
       fileTranskrip: body.fileTranskrip || null,
 
       nomorPaspor: body.nomorPaspor || null,

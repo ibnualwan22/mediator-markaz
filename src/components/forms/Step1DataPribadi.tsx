@@ -13,6 +13,7 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
     namaLengkap: initialData.namaLengkap || "",
     namaArab: initialData.namaArab || "",
     tempatLahir: initialData.tempatLahir || "",
+    tanggalLahir: initialData.tanggalLahir || "",
     asalProvinsi: initialData.asalProvinsi || "",
     noWaSantri: initialData.noWaSantri || "",
     gender: initialData.gender || "",
@@ -20,6 +21,7 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
     namaWali: initialData.namaWali || "",
     noWaWali: initialData.noWaWali || "",
     gelombangId: initialData.gelombangId || "",
+    punyaPaspor: initialData.punyaPaspor || false,
     nomorPaspor: initialData.nomorPaspor || "",
     kantorPenerbitPaspor: initialData.kantorPenerbitPaspor || "",
     tanggalPembuatanPaspor: initialData.tanggalPembuatanPaspor || "",
@@ -27,13 +29,26 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    setFormData(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  // Normalisasi nomor WA ke format 628xxx (untuk otomatisasi)
+  const normalizePhone = (phone: string): string => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("08")) return "62" + digits.slice(1);
+    if (digits.startsWith("8")) return "62" + digits;
+    return digits;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onNext(formData);
+    onNext({
+      ...formData,
+      noWaSantri: normalizePhone(formData.noWaSantri),
+      noWaWali: normalizePhone(formData.noWaWali),
+    });
   };
 
   return (
@@ -100,6 +115,18 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
         </div>
 
         <div className="space-y-2">
+          <label className="text-sm font-medium text-text-secondary">Tanggal Lahir <span className="text-danger">*</span></label>
+          <input 
+            required
+            type="date" 
+            name="tanggalLahir"
+            value={formData.tanggalLahir}
+            onChange={handleChange}
+            className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
+          />
+        </div>
+
+        <div className="space-y-2">
           <label className="text-sm font-medium text-text-secondary">Asal Provinsi <span className="text-danger">*</span></label>
           <select 
             required
@@ -138,7 +165,7 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
             name="noWaSantri"
             value={formData.noWaSantri}
             onChange={handleChange}
-            pattern="^(08|\+628)[0-9]{8,12}$"
+            pattern="[0-9+\- ]{9,20}"
             className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
             placeholder="Contoh: 08123456789"
           />
@@ -178,20 +205,33 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
             name="noWaWali"
             value={formData.noWaWali}
             onChange={handleChange}
-            pattern="^(08|\+628)[0-9]{8,12}$"
+            pattern="[0-9+\- ]{9,20}"
             className="w-full px-4 py-2.5 rounded-lg border border-primary-light/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
             placeholder="Contoh: 08123456789"
           />
         </div>
       </div>
 
-      {/* Data Paspor */}
+      {/* Data Paspor (opsional) */}
       <div className="pt-4 border-t border-primary-light/20">
         <h3 className="text-lg font-heading font-bold text-text-primary mb-4">Data Paspor</h3>
+        <label className="flex items-center gap-3 cursor-pointer p-4 bg-white/60 rounded-lg border border-primary-light/20 mb-4">
+          <input
+            type="checkbox"
+            name="punyaPaspor"
+            checked={!!formData.punyaPaspor}
+            onChange={handleChange}
+            className="w-5 h-5 accent-primary"
+          />
+          <span className="text-sm font-medium text-text-primary">Saya sudah memiliki paspor</span>
+        </label>
+
+        {formData.punyaPaspor && (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Nomor Paspor</label>
+            <label className="text-sm font-medium text-text-secondary">Nomor Paspor <span className="text-danger">*</span></label>
             <input 
+              required={!!formData.punyaPaspor}
               type="text" 
               name="nomorPaspor"
               value={formData.nomorPaspor}
@@ -202,8 +242,9 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Kantor yang Mengeluarkan Paspor</label>
+            <label className="text-sm font-medium text-text-secondary">Kantor yang Mengeluarkan Paspor <span className="text-danger">*</span></label>
             <input 
+              required={!!formData.punyaPaspor}
               type="text" 
               name="kantorPenerbitPaspor"
               value={formData.kantorPenerbitPaspor}
@@ -214,8 +255,9 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Tanggal Terbit Paspor</label>
+            <label className="text-sm font-medium text-text-secondary">Tanggal Terbit Paspor <span className="text-danger">*</span></label>
             <input 
+              required={!!formData.punyaPaspor}
               type="date" 
               name="tanggalPembuatanPaspor"
               value={formData.tanggalPembuatanPaspor}
@@ -225,8 +267,9 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Tanggal Expired Paspor</label>
+            <label className="text-sm font-medium text-text-secondary">Tanggal Expired Paspor <span className="text-danger">*</span></label>
             <input 
+              required={!!formData.punyaPaspor}
               type="date" 
               name="tanggalKadaluarsaPaspor"
               value={formData.tanggalKadaluarsaPaspor}
@@ -235,6 +278,7 @@ export default function Step1DataPribadi({ initialData, activeGelombangs = [], o
             />
           </div>
         </div>
+        )}
       </div>
 
       <div className="flex justify-end pt-4">

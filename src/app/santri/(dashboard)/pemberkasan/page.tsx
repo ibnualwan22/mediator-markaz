@@ -80,8 +80,7 @@ export default async function PemberkasanSantriPage() {
     { field: "fileKK", label: "Scan Kartu Keluarga (KK)", url: santri.fileKK },
     { field: "fileKtp", label: "Scan/Foto KTP", url: santri.fileKtp },
     { field: "filePasFoto", label: "Pas Foto", url: santri.filePasFoto },
-    { field: "fileIjazah", label: "Scan Ijazah", url: santri.fileIjazah },
-    { field: "fileIjazahAsli", label: "Scan Ijazah Asli", url: santri.fileIjazahAsli },
+    { field: "fileIjazah", label: "Scan Ijazah Asli", url: santri.fileIjazah },
     { field: "fileTranskrip", label: "Scan Transkrip Nilai", url: santri.fileTranskrip },
     { field: "filePaspor", label: "Scan Paspor", url: santri.filePaspor },
   ];
