@@ -149,6 +149,12 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
   };
 
 
+  // Foto yang ditampilkan: foto profil manual, fallback ke pas foto dari form pendaftaran
+  const fotoProfilAktif =
+    santriData.fotoProfil && santriData.fotoProfil !== "-"
+      ? santriData.fotoProfil
+      : santriData.filePasFoto || null;
+
   return (
     <div className="space-y-6 pb-20 max-w-4xl">
       {/* Action Bar */}
@@ -198,10 +204,10 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
                 if (!isUploadingPhoto) fileInputRef.current?.click();
               }}
             >
-              {santriData.fotoProfil && santriData.fotoProfil !== "-" ? (
+              {fotoProfilAktif ? (
                 <div className="w-24 h-28 sm:w-28 sm:h-32 rounded-2xl border-2 border-primary-light/30 overflow-hidden shadow-lg relative bg-bg-cream">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/api/santri/profile/photo/image?v=${encodeURIComponent(String(santriData.fotoProfil).slice(-15))}`} alt="Foto Profil" className="w-full h-full object-cover" />
+                  <img src={`/api/santri/profile/photo/image?v=${encodeURIComponent(String(fotoProfilAktif).slice(-15))}`} alt="Foto Profil" className="w-full h-full object-cover" />
 
                   {isUploadingPhoto && (
                     <div className="absolute inset-0 bg-white/70 flex items-center justify-center">

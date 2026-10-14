@@ -16,10 +16,12 @@ export async function GET(req: Request) {
 
     const santri = await prisma.santri.findUnique({
       where: { id: session.santriId },
-      select: { fotoProfil: true }
+      select: { fotoProfil: true, filePasFoto: true }
     });
 
-    const fotoUrl = santri?.fotoProfil;
+    // Fallback: kalau foto profil manual belum diupload, pakai pas foto dari pendaftaran
+    const fotoProfilManual = santri?.fotoProfil && santri.fotoProfil !== "-" ? santri.fotoProfil : null;
+    const fotoUrl = fotoProfilManual || santri?.filePasFoto;
     if (!fotoUrl) {
       return new NextResponse("No photo", { status: 404 });
     }
