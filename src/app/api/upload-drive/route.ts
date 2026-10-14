@@ -4,6 +4,16 @@ import { ensureSantriFolder, uploadFileToDrive } from "@/lib/googleDrive";
 
 export const maxDuration = 60; // Set longer timeout if supported by hosting, Drive API can take time.
 
+// Batas ukuran file 10MB dan tipe yang diizinkan (mencegah penyalahgunaan
+// endpoint publik sebagai tempat upload file sembarangan).
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+];
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -17,6 +27,20 @@ export async function POST(req: Request) {
 
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "Ukuran file maksimal 10MB." },
+        { status: 400 }
+      );
+    }
+
+    if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Tipe file tidak diizinkan. Hanya JPG, PNG, WebP, dan PDF." },
+        { status: 400 }
+      );
     }
 
     if (!santriName || santriName.trim() === "") {

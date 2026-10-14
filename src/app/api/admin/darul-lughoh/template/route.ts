@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import * as xlsx from "xlsx";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
   try {
     const wb = xlsx.utils.book_new();
     const wsData = [

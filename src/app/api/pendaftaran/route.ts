@@ -1,8 +1,44 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Rate limit sederhana: maks 5 pendaftaran per IP per 10 menit.
+// (In-memory; cukup untuk pola traffic form publik di Vercel serverless.)
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const rateLimitMap = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const attempts = (rateLimitMap.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (attempts.length >= RATE_LIMIT_MAX) {
+    rateLimitMap.set(ip, attempts);
+    return true;
+  }
+  attempts.push(now);
+  rateLimitMap.set(ip, attempts);
+  // Bersihkan entri kadaluarsa agar map tidak membesar tanpa batas.
+  if (rateLimitMap.size > 10000) {
+    for (const [key, val] of rateLimitMap) {
+      if (val.every((t) => now - t >= RATE_LIMIT_WINDOW_MS)) rateLimitMap.delete(key);
+    }
+  }
+  return false;
+}
+
 export async function POST(req: Request) {
   try {
+    // Rate limiting per IP.
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Terlalu banyak percobaan. Silakan coba lagi dalam beberapa menit." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
 
     // Check if the applicant selected a Gelombang
@@ -50,22 +86,30 @@ export async function POST(req: Request) {
     };
 
     // Generate No Pendaftaran: MA-[Tahun]-XXXX dengan retry anti-duplikat.
-    // Nomor dihitung dari count+1 sehingga dua pendaftar yang submit hampir
-    // bersamaan bisa mendapat nomor yang sama; bila duplikat (P2002 pada
-    // noPendaftaran), hitung ulang nomornya dan coba lagi.
+    // Nomor dihitung dari nomor TERBESAR yang sudah ada (+1), bukan dari count,
+    // karena count bisa menabrak nomor yang sudah ada bila ada data yang dihapus.
+    // Tiap retry menaikkan nomor (+attempt) sehingga tidak pernah mencoba nomor
+    // yang sama dua kali.
     const currentYear = new Date().getFullYear();
     const MAX_RETRY = 5;
     let santri: any = null;
     let noPendaftaran = "";
     let lastError: any = null;
 
+    const lastSantri = await prisma.santri.findFirst({
+      where: {
+        noPendaftaran: { startsWith: `MA-${currentYear}-` }
+      },
+      orderBy: { noPendaftaran: "desc" },
+      select: { noPendaftaran: true }
+    });
+    const baseNum = lastSantri
+      ? parseInt(lastSantri.noPendaftaran.split("-")[2], 10) || 0
+      : 0;
+
     for (let attempt = 0; attempt < MAX_RETRY; attempt++) {
-      const count = await prisma.santri.count({
-        where: {
-          noPendaftaran: { startsWith: `MA-${currentYear}-` }
-        }
-      });
-      const paddingCount = String(count + 1).padStart(4, '0');
+      const nextNum = baseNum + 1 + attempt;
+      const paddingCount = String(nextNum).padStart(4, '0');
       noPendaftaran = `MA-${currentYear}-${paddingCount}`;
 
       try {

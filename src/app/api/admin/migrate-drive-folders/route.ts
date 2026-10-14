@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureSantriFolder, moveFileToFolder } from "@/lib/googleDrive";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export const maxDuration = 300; // 5 minutes — migration can take a while
 
@@ -11,6 +12,8 @@ export const maxDuration = 300; // 5 minutes — migration can take a while
  * GET /api/admin/migrate-drive-folders
  */
 export async function GET() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
   // Fire and forget (Background Process)
   // Ini mencegah Cloudflare Timeout Error 524 (karena nunggu lebih dari 100 detik)
   (async () => {
