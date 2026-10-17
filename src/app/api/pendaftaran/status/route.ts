@@ -52,6 +52,7 @@ export async function GET(req: Request) {
       select: {
         id: true,
         noPendaftaran: true,
+        nis: true,
         namaLengkap: true,
         tanggalLahir: true,
         tempatLahir: true,
@@ -102,9 +103,41 @@ export async function GET(req: Request) {
       (p) => p.poinTahap.tahapPaket.urutan === 1
     );
 
+    // Transaksi Midtrans sukses (untuk bukti lunas).
+    let transaksiSukses: {
+      orderId: string;
+      paymentType: string | null;
+      paidAt: string | null;
+      raw: any;
+    } | null = null;
+    if (tagihanTahap1?.isLunas) {
+      const tx = await prisma.transaksiMidtrans.findFirst({
+        where: {
+          pembayaranSantriId: tagihanTahap1.id,
+          status: "SUCCESS",
+        },
+        orderBy: { paidAt: "desc" },
+        select: {
+          orderId: true,
+          paymentType: true,
+          paidAt: true,
+          rawNotification: true,
+        },
+      });
+      if (tx) {
+        transaksiSukses = {
+          orderId: tx.orderId,
+          paymentType: tx.paymentType,
+          paidAt: tx.paidAt ? tx.paidAt.toISOString() : null,
+          raw: tx.rawNotification,
+        };
+      }
+    }
+
     return NextResponse.json({
       nama: santri.namaLengkap,
       noPendaftaran: santri.noPendaftaran,
+      nis: santri.nis,
       tanggalLahir: santri.tanggalLahir
         ? new Date(santri.tanggalLahir).toISOString().slice(0, 10)
         : null,
@@ -128,6 +161,7 @@ export async function GET(req: Request) {
             isLunas: tagihanTahap1.isLunas,
           }
         : null,
+      transaksiSukses,
     });
   } catch (error: any) {
     console.error("Status Error:", error);

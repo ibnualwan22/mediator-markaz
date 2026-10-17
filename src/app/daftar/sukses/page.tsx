@@ -8,6 +8,9 @@ import SimpanKodeLokal from "@/components/midtrans/SimpanKodeLokal";
 import UnduhBuktiButton, {
   BuktiDataInput,
 } from "@/components/midtrans/UnduhBuktiButton";
+import UnduhBuktiLunasButton, {
+  LunasButtonInfo,
+} from "@/components/midtrans/UnduhBuktiLunasButton";
 import TataCaraPembayaran from "@/components/midtrans/TataCaraPembayaran";
 
 export default async function PendaftaranSuksesPage({ searchParams }: { searchParams: Promise<{ id: string }> }) {
@@ -61,6 +64,37 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
     biayaPendaftaran: nominalTampil,
     biayaLayanan: midtransAktif && !sudahLunas ? serviceFee : 0,
   };
+
+  // Data untuk Bukti Lunas (hanya bila sudah lunas via Midtrans).
+  let lunasInfo: LunasButtonInfo | null = null;
+  if (sudahLunas && tagihanTahap1) {
+    const tx = await prisma.transaksiMidtrans.findFirst({
+      where: { pembayaranSantriId: tagihanTahap1.id, status: "SUCCESS" },
+      orderBy: { paidAt: "desc" },
+      select: {
+        orderId: true,
+        paymentType: true,
+        paidAt: true,
+        rawNotification: true,
+        serviceFee: true,
+      },
+    });
+    if (tx) {
+      lunasInfo = {
+        noPendaftaran: santri.noPendaftaran,
+        nis: santri.nis,
+        namaLengkap: santri.namaLengkap,
+        biayaPendaftaran: tagihanTahap1.nominalHarus,
+        biayaLayanan: tx.serviceFee,
+        transaksi: {
+          orderId: tx.orderId,
+          paymentType: tx.paymentType,
+          paidAt: tx.paidAt ? tx.paidAt.toISOString() : null,
+          raw: tx.rawNotification,
+        },
+      };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-bg-cream flex flex-col items-center justify-center p-4 py-12">
@@ -121,6 +155,12 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
                   </span>
                 )}
               </div>
+
+              {sudahLunas && lunasInfo && (
+                <div className="pt-4">
+                  <UnduhBuktiLunasButton info={lunasInfo} className="w-full" />
+                </div>
+              )}
               
               <div className="pt-4 border-t border-primary-light/20">
                 <div className="flex justify-between items-end">

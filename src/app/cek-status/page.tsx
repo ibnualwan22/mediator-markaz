@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Wallet,
@@ -15,11 +16,15 @@ import { bacaKodeLokal } from "@/components/midtrans/SimpanKodeLokal";
 import UnduhBuktiButton, {
   BuktiDataInput,
 } from "@/components/midtrans/UnduhBuktiButton";
+import UnduhBuktiLunasButton, {
+  LunasButtonInfo,
+} from "@/components/midtrans/UnduhBuktiLunasButton";
 import TataCaraPembayaran from "@/components/midtrans/TataCaraPembayaran";
 
 interface StatusData {
   nama: string;
   noPendaftaran: string;
+  nis: string | null;
   tanggalLahir: string | null;
   tempatLahir: string | null;
   gender: string;
@@ -38,11 +43,34 @@ interface StatusData {
     sisa: number;
     isLunas: boolean;
   } | null;
+  transaksiSukses: {
+    orderId: string;
+    paymentType: string | null;
+    paidAt: string | null;
+    raw: any;
+  } | null;
 }
 
 const formatRp = (n: number) => "Rp " + n.toLocaleString("id-ID");
 
 export default function CekStatusPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-bg-cream py-10 px-4">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-text-secondary">Memuat...</p>
+          </div>
+        </div>
+      }
+    >
+      <CekStatusInner />
+    </Suspense>
+  );
+}
+
+function CekStatusInner() {
+  const searchParams = useSearchParams();
   const [no, setNo] = useState("");
   const [tgl, setTgl] = useState("");
   const [data, setData] = useState<StatusData | null>(null);
@@ -89,17 +117,26 @@ export default function CekStatusPage() {
     }
   }, []);
 
-  // Otomatis muat dari localStorage bila ada.
+  // Otomatis muat: prioritas (1) query param ?no=&tgl= (deep link),
+  // (2) localStorage.
   useEffect(() => {
     if (autoTried) return;
     setAutoTried(true);
+    const qNo = searchParams.get("no") || "";
+    const qTgl = searchParams.get("tgl") || "";
+    if (qNo && qTgl) {
+      setNo(qNo);
+      setTgl(qTgl);
+      fetchStatus(qNo, qTgl);
+      return;
+    }
     const saved = bacaKodeLokal();
     if (saved) {
       setNo(saved.noPendaftaran);
       setTgl(saved.tanggalLahir);
       fetchStatus(saved.noPendaftaran, saved.tanggalLahir);
     }
-  }, [autoTried, fetchStatus]);
+  }, [autoTried, fetchStatus, searchParams]);
 
   // Polling berkelanjutan tiap 20 detik selama tagihan belum lunas —
   // status selalu update selama halaman dibuka.
@@ -161,6 +198,18 @@ export default function CekStatusPage() {
           data.tagihan && !data.tagihan.isLunas ? data.serviceFee : 0,
       }
     : null;
+
+  const lunasInfo: LunasButtonInfo | null =
+    data?.tagihan?.isLunas && data.transaksiSukses
+      ? {
+          noPendaftaran: data.noPendaftaran,
+          nis: data.nis,
+          namaLengkap: data.nama,
+          biayaPendaftaran: data.tagihan.nominalHarus,
+          biayaLayanan: data.serviceFee,
+          transaksi: data.transaksiSukses,
+        }
+      : null;
 
   return (
     <div className="min-h-screen bg-bg-cream py-10 px-4">
@@ -283,6 +332,12 @@ export default function CekStatusPage() {
                     </span>
                   )}
                 </div>
+
+                {data.tagihan.isLunas && lunasInfo && (
+                  <div className="mt-4">
+                    <UnduhBuktiLunasButton info={lunasInfo} className="w-full" />
+                  </div>
+                )}
 
                 {!data.tagihan.isLunas && data.midtransEnabled && (
                   <div className="mt-6">
