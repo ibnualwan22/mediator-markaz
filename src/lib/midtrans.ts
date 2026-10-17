@@ -25,6 +25,46 @@ export function getServiceFee(): number {
   return Number.isFinite(v) && v >= 0 ? v : 5000;
 }
 
+// ============ METODE BAYAR & FEE ============
+// Fee dihitung EXACT per metode (dibebankan ke pendaftar), bukan flat.
+// Referensi fee Midtrans: VA bank Rp4.000, QRIS 0,7%, e-wallet ~2%.
+
+export interface MetodeBayar {
+  id: string; // id internal, dikirim dari frontend
+  label: string; // label tampil, mis. "QRIS"
+  snapPayments: string[]; // nilai untuk enabled_payments Snap
+}
+
+export const METODE_BAYAR: MetodeBayar[] = [
+  { id: "qris", label: "QRIS", snapPayments: ["qris"] },
+  { id: "gopay", label: "GoPay", snapPayments: ["gopay"] },
+  {
+    id: "bank_transfer",
+    label: "Virtual Account Bank",
+    snapPayments: ["bank_transfer"],
+  },
+];
+
+export function getMetodeBayar(id: string | null | undefined): MetodeBayar | null {
+  if (!id) return null;
+  return METODE_BAYAR.find((m) => m.id === id) ?? null;
+}
+
+// Hitung fee untuk nominal tertentu dengan metode tertentu.
+// Percent dihitung dari nominal (dibulatkan ke atas).
+export function hitungFee(metodeId: string, nominal: number): number {
+  switch (metodeId) {
+    case "qris":
+      return Math.ceil(nominal * 0.007);
+    case "gopay":
+      return Math.ceil(nominal * 0.02);
+    case "bank_transfer":
+      return 4000;
+    default:
+      return getServiceFee(); // fallback flat bila metode tak dikenal
+  }
+}
+
 export function getSnapApiBase(): string {
   return isMidtransProduction()
     ? "https://app.midtrans.com"
@@ -46,6 +86,8 @@ export interface SnapTransactionParams {
   itemName: string;
   itemPrice: number; // nominal kewajiban (tanpa fee)
   serviceFee: number;
+  // Batasi metode yang tampil di Snap (mis. ["qris"]). Default: semua umum.
+  enabledPayments?: string[];
 }
 
 export interface SnapTransactionResult {
@@ -96,9 +138,14 @@ export async function createSnapTransaction(
         phone: params.customerPhone || undefined,
       },
       item_details: items,
-      // Batasi ke metode yang umum dipakai santri; bisa diubah sesuai kebutuhan.
-      // Kosongkan array ini untuk mengizinkan semua metode.
-      enabled_payments: ["qris", "gopay", "bank_transfer", "echannel"],
+      // Metode dibatasi sesuai pilihan user di halaman kita (fee exact).
+      // Fallback ke daftar umum bila tidak ditentukan.
+      enabled_payments: params.enabledPayments ?? [
+        "qris",
+        "gopay",
+        "bank_transfer",
+        "echannel",
+      ],
     }),
   });
 
@@ -202,6 +249,20 @@ export async function resolveBiayaPendaftaran(
 // ============ CEK STATUS KE MIDTRANS ============
 // Untuk tombol "Sinkronkan Status": tanya langsung ke API Midtrans
 // (bukan cuma database) sebagai cadangan kalau webhook telat/hilang.
+
+// Hitung total NETO yang sudah dibayar untuk satu PembayaranSantri:
+// jumlah (grossAmount - serviceFee) dari semua transaksi SUCCESS.
+// Dipakai untuk logika pembayaran kumulatif (bayar bertahap / sisa).
+export async function hitungTotalDibayar(
+  prisma: any,
+  pembayaranSantriId: string
+): Promise<number> {
+  const agg = await prisma.transaksiMidtrans.aggregate({
+    where: { pembayaranSantriId, status: "SUCCESS" },
+    _sum: { grossAmount: true, serviceFee: true },
+  });
+  return (agg._sum.grossAmount ?? 0) - (agg._sum.serviceFee ?? 0);
+}
 export function getCoreApiBase(): string {
   return isMidtransProduction()
     ? "https://api.midtrans.com"

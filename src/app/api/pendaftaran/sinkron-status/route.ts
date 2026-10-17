@@ -6,8 +6,13 @@ import {
   mapTransactionStatus,
 } from "@/lib/midtrans";
 import { prosesPembayaranSukses } from "@/lib/pembayaranSukses";
+import { isRateLimited, getClientIp } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
+
+// Rate limit: tiap panggilan query ke API Midtrans, batasi 10x/10mnt/IP.
+const SINKRON_LIMIT_MAX = 10;
+const SINKRON_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 // POST /api/pendaftaran/sinkron-status
 // Body: { noPendaftaran, tgl } (tgl = tanggal lahir YYYY-MM-DD).
@@ -30,6 +35,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Nomor pendaftaran dan tanggal lahir wajib diisi." },
         { status: 400 }
+      );
+    }
+
+    const ip = getClientIp(req);
+    if (isRateLimited(ip, SINKRON_LIMIT_MAX, SINKRON_LIMIT_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Terlalu banyak percobaan. Coba lagi beberapa menit." },
+        { status: 429 }
       );
     }
 
@@ -95,6 +108,18 @@ export async function POST(req: Request) {
       mid.transaction_status,
       mid.fraud_status
     );
+
+    // Verifikasi nominal: harus cocok dengan yang tercatat di DB.
+    if (Number(mid.gross_amount) !== pendingTx.grossAmount) {
+      console.error(
+        `Sinkron-status: gross_amount tidak cocok order=${pendingTx.orderId} ` +
+          `midtrans=${mid.gross_amount} db=${pendingTx.grossAmount}`
+      );
+      return NextResponse.json(
+        { error: "Nominal transaksi tidak cocok. Hubungi admin." },
+        { status: 422 }
+      );
+    }
 
     if (outcome === "SUCCESS") {
       await prosesPembayaranSukses(

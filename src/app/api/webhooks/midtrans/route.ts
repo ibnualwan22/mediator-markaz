@@ -39,6 +39,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, ignored: true });
     }
 
+    // A1: verifikasi nominal — gross_amount notifikasi harus cocok persis
+    // dengan yang tercatat di DB. Tolak (tanpa retry) bila beda.
+    const notifAmount = Number(gross_amount);
+    if (!Number.isFinite(notifAmount) || notifAmount !== transaksi.grossAmount) {
+      console.error(
+        `Midtrans webhook: gross_amount tidak cocok order=${order_id} ` +
+          `notif=${gross_amount} db=${transaksi.grossAmount}`
+      );
+      return NextResponse.json({ ok: true, ignored: true, reason: "amount_mismatch" });
+    }
+
     const outcome = mapTransactionStatus(
       String(body.transaction_status || ""),
       body.fraud_status ? String(body.fraud_status) : undefined

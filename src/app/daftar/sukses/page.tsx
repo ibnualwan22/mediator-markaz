@@ -174,13 +174,19 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
               <div className="mt-8">
                 <BayarButton
                   noPendaftaran={santri.noPendaftaran}
-                  label="Bayar Sekarang via Midtrans"
+                  sisa={Math.max(
+                    0,
+                    (tagihanTahap1?.nominalHarus ?? 0) -
+                      (tagihanTahap1?.nominalDibayar ?? 0)
+                  )}
+                  sudahDibayar={tagihanTahap1?.nominalDibayar ?? 0}
+                  label={
+                    (tagihanTahap1?.nominalDibayar ?? 0) > 0
+                      ? "Bayar Sisa Tagihan via Midtrans"
+                      : "Bayar Sekarang via Midtrans"
+                  }
                   className="w-full py-4! text-lg! shadow-lg"
                 />
-                <p className="text-xs text-text-secondary mt-2 text-center">
-                  QRIS, Virtual Account bank, GoPay, dan lainnya. Biaya layanan
-                  Rp {serviceFee.toLocaleString("id-ID")} ditambahkan pada total pembayaran.
-                </p>
                 <TataCaraPembayaran />
               </div>
             ) : (

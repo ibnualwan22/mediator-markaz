@@ -343,7 +343,13 @@ function CekStatusInner() {
                   <div className="mt-6">
                     <BayarButton
                       noPendaftaran={data.noPendaftaran}
-                      label="Bayar Sekarang via Midtrans"
+                      sisa={Math.max(0, data.tagihan.sisa)}
+                      sudahDibayar={data.tagihan.nominalDibayar}
+                      label={
+                        data.tagihan.nominalDibayar > 0
+                          ? "Bayar Sisa Tagihan via Midtrans"
+                          : "Bayar Sekarang via Midtrans"
+                      }
                       className="w-full py-4! text-lg! shadow-lg"
                       onStatusChange={() => {
                         const { n, t } = kredensial();
