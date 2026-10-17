@@ -76,28 +76,53 @@ export async function kirimDokumenWa(
   }
   if (!target.includes("@")) target += "@s.whatsapp.net";
   const document = Buffer.from(fileBytes).toString("base64");
-  try {
-    const res = await fetch(
-      `${WA_API_URL}/sessions/${getSessionId()}/send/document`,
-      {
-        method: "POST",
-        headers: {
-          "X-API-Key": apiKey,
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ to: target, document, filename, caption }),
+
+  // Retry 3x: blokir sesaat (mis. 403 Cloudflare yang transient) sering
+  // lolos pada percobaan berikutnya. 400/401 = kesalahan permanen, tidak di-retry.
+  const maxAttempts = 3;
+  let lastDetail = "unknown error";
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(
+        `${WA_API_URL}/sessions/${getSessionId()}/send/document`,
+        {
+          method: "POST",
+          headers: {
+            "X-API-Key": apiKey,
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ to: target, document, filename, caption }),
+        }
+      );
+      const rawBody = await res.text().catch(() => "");
+      let data: any = {};
+      try {
+        data = JSON.parse(rawBody);
+      } catch {
+        // Non-JSON (mis. halaman blokir Cloudflare) — biarkan data kosong.
       }
-    );
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) return { success: true };
-    return {
-      success: false,
-      detail: data.message || data.error || `HTTP ${res.status}`,
-    };
-  } catch (e: any) {
-    return { success: false, detail: e?.message || "Network error" };
+      if (res.ok) return { success: true };
+      lastDetail = data.message || data.error || `HTTP ${res.status}`;
+      const bodySnippet =
+        rawBody && !data.message && !data.error
+          ? ` | body: ${rawBody.slice(0, 300).replace(/\s+/g, " ")}`
+          : "";
+      console.warn(
+        `kirimDokumenWa percobaan ${attempt}/${maxAttempts} gagal: ${lastDetail}${bodySnippet}`
+      );
+      if (res.status === 400 || res.status === 401) break;
+    } catch (e: any) {
+      lastDetail = e?.message || "Network error";
+      console.warn(
+        `kirimDokumenWa percobaan ${attempt}/${maxAttempts} network error: ${lastDetail}`
+      );
+    }
+    if (attempt < maxAttempts) {
+      await new Promise((r) => setTimeout(r, attempt * 2000));
+    }
   }
+  return { success: false, detail: lastDetail };
 }
 
 // Base URL publik aplikasi (untuk link di pesan WA).
