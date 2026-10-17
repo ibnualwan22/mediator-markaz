@@ -59,6 +59,14 @@ export async function verifySantri(santriId: string) {
 
   const isAgama = santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN';
 
+  // Tagihan yang sudah dibuat saat pendaftaran (mis. via payment gateway)
+  // tidak dibuat ulang agar tidak menabrak unique constraint.
+  const existingPembayaran = await prisma.pembayaranSantri.findMany({
+    where: { santriId },
+    select: { poinTahapId: true },
+  });
+  const existingPoinIds = new Set(existingPembayaran.map((p) => p.poinTahapId));
+
   // Build pembayaran records if paket exists
   const pembayaranRecords: any[] = [];
   if (paket) {
@@ -66,6 +74,8 @@ export async function verifySantri(santriId: string) {
       const tahap = paket.tahapPaket[t];
       for (let p = 0; p < tahap.poinTahap.length; p++) {
         const poin = tahap.poinTahap[p];
+        // Lewati poin yang tagihannya sudah ada (dibuat saat pendaftaran).
+        if (existingPoinIds.has(poin.id)) continue;
         const nominalActive = (tahap.isIjazahBased && isAgama && poin.nominalIjazah !== null) ? poin.nominalIjazah : poin.nominal;
         
         // Auto-pay Tahap 1 Poin 1 (Booking Rp 1.000.000)

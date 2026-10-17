@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { resolveBiayaPendaftaran } from "@/lib/midtrans";
 
 // Rate limit sederhana: maks 5 pendaftaran per IP per 10 menit.
 // (In-memory; cukup untuk pola traffic form publik di Vercel serverless.)
@@ -155,7 +156,45 @@ export async function POST(req: Request) {
 
     // Generation of Tahap 1 pembayaran is now handled by PembayaranSantri system during verification.
 
-    return NextResponse.json({ success: true, id: santri.id, noPendaftaran });
+    // Buat tagihan Tahap 1 (Biaya Pendaftaran) sejak awal agar bisa dibayar
+    // via payment gateway tanpa menunggu verifikasi admin. Idempoten per
+    // (santriId, poinTahapId); verifikasi admin melewati record yang sudah ada.
+    let pembayaranSantriId: string | null = null;
+    try {
+      const biaya = await resolveBiayaPendaftaran(prisma, santri.id);
+      if (biaya) {
+        const existing = await prisma.pembayaranSantri.findUnique({
+          where: {
+            santriId_poinTahapId: {
+              santriId: santri.id,
+              poinTahapId: biaya.poinTahapId,
+            },
+          },
+          select: { id: true },
+        });
+        if (existing) {
+          pembayaranSantriId = existing.id;
+        } else {
+          const ps = await prisma.pembayaranSantri.create({
+            data: {
+              santriId: santri.id,
+              poinTahapId: biaya.poinTahapId,
+              nominalHarus: biaya.nominal,
+              nominalDibayar: 0,
+              isLunas: biaya.nominal === 0,
+            },
+            select: { id: true },
+          });
+          pembayaranSantriId = ps.id;
+        }
+      }
+    } catch (e) {
+      // Kegagalan membuat tagihan tidak menggagalkan pendaftaran;
+      // admin tetap bisa membuatkan tagihan saat verifikasi.
+      console.error("Pendaftaran: gagal membuat tagihan Tahap 1", e);
+    }
+
+    return NextResponse.json({ success: true, id: santri.id, noPendaftaran, pembayaranSantriId });
   } catch (error: any) {
     console.error("Pendaftaran Error:", error);
     return NextResponse.json({

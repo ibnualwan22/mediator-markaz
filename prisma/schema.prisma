@@ -214,6 +214,32 @@ model PembayaranSantri {
   updatedAt      DateTime  @updatedAt
 
   @@unique([santriId, poinTahapId])
+
+  transaksiMidtrans TransaksiMidtrans[]
+}
+
+// ============ MIDTRANS PAYMENT GATEWAY ============
+// Mencatat setiap transaksi Snap yang dibuat untuk sebuah PembayaranSantri.
+// Satu PembayaranSantri bisa punya beberapa transaksi (retry), tapi hanya
+// satu yang berstatus PENDING dalam satu waktu; webhook bersifat idempoten.
+model TransaksiMidtrans {
+  id                 String           @id @default(cuid())
+  orderId            String           @unique // order_id Midtrans, unik per transaksi
+  pembayaranSantriId String
+  pembayaranSantri   PembayaranSantri @relation(fields: [pembayaranSantriId], references: [id], onDelete: Cascade)
+  snapToken          String?
+  grossAmount        Int              // nominalHarus + serviceFee
+  serviceFee         Int              @default(0)
+  // PENDING = menunggu bayar, SUCCESS = lunas, FAILED = deny/cancel,
+  // EXPIRED = kedaluwarsa, REPLACED = digantikan transaksi baru (retry)
+  status             String           @default("PENDING")
+  paymentType        String?
+  rawNotification    Json?
+  paidAt             DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([pembayaranSantriId])
 }
 
 // ============ DARUL LUGHOH ============

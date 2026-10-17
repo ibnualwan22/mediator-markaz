@@ -2,6 +2,9 @@ import Link from "next/link";
 import { CheckCircle2, FileText, ArrowRight, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { isMidtransEnabled, getServiceFee } from "@/lib/midtrans";
+import BayarButton from "@/components/midtrans/BayarButton";
+import SimpanKodeLokal from "@/components/midtrans/SimpanKodeLokal";
 
 export default async function PendaftaranSuksesPage({ searchParams }: { searchParams: Promise<{ id: string }> }) {
   const resolvedSearchParams = await searchParams;
@@ -12,6 +15,16 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
   const santri = await prisma.santri.findUnique({
     where: { id: resolvedSearchParams.id },
     include: {
+      pembayaranSantri: {
+        include: {
+          poinTahap: {
+            select: {
+              nama: true,
+              tahapPaket: { select: { urutan: true } },
+            },
+          },
+        },
+      },
     }
   });
 
@@ -19,10 +32,19 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
     redirect("/");
   }
 
-
+  const tagihanTahap1 = santri.pembayaranSantri.find(
+    (p) => p.poinTahap.tahapPaket.urutan === 1
+  );
+  const nominalTampil = tagihanTahap1?.nominalHarus ?? 1000000;
+  const sudahLunas = tagihanTahap1?.isLunas ?? false;
+  const midtransAktif = isMidtransEnabled();
+  const tglLahirStr = santri.tanggalLahir
+    ? new Date(santri.tanggalLahir).toISOString().slice(0, 10)
+    : "";
 
   return (
     <div className="min-h-screen bg-bg-cream flex flex-col items-center justify-center p-4 py-12">
+      <SimpanKodeLokal noPendaftaran={santri.noPendaftaran} tanggalLahir={tglLahirStr} />
       <div className="max-w-2xl w-full bg-white rounded-3xl shadow-lg border border-primary-light/20 overflow-hidden">
         {/* Header */}
         <div className="bg-primary px-8 py-10 text-center relative overflow-hidden">
@@ -65,24 +87,46 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-text-secondary">Status Pembayaran</span>
-                <span className="px-3 py-1 bg-danger/10 text-danger text-xs font-bold rounded-full">
-                  BELUM DIBAYAR
-                </span>
+                {sudahLunas ? (
+                  <span className="px-3 py-1 bg-success/10 text-success text-xs font-bold rounded-full">
+                    LUNAS
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 bg-danger/10 text-danger text-xs font-bold rounded-full">
+                    BELUM DIBAYAR
+                  </span>
+                )}
               </div>
               
               <div className="pt-4 border-t border-primary-light/20">
                 <div className="flex justify-between items-end">
                   <span className="text-text-primary font-medium">Total Tagihan</span>
-                  <span className="text-3xl font-bold text-primary">Rp 1.000.000</span>
+                  <span className="text-3xl font-bold text-primary">Rp {nominalTampil.toLocaleString("id-ID")}</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/20">
-              <p className="text-sm text-text-secondary mb-2">Silakan transfer biaya pendaftaran ke rekening berikut:</p>
-              <div className="text-xl font-bold text-text-primary tracking-wide">BRI 055501049030500</div>
-              <div className="text-sm font-medium text-text-primary">a.n. Markaz Arabiyah</div>
-            </div>
+            {midtransAktif && !sudahLunas ? (
+              <div className="mt-8">
+                <BayarButton
+                  noPendaftaran={santri.noPendaftaran}
+                  label="Bayar Sekarang via Midtrans"
+                  className="w-full"
+                />
+                <p className="text-xs text-text-secondary mt-2 text-center">
+                  QRIS, Virtual Account bank, GoPay, dan lainnya. Biaya layanan
+                  Rp {getServiceFee().toLocaleString("id-ID")} ditambahkan pada total pembayaran.
+                </p>
+              </div>
+            ) : (
+              !sudahLunas && (
+                <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                  <p className="text-sm text-text-secondary mb-2">Silakan transfer biaya pendaftaran ke rekening berikut:</p>
+                  <div className="text-xl font-bold text-text-primary tracking-wide">BRI 055501049030500</div>
+                  <div className="text-sm font-medium text-text-primary">a.n. Markaz Arabiyah</div>
+                </div>
+              )
+            )}
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
