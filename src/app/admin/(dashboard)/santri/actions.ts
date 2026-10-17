@@ -2,124 +2,20 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifikasiCamaba } from "@/lib/verifikasiCamaba";
 
+// Verifikasi manual oleh admin (tombol "Verifikasi & Generate NIS").
+// Inti logika ada di lib/verifikasiCamaba agar dipakai bersama
+// auto-verifikasi saat pembayaran Midtrans sukses.
 export async function verifySantri(santriId: string) {
-  const santri = await prisma.santri.findUnique({
-    where: { id: santriId },
-    include: { gelombang: true }
-  });
-
-  if (!santri || santri.isVerified) {
-    return { success: false, error: "Santri tidak ditemukan atau sudah terverifikasi." };
+  const hasil = await verifikasiCamaba(santriId);
+  if (!hasil.success) {
+    return { success: false, error: hasil.error || "Gagal verifikasi." };
   }
-
-  // 1. Dapatkan angka gelombang (ekstrak dari nama gelombang)
-  const gelombangMatch = santri.gelombang.nama.match(/\d+/);
-  const gelombangNum = gelombangMatch ? parseInt(gelombangMatch[0]) : 1;
-  const kodeGelombang = String(gelombangNum).padStart(2, '0');
-
-  // 2. Dapatkan DDMMYY dari tanggal mendaftar (createdAt)
-  const regDate = santri.createdAt;
-  const dd = String(regDate.getDate()).padStart(2, '0');
-  const mm = String(regDate.getMonth() + 1).padStart(2, '0');
-  const yy = String(regDate.getFullYear()).slice(-2);
-  const tanggalMendaftar = `${dd}${mm}${yy}`;
-
-  // 3. Dapatkan nomor urut santri dalam gelombang ini saja
-  const latestVerifiedCount = await prisma.santri.count({
-    where: {
-      isVerified: true,
-      gelombangId: santri.gelombangId
-    }
-  });
-  const nomorUrut = String(latestVerifiedCount + 1).padStart(3, '0');
-
-  // Gabungkan format: [Gelombang(2)][Tanggal(6)][Urutan(3)]
-  const generatedNis = `${kodeGelombang}${tanggalMendaftar}${nomorUrut}`;
-
-  // Resolve default paket
-  let paket = await prisma.paketPembayaran.findFirst({
-    where: { isDefault: true },
-    include: {
-      tahapPaket: {
-        include: { poinTahap: true }
-      }
-    }
-  });
-
-  if (!paket) {
-    paket = await prisma.paketPembayaran.findFirst({
-      include: {
-        tahapPaket: {
-          include: { poinTahap: true }
-        }
-      }
-    });
-  }
-
-  const isAgama = santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN';
-
-  // Tagihan yang sudah dibuat saat pendaftaran (mis. via payment gateway)
-  // tidak dibuat ulang agar tidak menabrak unique constraint.
-  const existingPembayaran = await prisma.pembayaranSantri.findMany({
-    where: { santriId },
-    select: { poinTahapId: true },
-  });
-  const existingPoinIds = new Set(existingPembayaran.map((p) => p.poinTahapId));
-
-  // Build pembayaran records if paket exists
-  const pembayaranRecords: any[] = [];
-  if (paket) {
-    for (let t = 0; t < paket.tahapPaket.length; t++) {
-      const tahap = paket.tahapPaket[t];
-      for (let p = 0; p < tahap.poinTahap.length; p++) {
-        const poin = tahap.poinTahap[p];
-        // Lewati poin yang tagihannya sudah ada (dibuat saat pendaftaran).
-        if (existingPoinIds.has(poin.id)) continue;
-        const nominalActive = (tahap.isIjazahBased && isAgama && poin.nominalIjazah !== null) ? poin.nominalIjazah : poin.nominal;
-        
-        // Auto-pay Tahap 1 Poin 1 (Booking Rp 1.000.000)
-        let nominalDibayar = 0;
-        let isLunas = nominalActive === 0 && !poin.isBebas;
-        
-        if (t === 0 && p === 0) {
-          nominalDibayar = nominalActive;
-          isLunas = true; // Full bayar booking
-        }
-
-        pembayaranRecords.push({
-          santriId,
-          poinTahapId: poin.id,
-          nominalHarus: nominalActive,
-          nominalDibayar: nominalDibayar,
-          isLunas: isLunas
-        });
-      }
-    }
-  }
-
-  await prisma.santri.update({
-    where: { id: santriId },
-    data: {
-      isVerified: true,
-      nis: generatedNis,
-      nomorUrut: nomorUrut,
-      paketPembayaranId: paket?.id || null
-    }
-  });
-
-  if (pembayaranRecords.length > 0) {
-    await prisma.pembayaranSantri.createMany({
-      data: pembayaranRecords
-    });
-  }
-
   revalidatePath(`/admin/santri/${santriId}`);
   revalidatePath("/admin/santri");
   revalidatePath("/admin/pembayaran");
-
-  
-  return { success: true, nis: generatedNis };
+  return { success: true, nis: hasil.nis };
 }
 
 export async function deleteSantri(santriId: string) {

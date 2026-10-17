@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isMidtransEnabled } from "@/lib/midtrans";
+import { isMidtransEnabled, getServiceFee } from "@/lib/midtrans";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +54,11 @@ export async function GET(req: Request) {
         noPendaftaran: true,
         namaLengkap: true,
         tanggalLahir: true,
+        tempatLahir: true,
+        gender: true,
+        noWaSantri: true,
+        email: true,
+        createdAt: true,
         isVerified: true,
         gelombang: { select: { nama: true, periode: { select: { nama: true } } } },
         pembayaranSantri: {
@@ -100,10 +105,19 @@ export async function GET(req: Request) {
     return NextResponse.json({
       nama: santri.namaLengkap,
       noPendaftaran: santri.noPendaftaran,
+      tanggalLahir: santri.tanggalLahir
+        ? new Date(santri.tanggalLahir).toISOString().slice(0, 10)
+        : null,
+      tempatLahir: santri.tempatLahir,
+      gender: santri.gender,
+      noWaSantri: santri.noWaSantri,
+      email: santri.email,
+      tanggalDaftar: santri.createdAt.toISOString(),
       gelombang: santri.gelombang.nama,
       periode: santri.gelombang.periode.nama,
       isVerified: santri.isVerified,
       midtransEnabled: isMidtransEnabled(),
+      serviceFee: getServiceFee(),
       tagihan: tagihanTahap1
         ? {
             nama: tagihanTahap1.poinTahap.nama,

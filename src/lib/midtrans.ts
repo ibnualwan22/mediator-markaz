@@ -198,3 +198,41 @@ export async function resolveBiayaPendaftaran(
 
   return { poinTahapId: poin.id, nominal };
 }
+
+// ============ CEK STATUS KE MIDTRANS ============
+// Untuk tombol "Sinkronkan Status": tanya langsung ke API Midtrans
+// (bukan cuma database) sebagai cadangan kalau webhook telat/hilang.
+export function getCoreApiBase(): string {
+  return isMidtransProduction()
+    ? "https://api.midtrans.com"
+    : "https://api.sandbox.midtrans.com";
+}
+
+export interface MidtransStatusResult {
+  transaction_status: string;
+  fraud_status?: string;
+  payment_type?: string;
+  order_id: string;
+  gross_amount: string;
+  transaction_id?: string;
+}
+
+export async function getTransactionStatus(
+  orderId: string
+): Promise<MidtransStatusResult> {
+  const serverKey = getServerKey();
+  if (!serverKey) throw new Error("MIDTRANS_SERVER_KEY belum dikonfigurasi.");
+  const res = await fetch(
+    `${getCoreApiBase()}/v2/${encodeURIComponent(orderId)}/status`,
+    {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Basic ${Buffer.from(serverKey + ":").toString("base64")}`,
+      },
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`Midtrans status API: HTTP ${res.status}`);
+  }
+  return res.json();
+}

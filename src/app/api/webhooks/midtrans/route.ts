@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature, mapTransactionStatus } from "@/lib/midtrans";
+import { prosesPembayaranSukses } from "@/lib/pembayaranSukses";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,6 @@ export async function POST(req: Request) {
 
     const transaksi = await prisma.transaksiMidtrans.findUnique({
       where: { orderId: String(order_id) },
-      include: { pembayaranSantri: true },
     });
     if (!transaksi) {
       // Bukan order dari sistem ini; tetap 200 agar Midtrans tidak retry sia-sia.
@@ -50,35 +50,22 @@ export async function POST(req: Request) {
     }
 
     if (outcome === "SUCCESS") {
-      await prisma.$transaction([
-        prisma.transaksiMidtrans.update({
-          where: { id: transaksi.id },
-          data: {
-            status: "SUCCESS",
-            paymentType: body.payment_type ? String(body.payment_type) : null,
-            rawNotification: body as any,
-            paidAt: new Date(),
-          },
-        }),
-        prisma.pembayaranSantri.update({
-          where: { id: transaksi.pembayaranSantriId },
-          data: {
-            nominalDibayar: transaksi.pembayaranSantri.nominalHarus,
-            isLunas: true,
-            tanggalLunas: new Date(),
-          },
-        }),
-      ]);
-    } else {
-      await prisma.transaksiMidtrans.update({
-        where: { id: transaksi.id },
-        data: {
-          status: outcome,
-          paymentType: body.payment_type ? String(body.payment_type) : null,
-          rawNotification: body as any,
-        },
-      });
+      const hasil = await prosesPembayaranSukses(
+        String(order_id),
+        body.payment_type ? String(body.payment_type) : null,
+        body
+      );
+      return NextResponse.json({ outcome, ...hasil });
     }
+
+    await prisma.transaksiMidtrans.update({
+      where: { id: transaksi.id },
+      data: {
+        status: outcome,
+        paymentType: body.payment_type ? String(body.payment_type) : null,
+        rawNotification: body as any,
+      },
+    });
 
     return NextResponse.json({ ok: true, outcome });
   } catch (error: any) {

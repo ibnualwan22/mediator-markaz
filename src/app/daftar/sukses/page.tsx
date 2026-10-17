@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { isMidtransEnabled, getServiceFee } from "@/lib/midtrans";
 import BayarButton from "@/components/midtrans/BayarButton";
 import SimpanKodeLokal from "@/components/midtrans/SimpanKodeLokal";
+import UnduhBuktiButton, {
+  BuktiDataInput,
+} from "@/components/midtrans/UnduhBuktiButton";
+import TataCaraPembayaran from "@/components/midtrans/TataCaraPembayaran";
 
 export default async function PendaftaranSuksesPage({ searchParams }: { searchParams: Promise<{ id: string }> }) {
   const resolvedSearchParams = await searchParams;
@@ -15,6 +19,7 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
   const santri = await prisma.santri.findUnique({
     where: { id: resolvedSearchParams.id },
     include: {
+      gelombang: { select: { nama: true } },
       pembayaranSantri: {
         include: {
           poinTahap: {
@@ -38,9 +43,24 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
   const nominalTampil = tagihanTahap1?.nominalHarus ?? 1000000;
   const sudahLunas = tagihanTahap1?.isLunas ?? false;
   const midtransAktif = isMidtransEnabled();
+  const serviceFee = getServiceFee();
   const tglLahirStr = santri.tanggalLahir
     ? new Date(santri.tanggalLahir).toISOString().slice(0, 10)
     : "";
+
+  const buktiData: BuktiDataInput = {
+    noPendaftaran: santri.noPendaftaran,
+    namaLengkap: santri.namaLengkap,
+    tempatLahir: santri.tempatLahir,
+    tanggalLahir: tglLahirStr || null,
+    gender: santri.gender,
+    noWaSantri: santri.noWaSantri,
+    email: santri.email,
+    gelombangNama: santri.gelombang?.nama ?? "-",
+    tanggalDaftar: santri.createdAt,
+    biayaPendaftaran: nominalTampil,
+    biayaLayanan: midtransAktif && !sudahLunas ? serviceFee : 0,
+  };
 
   return (
     <div className="min-h-screen bg-bg-cream flex flex-col items-center justify-center p-4 py-12">
@@ -67,7 +87,11 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
             <div className="text-3xl md:text-4xl font-bold font-mono text-primary mt-2">{santri.noPendaftaran}</div>
             <p className="text-sm mt-3 text-text-secondary max-w-md mx-auto">
               Simpan nomor pendaftaran ini untuk mengecek status pendaftaran dan pembayaran Anda ke depannya.
+              Bukti pendaftaran (PDF) otomatis terunduh — jika tidak, gunakan tombol di bawah.
             </p>
+            <div className="mt-4">
+              <UnduhBuktiButton data={buktiData} auto />
+            </div>
           </div>
 
           <div className="bg-bg-cream rounded-2xl p-6 border border-primary-light/30">
@@ -111,12 +135,13 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
                 <BayarButton
                   noPendaftaran={santri.noPendaftaran}
                   label="Bayar Sekarang via Midtrans"
-                  className="w-full"
+                  className="w-full py-4! text-lg! shadow-lg"
                 />
                 <p className="text-xs text-text-secondary mt-2 text-center">
                   QRIS, Virtual Account bank, GoPay, dan lainnya. Biaya layanan
-                  Rp {getServiceFee().toLocaleString("id-ID")} ditambahkan pada total pembayaran.
+                  Rp {serviceFee.toLocaleString("id-ID")} ditambahkan pada total pembayaran.
                 </p>
+                <TataCaraPembayaran />
               </div>
             ) : (
               !sudahLunas && (
