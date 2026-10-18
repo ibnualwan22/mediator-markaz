@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { isMidtransEnabled, getServiceFee } from "@/lib/midtrans";
 import BayarButton from "@/components/midtrans/BayarButton";
+import InfoFee from "@/components/midtrans/InfoFee";
 import SimpanKodeLokal from "@/components/midtrans/SimpanKodeLokal";
 import UnduhBuktiButton, {
   BuktiDataInput,
@@ -172,7 +173,15 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
 
             {midtransAktif && !sudahLunas ? (
               <div className="mt-8">
-                <BayarButton
+                <InfoFee
+                  nominal={Math.max(
+                    0,
+                    (tagihanTahap1?.nominalHarus ?? 0) -
+                      (tagihanTahap1?.nominalDibayar ?? 0)
+                  )}
+                />
+                <div className="mt-4">
+                  <BayarButton
                   noPendaftaran={santri.noPendaftaran}
                   sisa={Math.max(
                     0,
@@ -187,6 +196,7 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
                   }
                   className="w-full py-4! text-lg! shadow-lg"
                 />
+                </div>
                 <TataCaraPembayaran />
               </div>
             ) : (

@@ -12,6 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import BayarButton from "@/components/midtrans/BayarButton";
+import InfoFee from "@/components/midtrans/InfoFee";
 import { bacaKodeLokal } from "@/components/midtrans/SimpanKodeLokal";
 import UnduhBuktiButton, {
   BuktiDataInput,
@@ -332,6 +333,10 @@ function CekStatusInner() {
                     </span>
                   )}
                 </div>
+
+                {!data.tagihan.isLunas && data.midtransEnabled && (
+                  <InfoFee nominal={Math.max(0, data.tagihan.sisa)} />
+                )}
 
                 {data.tagihan.isLunas && lunasInfo && (
                   <div className="mt-4">
