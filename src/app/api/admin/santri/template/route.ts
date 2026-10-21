@@ -15,19 +15,23 @@ export async function GET() {
     // NIC diisi bila camaba SUDAH punya NIC (format standar 11 digit:
     // kode gelombang + tanggal lahir DDMMYY + nomor urut, terbit saat
     // verifikasi). Camaba baru dari pendaftaran offline: kosongkan NIC,
-    // data akan dibuat sebagai camaba baru pada gelombang yang dipilih
-    // di jendela import, dan NIC terbit otomatis saat diverifikasi.
+    // data akan dibuat sebagai camaba baru, dan NIC terbit otomatis saat
+    // diverifikasi.
+    // Kolom Gelombang khusus untuk camaba BARU: isi nomor/nama gelombang
+    // tujuannya (mis. "Gelombang 1"); sistem mencocokkan angkanya ke
+    // gelombang yang sedang AKTIF. Untuk camaba yang sudah ada di web
+    // kolom ini diabaikan (pindah gelombang ada jalurnya sendiri).
     const wsData = [
       [
-        "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Tempat Lahir", "Tanggal Lahir", "Asal Provinsi", "No. WA Santri",
+        "NIC", "Gelombang", "Nama Lengkap", "Nama Arab", "Gender", "Tempat Lahir", "Tanggal Lahir", "Asal Provinsi", "No. WA Santri",
         "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Riwayat Akademik Lainnya", "Tahun Kelulusan", "Nomor Paspor", "Kantor Penerbit Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
       ],
       [
-        "01150508001", "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jakarta", "15/05/2008", "Jawa Barat", "08123456789",
+        "01150508001", "Gelombang 1", "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jakarta", "15/05/2008", "Jawa Barat", "08123456789",
         "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", "", 2026, "A1234567", "Kantor Imigrasi Jakarta Selatan", "01/01/2023", "01/01/2028"
       ],
       [
-        "", "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Semarang", "20/03/2008", "Jawa Tengah", "08129876543",
+        "", "Gelombang 2", "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Semarang", "20/03/2008", "Jawa Tengah", "08129876543",
         "fulanah@example.com", "Bapak Fulan", "08987654321", "Lainnya", "D3 Bahasa Arab", 2026, "", "", "", ""
       ]
     ];
@@ -38,6 +42,7 @@ export async function GET() {
     // Atur lebar kolom agar rapi
     ws['!cols'] = [
       { wch: 15 }, // NIC
+      { wch: 15 }, // Gelombang
       { wch: 30 }, // Nama Lengkap
       { wch: 30 }, // Nama Arab
       { wch: 15 }, // Gender

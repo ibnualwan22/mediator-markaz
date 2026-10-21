@@ -131,6 +131,30 @@ export async function POST(req: Request) {
       });
     }
 
+    // Peta gelombang AKTIF berdasarkan nomor dari namanya ("Gelombang 1" -> 1),
+    // untuk kolom Gelombang di Excel: penempatan camaba baru per baris.
+    const activeGelombang = await prisma.gelombang.findMany({
+      where: { isActive: true },
+      select: { id: true, nama: true }
+    });
+    const gelombangByNomor = new Map<number, { id: string; nama: string }[]>();
+    for (const g of activeGelombang) {
+      const m = g.nama.match(/\d+/);
+      if (!m) continue;
+      const num = parseInt(m[0], 10);
+      const arr = gelombangByNomor.get(num) || [];
+      arr.push({ id: g.id, nama: g.nama });
+      gelombangByNomor.set(num, arr);
+    }
+    const resolveGelombangKolom = (val: any) => {
+      const m = String(val).match(/\d+/);
+      if (!m) return { status: "tidak-ditemukan" as const };
+      const kandidat = gelombangByNomor.get(parseInt(m[0], 10)) || [];
+      if (kandidat.length === 1) return { status: "ok" as const, gelombang: kandidat[0] };
+      if (kandidat.length > 1) return { status: "ambigu" as const, jumlah: kandidat.length };
+      return { status: "tidak-ditemukan" as const };
+    };
+
     // Penomoran No. Pendaftaran untuk camaba baru: lanjutkan dari nomor
     // terbesar yang sudah ada (pola sama seperti API pendaftaran online).
     const lastSantri = await prisma.santri.findFirst({
@@ -338,8 +362,29 @@ export async function POST(req: Request) {
         continue;
       }
 
-      if (!gelombangForCreate) {
-        errors.push(`Baris ${rowNum}: Camaba baru tidak dibuat untuk ${namaLengkap} — pilih gelombang penempatan yang valid di jendela import`);
+      // Penempatan gelombang camaba baru: kolom Gelombang di Excel
+      // didahulukan; pilihan gelombang di jendela import jadi cadangan
+      // bila kolomnya kosong.
+      let targetGelombangId: string | null = null;
+      if (hasValue(row["Gelombang"])) {
+        const resolved = resolveGelombangKolom(row["Gelombang"]);
+        if (resolved.status === "ok") {
+          targetGelombangId = resolved.gelombang.id;
+        } else if (resolved.status === "ambigu") {
+          errors.push(`Baris ${rowNum}: Camaba baru tidak dibuat untuk ${namaLengkap} — Gelombang "${row["Gelombang"]}" ambigu, ada ${resolved.jumlah} gelombang aktif dengan nomor tersebut`);
+          failedCount++;
+          continue;
+        } else {
+          errors.push(`Baris ${rowNum}: Camaba baru tidak dibuat untuk ${namaLengkap} — Gelombang "${row["Gelombang"]}" tidak dikenali atau tidak ditemukan di antara gelombang yang aktif`);
+          failedCount++;
+          continue;
+        }
+      } else if (gelombangForCreate) {
+        targetGelombangId = gelombangForCreate.id;
+      }
+
+      if (!targetGelombangId) {
+        errors.push(`Baris ${rowNum}: Camaba baru tidak dibuat untuk ${namaLengkap} — isi kolom Gelombang di Excel atau pilih gelombang penempatan di jendela import`);
         failedCount++;
         continue;
       }
@@ -348,7 +393,7 @@ export async function POST(req: Request) {
       // simpan sebagai NIS-nya. Kosong = NIS terbit saat verifikasi,
       // sama seperti pendaftar online.
       const createData: any = {
-        gelombangId: gelombangForCreate.id,
+        gelombangId: targetGelombangId,
         namaLengkap,
         namaArab: str("Nama Arab"),
         tempatLahir: str("Tempat Lahir") ?? null,
