@@ -3,6 +3,20 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+// Format NIC/NIS: [kode gelombang 2 digit][tanggal lahir DDMMYY][nomor urut 3 digit].
+// Sejak 2026-10-21 bagian tengah memakai tanggal LAHIR santri (sebelumnya
+// tanggal mendaftar). NIC yang sudah terbit sebelumnya tidak diubah.
+// Tanggal lahir dibaca dengan getter UTC: nilai dari form pendaftaran
+// tersimpan sebagai tanggal kalender (tengah malam UTC), jadi getter UTC
+// mengembalikan tanggal yang benar di zona waktu server mana pun.
+function nisBagianTanggalLahir(tanggalLahir: Date | null): string | null {
+  if (!tanggalLahir) return null;
+  const dd = String(tanggalLahir.getUTCDate()).padStart(2, '0');
+  const mm = String(tanggalLahir.getUTCMonth() + 1).padStart(2, '0');
+  const yy = String(tanggalLahir.getUTCFullYear()).slice(-2);
+  return `${dd}${mm}${yy}`;
+}
+
 export async function verifySantri(santriId: string) {
   const santri = await prisma.santri.findUnique({
     where: { id: santriId },
@@ -18,12 +32,12 @@ export async function verifySantri(santriId: string) {
   const gelombangNum = gelombangMatch ? parseInt(gelombangMatch[0]) : 1;
   const kodeGelombang = String(gelombangNum).padStart(2, '0');
 
-  // 2. Dapatkan DDMMYY dari tanggal mendaftar (createdAt)
-  const regDate = santri.createdAt;
-  const dd = String(regDate.getDate()).padStart(2, '0');
-  const mm = String(regDate.getMonth() + 1).padStart(2, '0');
-  const yy = String(regDate.getFullYear()).slice(-2);
-  const tanggalMendaftar = `${dd}${mm}${yy}`;
+  // 2. Dapatkan DDMMYY dari tanggal LAHIR santri (format NIC saat ini).
+  // Tanpa tanggal lahir, NIC tidak bisa diterbitkan.
+  const bagianTanggalLahir = nisBagianTanggalLahir(santri.tanggalLahir);
+  if (!bagianTanggalLahir) {
+    return { success: false, error: "Tanggal lahir santri belum terisi. Lengkapi tanggal lahir terlebih dahulu — NIC memakai tanggal lahir santri." };
+  }
 
   // 3. Dapatkan nomor urut santri dalam gelombang ini saja
   const latestVerifiedCount = await prisma.santri.count({
@@ -35,7 +49,7 @@ export async function verifySantri(santriId: string) {
   const nomorUrut = String(latestVerifiedCount + 1).padStart(3, '0');
 
   // Gabungkan format: [Gelombang(2)][Tanggal(6)][Urutan(3)]
-  const generatedNis = `${kodeGelombang}${tanggalMendaftar}${nomorUrut}`;
+  const generatedNis = `${kodeGelombang}${bagianTanggalLahir}${nomorUrut}`;
 
   // Resolve default paket
   let paket = await prisma.paketPembayaran.findFirst({
@@ -226,16 +240,17 @@ export async function transferSantriToGelombang(santriId: string, targetGelomban
     const gelombangMatch = targetGelombang.nama.match(/\d+/);
     const kodeGelombang = String(gelombangMatch ? parseInt(gelombangMatch[0]) : 1).padStart(2, '0');
     
-    const dd = String(santri.createdAt.getDate()).padStart(2, '0');
-    const mm = String(santri.createdAt.getMonth() + 1).padStart(2, '0');
-    const yy = String(santri.createdAt.getFullYear()).slice(-2);
-    const tanggalMendaftar = `${dd}${mm}${yy}`;
+    // NIC baru mengikuti format saat ini: bagian tengah = tanggal LAHIR.
+    const bagianTanggalLahir = nisBagianTanggalLahir(santri.tanggalLahir);
+    if (!bagianTanggalLahir) {
+      throw new Error("Tanggal lahir santri belum terisi. Lengkapi tanggal lahir terlebih dahulu — NIC memakai tanggal lahir santri.");
+    }
     
     const latestVerifiedCount = await prisma.santri.count({
       where: { isVerified: true, gelombangId: targetGelombangId }
     });
     const nomorUrut = String(latestVerifiedCount + 1).padStart(3, '0');
-    newNis = `${kodeGelombang}${tanggalMendaftar}${nomorUrut}`;
+    newNis = `${kodeGelombang}${bagianTanggalLahir}${nomorUrut}`;
 
     // Determine target Paket Pembayaran (match by name or use default)
     let targetPaketId = santri.paketPembayaranId;
@@ -337,6 +352,6 @@ export async function transferSantriToGelombang(santriId: string, targetGelomban
     return { success: true };
   } catch (error: any) {
     console.error("Transfer Gelombang Error:", error);
-    return { success: false, error: "Gagal memindahkan santri." };
+    return { success: false, error: error?.message?.includes("Tanggal lahir") ? error.message : "Gagal memindahkan santri." };
   }
 }

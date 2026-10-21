@@ -69,7 +69,7 @@ enum JurusanType {
 model Santri {
   id                String           @id @default(cuid())
   noPendaftaran     String           @unique // Auto-generated: MA-2026-0001
-  nis               String?          @unique // Generated saat admin verifikasi, format: MA-26-0001
+  nis               String?          @unique // Generated saat admin verifikasi: [gelombang 2 digit][tgl lahir DDMMYY][no urut 3 digit]
   nomorUrut         String?          // Nomor urut independen yang bisa diimport via excel
   gelombangId       String
   gelombang         Gelombang        @relation(fields: [gelombangId], references: [id])

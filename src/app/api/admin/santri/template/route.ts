@@ -9,19 +9,26 @@ export async function GET() {
     // Buat format workbook baru
     const wb = xlsx.utils.book_new();
 
-    // Data header template dan 1 contoh data
+    // Data header template dan contoh data.
+    // Kolom mengikuti seluruh isian form pendaftaran (Step 1 & Step 3),
+    // kecuali dokumen unggahan yang tidak bisa dibawa file Excel.
+    // NIC diisi bila camaba SUDAH punya NIC (format standar 11 digit:
+    // kode gelombang + tanggal lahir DDMMYY + nomor urut, terbit saat
+    // verifikasi). Camaba baru dari pendaftaran offline: kosongkan NIC,
+    // data akan dibuat sebagai camaba baru pada gelombang yang dipilih
+    // di jendela import, dan NIC terbit otomatis saat diverifikasi.
     const wsData = [
       [
-        "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Asal Provinsi", "No. WA Santri", 
-        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Tahun Kelulusan", "Nomor Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor", "Pilihan Jurusan"
+        "NIC", "Nama Lengkap", "Nama Arab", "Gender", "Tempat Lahir", "Tanggal Lahir", "Asal Provinsi", "No. WA Santri",
+        "Email", "Nama Wali", "No. WA Wali", "Riwayat Akademik", "Riwayat Akademik Lainnya", "Tahun Kelulusan", "Nomor Paspor", "Kantor Penerbit Paspor", "Tanggal Pembuatan Paspor", "Tanggal Kadaluarsa Paspor"
       ],
       [
-        "MA-26-0001", "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jawa Barat", "08123456789", 
-        "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", 2026, "A1234567", "01/01/2023", "01/01/2028", "LUGHAH"
+        "01150508001", "Fulan bin Fulan", "فلان بن فلان", "LAKI_LAKI", "Jakarta", "15/05/2008", "Jawa Barat", "08123456789",
+        "fulan@example.com", "Bapak Fulan", "08987654321", "Madrasah Aliyah (MA)", "", 2026, "A1234567", "Kantor Imigrasi Jakarta Selatan", "01/01/2023", "01/01/2028"
       ],
       [
-        "", "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Jawa Tengah", "08129876543", 
-        "fulanah@example.com", "Bapak Fulan", "08987654321", "Ijazah Pesantren", 2026, "", "", "", ""
+        "", "Fulanah binti Fulan", "فلانة بنت فلان", "PEREMPUAN", "Semarang", "20/03/2008", "Jawa Tengah", "08129876543",
+        "fulanah@example.com", "Bapak Fulan", "08987654321", "Lainnya", "D3 Bahasa Arab", 2026, "", "", "", ""
       ]
     ];
 
@@ -34,17 +41,20 @@ export async function GET() {
       { wch: 30 }, // Nama Lengkap
       { wch: 30 }, // Nama Arab
       { wch: 15 }, // Gender
+      { wch: 20 }, // Tempat Lahir
+      { wch: 15 }, // Tanggal Lahir
       { wch: 20 }, // Asal Provinsi
       { wch: 15 }, // No. WA Santri
       { wch: 25 }, // Email
       { wch: 25 }, // Nama Wali
       { wch: 15 }, // No. WA Wali
-      { wch: 20 }, // Riwayat Akademik
+      { wch: 22 }, // Riwayat Akademik
+      { wch: 25 }, // Riwayat Akademik Lainnya
       { wch: 15 }, // Tahun Kelulusan
       { wch: 20 }, // Nomor Paspor
+      { wch: 30 }, // Kantor Penerbit Paspor
       { wch: 25 }, // Tanggal Pembuatan Paspor
-      { wch: 25 }, // Tanggal Kadaluarsa Paspor
-      { wch: 20 }  // Pilihan Jurusan
+      { wch: 25 }  // Tanggal Kadaluarsa Paspor
     ];
 
     // Tambahkan worksheet ke workbook
