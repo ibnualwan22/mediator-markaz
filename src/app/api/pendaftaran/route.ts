@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { kirimPesanPendaftaran } from "@/lib/pesanOtomatis";
 
 // Rate limit sederhana: maks 5 pendaftaran per IP per 10 menit.
 // (In-memory; cukup untuk pola traffic form publik di Vercel serverless.)
@@ -154,6 +155,17 @@ export async function POST(req: Request) {
     }
 
     // Generation of Tahap 1 pembayaran is now handled by PembayaranSantri system during verification.
+
+    // Pesan otomatis WA (kegagalan kirim tidak menggagalkan pendaftaran).
+    try {
+      await kirimPesanPendaftaran({
+        namaLengkap: santri.namaLengkap,
+        noPendaftaran: santri.noPendaftaran,
+        noWaSantri: santri.noWaSantri,
+      });
+    } catch (e) {
+      console.warn("Pesan otomatis pendaftaran gagal:", e);
+    }
 
     return NextResponse.json({ success: true, id: santri.id, noPendaftaran });
   } catch (error: any) {

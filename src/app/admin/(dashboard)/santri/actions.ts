@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { kirimPesanVerifikasi } from "@/lib/pesanOtomatis";
 
 // Format NIC/NIS: [kode gelombang 2 digit][tanggal lahir DDMMYY][nomor urut 3 digit].
 // Sejak 2026-10-21 bagian tengah memakai tanggal LAHIR santri (sebelumnya
@@ -123,6 +124,22 @@ export async function verifySantri(santriId: string) {
   revalidatePath("/admin/pembayaran");
 
   
+  // Pesan otomatis WA (kegagalan kirim tidak menggagalkan verifikasi).
+  // Tahap 1 auto-lunas hanya bila baris tagihan paket berhasil dibuat.
+  try {
+    await kirimPesanVerifikasi(
+      {
+        namaLengkap: santri.namaLengkap,
+        noPendaftaran: santri.noPendaftaran,
+        noWaSantri: santri.noWaSantri,
+      },
+      generatedNis,
+      pembayaranRecords.length > 0
+    );
+  } catch (e) {
+    console.warn("Pesan otomatis verifikasi gagal:", e);
+  }
+
   return { success: true, nis: generatedNis };
 }
 
