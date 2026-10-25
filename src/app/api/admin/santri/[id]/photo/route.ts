@@ -14,10 +14,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const resolvedParams = await params;
     const santri = await prisma.santri.findUnique({
       where: { id: resolvedParams.id },
-      select: { fotoProfil: true }
+      select: { fotoProfil: true, filePasFoto: true }
     });
 
-    const fotoUrl = santri?.fotoProfil;
+    // Foto profil portal bila ada, bila kosong pakai pas foto dari form.
+    // Keduanya di-proxy lewat Drive API di bawah (URL Drive mentah tidak
+    // bisa langsung jadi <img src> karena webViewLink adalah halaman HTML).
+    const fotoUrl = santri?.fotoProfil || santri?.filePasFoto;
     if (!fotoUrl) {
       return new NextResponse("No photo", { status: 404 });
     }

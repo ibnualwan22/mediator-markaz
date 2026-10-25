@@ -58,9 +58,13 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
 
   // Foto kartu: foto profil portal bila ada, bila kosong pakai pas foto
   // dari form pendaftaran (dokumennya sendiri tetap hanya di pemberkasan).
-  const fotoProfilSrc = santri.fotoProfil
-    ? `/api/admin/santri/${santri.id}/photo?v=${encodeURIComponent(santri.fotoProfil.slice(-15))}`
-    : santri.filePasFoto;
+  // Keduanya dilewatkan endpoint /photo (proxy Drive API) karena URL Drive
+  // mentah (webViewLink) adalah halaman HTML, bukan byte gambar, sehingga
+  // tidak bisa langsung dipakai sebagai <img src>.
+  const fotoSumber = santri.fotoProfil || santri.filePasFoto;
+  const fotoProfilSrc = fotoSumber
+    ? `/api/admin/santri/${santri.id}/photo?v=${encodeURIComponent(fotoSumber.slice(-15))}`
+    : null;
 
   return (
     <div className="space-y-4 md:space-y-6 pb-20">
