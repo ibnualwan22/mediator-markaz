@@ -42,6 +42,20 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
     }
   };
 
+  // Dipanggil step saat ada perubahan di tengah step (mis. file selesai
+  // diupload di Step 3): langsung simpan ke cache agar tidak hilang bila
+  // halaman di-refresh sebelum submit. Sebelumnya cache hanya ditulis
+  // saat Next/Back, sehingga file Step 3 (step terakhir, tanpa tombol
+  // Next) selalu hilang saat refresh — padahal data Step 1 selamat karena
+  // sudah lewat tombol Next.
+  const handleDataChange = (partial: any) => {
+    setFormData((prev: any) => {
+      const newData = { ...prev, ...partial };
+      saveToCache(newData, currentStep);
+      return newData;
+    });
+  };
+
   const handleNext = (stepData: any) => {
     const newData = { ...formData, ...stepData };
     setFormData(newData);
@@ -165,8 +179,8 @@ export default function RegistrationWizard({ activeGelombangs = [] }: { activeGe
       {/* Form Content */}
       <div className="mt-8">
         {currentStep === 1 && <Step1DataPribadi initialData={formData} activeGelombangs={activeGelombangs} onNext={handleNext} />}
-        {currentStep === 2 && <Step2DokumenPribadi initialData={formData} onNext={handleNext} onBack={handleBack} />}
-        {currentStep === 3 && <Step3Akademik initialData={formData} onNext={handleNext} onBack={handleBack} />}
+        {currentStep === 2 && <Step2DokumenPribadi initialData={formData} onNext={handleNext} onBack={handleBack} onDataChange={handleDataChange} />}
+        {currentStep === 3 && <Step3Akademik initialData={formData} onNext={handleNext} onBack={handleBack} onDataChange={handleDataChange} />}
       </div>
     </>
   );

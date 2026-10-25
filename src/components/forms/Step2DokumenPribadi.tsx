@@ -11,14 +11,16 @@ const DOCUMENT_NAMES: Record<UploadField, string> = {
   filePaspor: "Paspor",
 };
 
-export default function Step2DokumenPribadi({ 
-  initialData, 
+export default function Step2DokumenPribadi({
+  initialData,
   onNext,
-  onBack
-}: { 
-  initialData: any, 
+  onBack,
+  onDataChange
+}: {
+  initialData: any,
   onNext: (data: any) => void,
-  onBack: (data: any) => void
+  onBack: (data: any) => void,
+  onDataChange?: (data: any) => void
 }) {
   const [formData, setFormData] = useState<Record<UploadField, string>>({
     fileAkteLahir: initialData.fileAkteLahir || "",
@@ -36,9 +38,30 @@ export default function Step2DokumenPribadi({
     filePaspor: false,
   });
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
+  // File yang baru dipilih tapi BELUM diupload — ditampilkan sebagai
+  // pratinjau agar bisa direview dulu sebelum diunggah.
+  const [selectedFile, setSelectedFile] = useState<Partial<Record<UploadField, File>>>({});
+  const [previewUrl, setPreviewUrl] = useState<Partial<Record<UploadField, string>>>({});
+
+  const clearSelection = (field: UploadField) => {
+    setPreviewUrl(prev => {
+      if (prev[field]) URL.revokeObjectURL(prev[field]!);
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setSelectedFile(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Pilih file → hanya pratinjau, BELUM upload.
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = "";
 
     if (field === 'filePasFoto' && !file.type.includes('jpeg') && !file.type.includes('jpg')) {
       alert("Pas foto harus berformat JPG/JPEG");
@@ -50,6 +73,16 @@ export default function Step2DokumenPribadi({
       alert(`Ukuran file terlalu besar. Maksimal 10MB.`);
       return;
     }
+
+    clearSelection(field);
+    setSelectedFile(prev => ({ ...prev, [field]: file }));
+    setPreviewUrl(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
+  };
+
+  // Upload file yang sudah dipilih & direview.
+  const handleFileUpload = async (field: UploadField) => {
+    const file = selectedFile[field];
+    if (!file) return;
 
     setIsUploading(prev => ({ ...prev, [field]: true }));
     try {
@@ -71,10 +104,13 @@ export default function Step2DokumenPribadi({
 
       const data = await driveRes.json();
 
-      setFormData(prev => ({ 
-        ...prev, 
-        [field]: data.secure_url 
+      setFormData(prev => ({
+        ...prev,
+        [field]: data.secure_url
       }));
+      // Simpan langsung ke cache wizard agar URL tidak hilang saat refresh.
+      onDataChange?.({ [field]: data.secure_url });
+      clearSelection(field);
     } catch (e: any) {
       alert("Error upload file: " + e.message);
     } finally {
@@ -86,6 +122,10 @@ export default function Step2DokumenPribadi({
     e.preventDefault();
     if (Object.values(isUploading).some(Boolean)) {
       alert("Harap tunggu hingga proses unggah selesai.");
+      return;
+    }
+    if (Object.values(selectedFile).some(Boolean)) {
+      alert("Masih ada dokumen yang dipilih tapi belum diunggah. Silakan klik \"Unggah\" pada dokumen tersebut, atau ganti pilihannya.");
       return;
     }
     if (!formData.fileAkteLahir || !formData.fileKtp || !formData.filePasFoto) {
@@ -106,6 +146,13 @@ export default function Step2DokumenPribadi({
     opts: { required?: boolean; accept?: string; hint?: string; notice?: string } = {}
   ) => {
     const { required = true, accept = ".pdf,image/jpeg,image/jpg", hint = "(Format PDF/JPG. Maksimal 10MB)", notice } = opts;
+    const pending = selectedFile[field];
+    const pendingPreview = previewUrl[field];
+    const pendingSize = pending
+      ? (pending.size >= 1024 * 1024
+        ? `${(pending.size / 1024 / 1024).toFixed(1)} MB`
+        : `${(pending.size / 1024).toFixed(0)} KB`)
+      : "";
     return (
       <div className="space-y-3">
         <label className="text-sm font-medium text-text-secondary block">
@@ -133,18 +180,43 @@ export default function Step2DokumenPribadi({
               )}
               <span className="text-success font-medium">✅ File berhasil diunggah</span>
               <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData[field].split('/').pop()}</span>
-              <button type="button" onClick={() => setFormData(f => ({...f, [field]: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+              <a href={formData[field]} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Lihat dokumen</a>
+              <button type="button" onClick={() => { setFormData(f => ({...f, [field]: ""})); onDataChange?.({ [field]: "" }); }} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+            </div>
+          ) : pending ? (
+            <div className="flex flex-col items-center gap-2">
+              {pending.type.startsWith("image/") ? (
+                <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
+                  <a href={pendingPreview} target="_blank" rel="noopener noreferrer" title="Buka pratinjau ukuran penuh">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pendingPreview} alt={`Pratinjau ${label}`} className="w-full h-full object-cover" />
+                  </a>
+                </div>
+              ) : (
+                <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex flex-col items-center justify-center text-text-secondary gap-1 p-2">
+                  <span className="text-xs font-bold uppercase">Dokumen</span>
+                  <a href={pendingPreview} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Lihat dokumen</a>
+                </div>
+              )}
+              <span className="text-sm font-medium break-all max-w-xs">{pending.name}</span>
+              <span className="text-xs text-text-secondary">{pendingSize}</span>
+              <div className="flex gap-2 mt-1">
+                <button type="button" onClick={() => handleFileUpload(field)} disabled={isUploading[field]} className="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-light disabled:opacity-50">
+                  {isUploading[field] ? "Sedang Mengunggah..." : "Unggah"}
+                </button>
+                <button type="button" onClick={() => clearSelection(field)} className="px-4 py-1.5 text-sm text-danger underline">Ganti</button>
+              </div>
+              <span className="text-xs text-text-secondary">Periksa dulu dokumennya sebelum diunggah.</span>
             </div>
           ) : (
             <label className="cursor-pointer flex flex-col items-center">
               <UploadCloud size={32} className="text-primary-light mb-2" />
-              <span className="text-sm font-medium">{isUploading[field] ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-              <input 
-                type="file" 
+              <span className="text-sm font-medium">Klik untuk pilih file</span>
+              <input
+                type="file"
                 accept={accept}
-                className="hidden" 
-                onChange={(e) => handleFileUpload(e, field)}
-                disabled={isUploading[field]}
+                className="hidden"
+                onChange={(e) => handleFileSelect(e, field)}
               />
             </label>
           )}

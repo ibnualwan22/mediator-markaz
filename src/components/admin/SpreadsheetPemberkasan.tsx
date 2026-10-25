@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback, useMemo } from "react";
-import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl } from "@/app/admin/(dashboard)/pemberkasan/actions";
+import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl, updateSantriDokumenForm } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
 import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
@@ -32,6 +32,21 @@ export default function SpreadsheetPemberkasan({
   const [itemModalView, setItemModalView] = useState<'MISSING' | 'ARSIP'>('MISSING');
 
   const visibleItems = items.filter(i => i.kategori !== "MESIR");
+
+  // Dokumen default dari form pendaftaran (sama seperti halaman pemberkasan
+  // santri): selalu tampil sebagai kolom, terlepas santri sudah upload atau
+  // belum. Admin bisa mengupload/mengganti/menghapus dokumen form langsung
+  // dari sel ini (mis. untuk santri hasil impor yang tidak lewat form);
+  // santri sendiri mengupload lewat portal pemberkasan.
+  const dokumenPendaftaran = [
+    { field: "fileAkteLahir", nama: "Scan Akte Kelahiran" },
+    { field: "fileKK", nama: "Scan Kartu Keluarga (KK)" },
+    { field: "fileKtp", nama: "Scan/Foto KTP" },
+    { field: "filePasFoto", nama: "Pas Foto" },
+    { field: "fileIjazah", nama: "Scan Ijazah Asli" },
+    { field: "fileTranskrip", nama: "Scan Transkrip Nilai" },
+    { field: "filePaspor", nama: "Scan Paspor" },
+  ];
   
   const indoCount = visibleItems.filter(i => i.kategori === 'INDONESIA').length;
   const mesirCount = visibleItems.filter(i => i.kategori === 'MESIR').length;
@@ -147,6 +162,56 @@ export default function SpreadsheetPemberkasan({
       alert("Gagal menghapus dokumen: " + err.message);
     }
     removeLoading(recordId);
+  }, [router]);
+
+  // Upload dokumen FORM (field Santri) dari spreadsheet admin.
+  const handleUploadFormDoc = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, santriId: string, field: string, santriName: string, documentName: string, gelombangNama?: string, periodeNama?: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    const cellKey = `${santriId}:${field}`;
+    addLoading(cellKey);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("santriName", santriName);
+      formData.append("documentName", documentName);
+      if (gelombangNama) formData.append("gelombangNama", gelombangNama);
+      if (periodeNama) formData.append("periodeNama", periodeNama);
+
+      const res = await fetch("/api/upload-drive", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+
+      if (data.success && data.secure_url) {
+        setOptimisticData(prev => ({ ...prev, [cellKey]: { fileUrl: data.secure_url } }));
+        await updateSantriDokumenForm(santriId, field, data.secure_url);
+        startTransition(() => router.refresh());
+      } else {
+        alert(data.error || "Gagal mengupload file");
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    }
+    removeLoading(cellKey);
+  }, [router]);
+
+  const handleDeleteFormDoc = useCallback(async (santriId: string, field: string) => {
+    if (!confirm("Yakin ingin menghapus dokumen ini? File di Google Drive juga akan ikut terhapus.")) return;
+
+    const cellKey = `${santriId}:${field}`;
+    addLoading(cellKey);
+    try {
+      setOptimisticData(prev => ({ ...prev, [cellKey]: { fileUrl: null } }));
+      await updateSantriDokumenForm(santriId, field, null);
+      startTransition(() => router.refresh());
+    } catch (err: any) {
+      alert("Gagal menghapus dokumen: " + err.message);
+    }
+    removeLoading(cellKey);
   }, [router]);
 
   return (
@@ -387,7 +452,9 @@ export default function SpreadsheetPemberkasan({
             {/* Header 1: Category Group */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
               <th colSpan={3} className="p-2 border-r border-primary-light/20 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 text-center font-bold sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Data Camaba</th>
-              
+
+              <th colSpan={dokumenPendaftaran.length} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">Dokumen Pendaftaran (dari Form)</th>
+
               {indoCount > 0 && (
                 <th colSpan={indoCount} className="p-2 border-r border-primary-light/20 dark:border-gray-700 text-center font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">Berkas Dalam Negeri (INDONESIA)</th>
               )}
@@ -403,7 +470,16 @@ export default function SpreadsheetPemberkasan({
               <th className="px-1 py-2 md:p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[40px] md:min-w-[60px] w-[40px] md:w-[60px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)] text-center">No.</th>
               <th className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[130px] md:min-w-[160px] max-w-[130px] md:max-w-[160px] sticky left-[40px] md:left-[60px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] md:min-w-[100px] z-20">NIC</th>
-              
+
+              {dokumenPendaftaran.map(dok => (
+                <th key={dok.field} className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-emerald-50/60 dark:bg-emerald-900/20 min-w-[100px] align-bottom" title={dok.nama}>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="truncate w-full font-medium pr-1 whitespace-normal break-words leading-tight">{dok.nama}</span>
+                    <span className="bg-emerald-600 text-white text-sm px-1 rounded ml-1">FORM</span>
+                  </div>
+                </th>
+              ))}
+
               {visibleItems.map(item => (
                 <th key={item.id} className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[100px] align-bottom group" title={item.nama}>
                   <div className="flex justify-between items-center text-sm">
@@ -435,7 +511,50 @@ export default function SpreadsheetPemberkasan({
                   </td>
                   <td className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-semibold min-w-[130px] md:min-w-[160px] max-w-[130px] md:max-w-[160px] whitespace-normal break-words leading-tight sticky left-[40px] md:left-[60px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]" title={santri.namaLengkap}>{santri.namaLengkap}</td>
                   <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-medium text-primary text-[11px] whitespace-nowrap z-0 min-w-[80px] md:min-w-[100px]">{santri.nis}</td>
-                  
+
+                  {dokumenPendaftaran.map(dok => {
+                    const url = santri[dok.field] as string | null | undefined;
+                    const cellKey = `${santri.id}:${dok.field}`;
+                    const opt = optimisticData[cellKey];
+                    const cellFileUrl = opt ? (opt.fileUrl ?? null) : (url ?? null);
+                    const cellLoading = loadingCells.has(cellKey);
+                    return (
+                      <td key={dok.field} className={`border-r border-primary-light/10 dark:border-gray-700 text-center transition-colors ${cellFileUrl ? 'bg-emerald-50/50 hover:bg-emerald-50' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:bg-gray-800'}`}>
+                        <div className="flex flex-col items-center justify-center h-full p-2 gap-2">
+                          {cellLoading ? (
+                            <Loader2 size={16} className="animate-spin text-primary" />
+                          ) : cellFileUrl ? (
+                            <div className="flex items-stretch justify-center h-full gap-0.5">
+                              <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
+                                <span className="truncate">Diupload ✓</span>
+                              </a>
+                              <button
+                                onClick={() => handleDeleteFormDoc(santri.id, dok.field)}
+                                disabled={cellLoading}
+                                title="Hapus Dokumen"
+                                className="bg-danger/10 text-danger hover:bg-danger/20 px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 shrink-0 flex items-center justify-center"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-text-secondary/70 dark:text-gray-500">Belum</span>
+                          )}
+                          <label className={`text-sm font-bold text-white bg-primary px-1.5 py-0.5 rounded cursor-pointer opacity-70 hover:opacity-100 flex items-center justify-center gap-1 w-full whitespace-nowrap ${cellLoading ? 'pointer-events-none opacity-50' : ''}`}>
+                            {cellLoading ? <Loader2 size={10} className="animate-spin" /> : <UploadCloud size={10} />} {cellFileUrl ? 'Ganti File' : 'Upload'}
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => handleUploadFormDoc(e, santri.id, dok.field, santri.namaLengkap, dok.nama, santri.gelombang?.nama, santri.gelombang?.periode?.nama)}
+                              disabled={cellLoading}
+                            />
+                          </label>
+                        </div>
+                      </td>
+                    );
+                  })}
+
                   {visibleItems.map(item => {
                     const record = santri.pemberkasan.find((p: any) => p.itemPemberkasanId === item.id);
                     const opt = record ? optimisticData[record.id] : undefined;
@@ -515,19 +634,13 @@ export default function SpreadsheetPemberkasan({
             
             {santriList.length === 0 && (
               <tr>
-                <td colSpan={visibleItems.length + 4} className="p-8 text-center italic text-text-secondary dark:text-gray-400 bg-white dark:bg-gray-900">
+                <td colSpan={visibleItems.length + 11} className="p-8 text-center italic text-text-secondary dark:text-gray-400 bg-white dark:bg-gray-900">
                   Belum ada data camaba pada filter ini.
                 </td>
               </tr>
             )}
             
-            {items.length === 0 && santriList.length > 0 && (
-               <tr>
-                <td colSpan={20} className="p-8 text-center italic text-text-secondary dark:text-gray-400 bg-white dark:bg-gray-900">
-                  Master item berkas masih kosong. Silakan setup di Halaman Master Item.
-                </td>
-              </tr>
-            )}
+
           </tbody>
         </table>
       </div>

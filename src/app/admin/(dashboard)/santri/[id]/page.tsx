@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, User, FileText, GraduationCap, Globe, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, GraduationCap, Globe, CheckCircle2 } from "lucide-react";
 import DocumentViewer from "@/components/admin/DocumentViewer";
 import DeleteSantriButton from "@/components/admin/DeleteSantriButton";
 import EditSantriModal from "@/components/admin/EditSantriModal";
@@ -56,6 +56,12 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
     </div>
   );
 
+  // Foto kartu: foto profil portal bila ada, bila kosong pakai pas foto
+  // dari form pendaftaran (dokumennya sendiri tetap hanya di pemberkasan).
+  const fotoProfilSrc = santri.fotoProfil
+    ? `/api/admin/santri/${santri.id}/photo?v=${encodeURIComponent(santri.fotoProfil.slice(-15))}`
+    : santri.filePasFoto;
+
   return (
     <div className="space-y-4 md:space-y-6 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -80,7 +86,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
                 </span>
               )}
             </h1>
-            <p className="text-text-secondary dark:text-gray-400 mt-1">Nomor Pendaftaran: {santri.noPendaftaran}</p>
+            <p className="text-text-secondary dark:text-gray-400 mt-1">Nomor Pendaftaran: {santri.noPendaftaran} • Terdaftar: {new Date(santri.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
 
@@ -101,6 +107,8 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           <DataGroup title="1. Data Pribadi" icon={<User size={20} />}>
             <DataItem label="Nama Lengkap" value={santri.namaLengkap} />
             <DataItem label="Nama Arab" value={santri.namaArab} />
+            <DataItem label="Tempat Lahir" value={santri.tempatLahir} />
+            <DataItem label="Tanggal Lahir" value={santri.tanggalLahir ? new Date(santri.tanggalLahir).toLocaleDateString() : null} />
             <DataItem label="Asal Provinsi" value={santri.asalProvinsi} />
             <DataItem label="Email" value={santri.email} />
             <DataItem label="Gender" value={santri.gender === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan'} />
@@ -108,7 +116,7 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <DataItem label="Nama Wali" value={santri.namaWali} />
             <DataItem label="Nomor WA Wali" value={santri.noWaWali} />
           </DataGroup>
-          <DataGroup title="3. Riwayat Akademik" icon={<GraduationCap size={20} />}>
+          <DataGroup title="2. Riwayat Akademik" icon={<GraduationCap size={20} />}>
             <DataItem label="Pesan Jurusan / Program Studi" value={
               santri.jurusan === "LUGHAH" ? "Lughah" :
                 santri.jurusan === "SYARIAH" ? "Syariah wal qonun" :
@@ -121,13 +129,15 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
             <DataItem label="Tahun Kelulusan" value={santri.tahunKelulusan} />
           </DataGroup>
 
-          <DataGroup title="4. Paspor " icon={<Globe size={20} />}>
+          <DataGroup title="3. Paspor " icon={<Globe size={20} />}>
             <DataItem label="Nomor Paspor" value={santri.nomorPaspor} />
+            <DataItem label="Kantor Penerbit Paspor" value={santri.kantorPenerbitPaspor} />
+            <DataItem label="Tanggal Pembuatan" value={santri.tanggalPembuatanPaspor ? new Date(santri.tanggalPembuatanPaspor).toLocaleDateString() : null} />
             <DataItem label="Tanggal Kadaluarsa" value={santri.tanggalKadaluarsaPaspor ? new Date(santri.tanggalKadaluarsaPaspor).toLocaleDateString() : null} />
           </DataGroup>
 
           {santri.isWithdrawn && santri.withdrawnNote && (
-            <DataGroup title="5. Catatan Mundur" icon={<User size={20} />}>
+            <DataGroup title="4. Catatan Mundur" icon={<User size={20} />}>
               <div className="sm:col-span-2">
                 <p className="text-sm font-semibold text-danger bg-danger/10 p-4 rounded-lg italic">
                   &quot;{santri.withdrawnNote}&quot;
@@ -137,12 +147,12 @@ export default async function AdminSantriDetailPage({ params }: { params: Promis
           )}
         </div>
 
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-4 md:space-y-6 order-first md:order-none">
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-primary-light/20 dark:border-gray-700 shadow-sm overflow-hidden p-6 text-center">
-            {santri.fotoProfil && (
+            {fotoProfilSrc && (
               <div className="w-32 h-40 bg-gray-100 dark:bg-gray-800 rounded-lg border border-primary-light/30 dark:border-gray-700 mx-auto mb-4 overflow-hidden shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/api/admin/santri/${santri.id}/photo?v=${encodeURIComponent(santri.fotoProfil.slice(-15))}`} alt="Foto Profil" className="w-full h-full object-cover" />
+                <img src={fotoProfilSrc} alt="Foto Profil" className="w-full h-full object-cover" />
               </div>
             )}
             <h3 className="font-bold text-lg text-text-primary dark:text-gray-100">{santri.namaLengkap}</h3>

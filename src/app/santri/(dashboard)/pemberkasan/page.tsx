@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { FolderCheck, CheckCircle2, AlertCircle, Download, FileText } from "lucide-react";
 import CollapsibleCategory from "@/components/santri/CollapsibleCategory";
 import PemberkasanUploadButton from "@/components/santri/PemberkasanUploadButton";
+import DokumenFormUploadButton from "@/components/santri/DokumenFormUploadButton";
 
 export default async function PemberkasanSantriPage() {
   const session = await getSantriSession();
@@ -138,26 +139,29 @@ export default async function PemberkasanSantriPage() {
                 <p className={`font-medium ${doc.url ? 'text-text-primary' : 'text-text-secondary'}`}>
                   {doc.label}
                 </p>
-                {doc.url && (
-                  <div className="mt-2 flex gap-2">
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"
-                    >
-                      Lihat Dokumen
-                    </a>
-                    <a
-                      href={doc.url.replace('export=view', 'export=download')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-cream text-text-secondary rounded-lg text-xs font-bold hover:bg-primary-light/20 border border-primary-light/20 transition-colors"
-                    >
-                      <Download size={14} /> Download
-                    </a>
-                  </div>
-                )}
+                <div className="mt-2 flex gap-2 flex-wrap">
+                  {doc.url && (
+                    <>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"
+                      >
+                        Lihat Dokumen
+                      </a>
+                      <a
+                        href={doc.url.replace('export=view', 'export=download')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-cream text-text-secondary rounded-lg text-xs font-bold hover:bg-primary-light/20 border border-primary-light/20 transition-colors"
+                      >
+                        <Download size={14} /> Download
+                      </a>
+                    </>
+                  )}
+                  <DokumenFormUploadButton field={doc.field} label={doc.label} hasFile={!!doc.url} />
+                </div>
               </div>
               <div className="shrink-0 text-xs font-medium uppercase tracking-wider">
                 {doc.url ? (

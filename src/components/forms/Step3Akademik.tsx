@@ -3,14 +3,16 @@ import { UploadCloud } from "lucide-react";
 
 type UploadField = 'fileIjazah' | 'fileTranskrip';
 
-export default function Step3Akademik({ 
-  initialData, 
+export default function Step3Akademik({
+  initialData,
   onNext,
-  onBack
-}: { 
-  initialData: any, 
+  onBack,
+  onDataChange
+}: {
+  initialData: any,
   onNext: (data: any) => void,
-  onBack: (data: any) => void
+  onBack: (data: any) => void,
+  onDataChange?: (data: any) => void
 }) {
   const [formData, setFormData] = useState({
     riwayatAkademik: initialData.riwayatAkademik || "",
@@ -25,6 +27,25 @@ export default function Step3Akademik({
     fileTranskrip: false,
   });
 
+  // File yang baru dipilih tapi BELUM diupload — ditampilkan sebagai
+  // pratinjau agar bisa direview dulu sebelum diunggah.
+  const [selectedFile, setSelectedFile] = useState<Partial<Record<UploadField, File>>>({});
+  const [previewUrl, setPreviewUrl] = useState<Partial<Record<UploadField, string>>>({});
+
+  const clearSelection = (field: UploadField) => {
+    setPreviewUrl(prev => {
+      if (prev[field]) URL.revokeObjectURL(prev[field]!);
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setSelectedFile(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   // Kalkulasi tahun kelulusan dinamis (CurrentYear - 2 s/d CurrentYear + 1)
   // Berdasarkan spec: dibuka 2026, opsi 2024-2027
   const years = useMemo(() => {
@@ -35,6 +56,9 @@ export default function Step3Akademik({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Simpan langsung ke cache wizard agar isian tidak hilang saat refresh
+    // (Step 3 adalah step terakhir — tidak ada tombol Next yang menyimpan).
+    onDataChange?.({ [name]: value });
   };
 
   const documentNames: Record<UploadField, string> = {
@@ -42,15 +66,27 @@ export default function Step3Akademik({
     fileTranskrip: "Transkrip Nilai",
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
+  // Pilih file → hanya pratinjau, BELUM upload.
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = "";
 
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       alert(`Ukuran file terlalu besar. Maksimal 10MB.`);
       return;
     }
+
+    clearSelection(field);
+    setSelectedFile(prev => ({ ...prev, [field]: file }));
+    setPreviewUrl(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
+  };
+
+  // Upload file yang sudah dipilih & direview.
+  const handleFileUpload = async (field: UploadField) => {
+    const file = selectedFile[field];
+    if (!file) return;
 
     setUploading(prev => ({ ...prev, [field]: true }));
     try {
@@ -71,10 +107,13 @@ export default function Step3Akademik({
       }
 
       const data = await driveRes.json();
-      setFormData(prev => ({ 
-        ...prev, 
-        [field]: data.secure_url 
+      setFormData(prev => ({
+        ...prev,
+        [field]: data.secure_url
       }));
+      // Simpan langsung ke cache wizard agar URL tidak hilang saat refresh.
+      onDataChange?.({ [field]: data.secure_url });
+      clearSelection(field);
     } catch (e: any) {
       alert("Error upload file: " + e.message);
     } finally {
@@ -87,6 +126,10 @@ export default function Step3Akademik({
     const anyUploading = Object.values(uploading).some(Boolean);
     if (anyUploading) {
       alert("Harap tunggu hingga proses unggah selesai.");
+      return;
+    }
+    if (Object.values(selectedFile).some(Boolean)) {
+      alert("Masih ada dokumen yang dipilih tapi belum diunggah. Silakan klik \"Unggah\" pada dokumen tersebut, atau ganti pilihannya.");
       return;
     }
     if (!formData.fileIjazah) {
@@ -113,7 +156,15 @@ export default function Step3Akademik({
     field: UploadField,
     label: string,
     required: boolean = true
-  ) => (
+  ) => {
+    const pending = selectedFile[field];
+    const pendingPreview = previewUrl[field];
+    const pendingSize = pending
+      ? (pending.size >= 1024 * 1024
+        ? `${(pending.size / 1024 / 1024).toFixed(1)} MB`
+        : `${(pending.size / 1024).toFixed(0)} KB`)
+      : "";
+    return (
     <div className="space-y-3 md:col-span-2 mt-4">
       <label className="text-sm font-medium text-text-secondary block">
         {label} {required && <span className="text-danger">*</span>}
@@ -134,24 +185,50 @@ export default function Step3Akademik({
             )}
             <span className="text-success font-medium">✅ File berhasil diunggah</span>
             <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData[field].split('/').pop()}</span>
-            <button type="button" onClick={() => setFormData(f => ({...f, [field]: ""}))} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+            <a href={formData[field]} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Lihat dokumen</a>
+            <button type="button" onClick={() => { setFormData(f => ({...f, [field]: ""})); onDataChange?.({ [field]: "" }); }} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+          </div>
+        ) : pending ? (
+          <div className="flex flex-col items-center gap-2">
+            {pending.type.startsWith("image/") ? (
+              <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
+                <a href={pendingPreview} target="_blank" rel="noopener noreferrer" title="Buka pratinjau ukuran penuh">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={pendingPreview} alt={`Pratinjau ${label}`} className="w-full h-full object-cover" />
+                </a>
+              </div>
+            ) : (
+              <div className="w-24 h-32 bg-gray-100 rounded-lg border border-primary-light/30 shadow-sm flex flex-col items-center justify-center text-text-secondary gap-1 p-2">
+                <span className="text-xs font-bold uppercase">Dokumen</span>
+                <a href={pendingPreview} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Lihat dokumen</a>
+              </div>
+            )}
+            <span className="text-sm font-medium break-all max-w-xs">{pending.name}</span>
+            <span className="text-xs text-text-secondary">{pendingSize}</span>
+            <div className="flex gap-2 mt-1">
+              <button type="button" onClick={() => handleFileUpload(field)} disabled={uploading[field]} className="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-light disabled:opacity-50">
+                {uploading[field] ? "Sedang Mengunggah..." : "Unggah"}
+              </button>
+              <button type="button" onClick={() => clearSelection(field)} className="px-4 py-1.5 text-sm text-danger underline">Ganti</button>
+            </div>
+            <span className="text-xs text-text-secondary">Periksa dulu dokumennya sebelum diunggah.</span>
           </div>
         ) : (
           <label className="cursor-pointer flex flex-col items-center">
             <UploadCloud size={32} className="text-primary-light mb-2" />
-            <span className="text-sm font-medium">{uploading[field] ? "Sedang Mengunggah..." : "Klik untuk pilih file"}</span>
-            <input 
-              type="file" 
-              accept=".pdf,image/jpeg,image/jpg" 
-              className="hidden" 
-              onChange={(e) => handleFileUpload(e, field)}
-              disabled={uploading[field]}
+            <span className="text-sm font-medium">Klik untuk pilih file</span>
+            <input
+              type="file"
+              accept=".pdf,image/jpeg,image/jpg"
+              className="hidden"
+              onChange={(e) => handleFileSelect(e, field)}
             />
           </label>
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

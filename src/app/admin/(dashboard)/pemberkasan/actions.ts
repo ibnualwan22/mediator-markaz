@@ -137,6 +137,46 @@ export async function toggleCheckboxPemberkasan(id: string, sudahDikumpulkan: bo
   revalidatePath(`/admin/pemberkasan`);
 }
 
+// Dokumen form pendaftaran (field di tabel Santri, bukan PemberkasanSantri).
+// Dipakai spreadsheet admin agar admin bisa mengupload/melengkapi dokumen
+// form untuk santri hasil impor (yang tidak lewat form pendaftaran) maupun
+// santri yang dokumennya masih kosong. Field dibatasi ke 7 dokumen form.
+const DOKUMEN_FORM_FIELDS = [
+  "fileAkteLahir",
+  "fileKK",
+  "fileKtp",
+  "filePasFoto",
+  "fileIjazah",
+  "fileTranskrip",
+  "filePaspor",
+] as const;
+
+export async function updateSantriDokumenForm(
+  santriId: string,
+  field: string,
+  fileUrl: string | null
+) {
+  if (!(DOKUMEN_FORM_FIELDS as readonly string[]).includes(field)) {
+    return { success: false, error: "Field dokumen tidak dikenal." };
+  }
+  if (fileUrl === null) {
+    const santri = await prisma.santri.findUnique({ where: { id: santriId } });
+    const oldUrl = (santri as any)?.[field] as string | null | undefined;
+    if (oldUrl) {
+      const match = oldUrl.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+      if (match) {
+        await deleteFileFromDrive(match[1]).catch(e => console.error("Drive delete error", e));
+      }
+    }
+  }
+  await prisma.santri.update({
+    where: { id: santriId },
+    data: { [field]: fileUrl } as any,
+  });
+  revalidatePath("/admin/pemberkasan");
+  return { success: true };
+}
+
 export async function bulkToggleCheckboxPemberkasan(ids: string[], sudahDikumpulkan: boolean) {
   await prisma.pemberkasanSantri.updateMany({
     where: { id: { in: ids } },
