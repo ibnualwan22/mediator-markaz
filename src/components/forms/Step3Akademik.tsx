@@ -27,10 +27,18 @@ export default function Step3Akademik({
     fileTranskrip: false,
   });
 
-  // File yang baru dipilih tapi BELUM diupload — ditampilkan sebagai
-  // pratinjau agar bisa direview dulu sebelum diunggah.
+  // File yang baru dipilih — pratinjau langsung tampil dan unggah otomatis
+  // dimulai (tidak ada lagi tombol "Unggah" eksplisit).
   const [selectedFile, setSelectedFile] = useState<Partial<Record<UploadField, File>>>({});
   const [previewUrl, setPreviewUrl] = useState<Partial<Record<UploadField, string>>>({});
+  // Info file yang BARU diunggah di sesi ini — dipertahankan agar gambar
+  // tetap terlihat sesudah unggah otomatis (object URL hanya hidup selama
+  // halaman ini dibuka; sesudah refresh, tampil kotak Dokumen biasa).
+  const [uploadedPreview, setUploadedPreview] = useState<Partial<Record<UploadField, { name: string; size: string; type: string }>>>({});
+  const [uploadError, setUploadError] = useState<Partial<Record<UploadField, string>>>({});
+
+  const formatSize = (size: number) =>
+    size >= 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)} MB` : `${(size / 1024).toFixed(0)} KB`;
 
   const clearSelection = (field: UploadField) => {
     setPreviewUrl(prev => {
@@ -44,6 +52,28 @@ export default function Step3Akademik({
       delete next[field];
       return next;
     });
+    setUploadError(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Hapus dokumen yang sudah terunggah: lepas URL Drive + pratinjau lokal.
+  const clearUploaded = (field: UploadField) => {
+    setPreviewUrl(prev => {
+      if (prev[field]) URL.revokeObjectURL(prev[field]!);
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setUploadedPreview(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setFormData(f => ({ ...f, [field]: "" }));
+    onDataChange?.({ [field]: "" });
   };
 
   // Kalkulasi tahun kelulusan dinamis (CurrentYear - 2 s/d CurrentYear + 1)
@@ -66,7 +96,7 @@ export default function Step3Akademik({
     fileTranskrip: "Transkrip Nilai",
   };
 
-  // Pilih file → hanya pratinjau, BELUM upload.
+  // Pilih file → pratinjau langsung tampil dan unggah otomatis dimulai.
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, field: UploadField) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -81,14 +111,20 @@ export default function Step3Akademik({
     clearSelection(field);
     setSelectedFile(prev => ({ ...prev, [field]: file }));
     setPreviewUrl(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
+    void handleFileUpload(field, file);
   };
 
-  // Upload file yang sudah dipilih & direview.
-  const handleFileUpload = async (field: UploadField) => {
-    const file = selectedFile[field];
+  // Unggah otomatis saat file dipilih; bisa dipanggil ulang saat gagal.
+  const handleFileUpload = async (field: UploadField, fileArg?: File) => {
+    const file = fileArg ?? selectedFile[field];
     if (!file) return;
 
     setUploading(prev => ({ ...prev, [field]: true }));
+    setUploadError(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
     try {
       // === GOOGLE DRIVE LOGIC ===
       const fd = new FormData();
@@ -113,9 +149,19 @@ export default function Step3Akademik({
       }));
       // Simpan langsung ke cache wizard agar URL tidak hilang saat refresh.
       onDataChange?.({ [field]: data.secure_url });
-      clearSelection(field);
+      // Sukses: pratinjau lokal DIPERTAHANKAN agar gambar tetap terlihat;
+      // hanya status "pending" yang dibersihkan supaya tidak menghalangi submit.
+      setSelectedFile(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+      setUploadedPreview(prev => ({
+        ...prev,
+        [field]: { name: file.name, size: formatSize(file.size), type: file.type },
+      }));
     } catch (e: any) {
-      alert("Error upload file: " + e.message);
+      setUploadError(prev => ({ ...prev, [field]: e.message }));
     } finally {
       setUploading(prev => ({ ...prev, [field]: false }));
     }
@@ -129,7 +175,7 @@ export default function Step3Akademik({
       return;
     }
     if (Object.values(selectedFile).some(Boolean)) {
-      alert("Masih ada dokumen yang dipilih tapi belum diunggah. Silakan klik \"Unggah\" pada dokumen tersebut, atau ganti pilihannya.");
+      alert("Masih ada dokumen yang gagal diunggah atau sedang diproses. Silakan tunggu, klik \"Coba lagi\", atau ganti pilihannya.");
       return;
     }
     if (!formData.fileIjazah) {
@@ -159,11 +205,8 @@ export default function Step3Akademik({
   ) => {
     const pending = selectedFile[field];
     const pendingPreview = previewUrl[field];
-    const pendingSize = pending
-      ? (pending.size >= 1024 * 1024
-        ? `${(pending.size / 1024 / 1024).toFixed(1)} MB`
-        : `${(pending.size / 1024).toFixed(0)} KB`)
-      : "";
+    const pendingSize = pending ? formatSize(pending.size) : "";
+    const justUploaded = uploadedPreview[field];
     return (
     <div className="space-y-3 md:col-span-2 mt-4">
       <label className="text-sm font-medium text-text-secondary block">
@@ -173,7 +216,14 @@ export default function Step3Akademik({
       <div className="border-2 border-dashed border-primary-light/50 rounded-xl p-6 text-center hover:bg-primary-bg transition-colors">
         {formData[field] ? (
           <div className="flex flex-col items-center gap-2">
-            {formData[field].match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData[field].startsWith("data:image") ? (
+            {justUploaded && justUploaded.type.startsWith("image/") && previewUrl[field] ? (
+              <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
+                <a href={previewUrl[field]} target="_blank" rel="noopener noreferrer" title="Buka pratinjau ukuran penuh">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={previewUrl[field]} alt={`Pratinjau ${label}`} className="w-full h-full object-cover" />
+                </a>
+              </div>
+            ) : formData[field].match(/\.(jpeg|jpg|gif|png|webp)$/i) || formData[field].startsWith("data:image") ? (
               <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden border border-primary-light/30 shadow-sm relative">
                  {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img src={formData[field]} alt={`Preview ${label}`} className="w-full h-full object-cover" />
@@ -184,9 +234,9 @@ export default function Step3Akademik({
               </div>
             )}
             <span className="text-success font-medium">✅ File berhasil diunggah</span>
-            <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{formData[field].split('/').pop()}</span>
+            <span className="text-xs text-text-secondary overflow-hidden text-ellipsis w-full max-w-xs">{justUploaded ? justUploaded.name : formData[field].split('/').pop()}</span>
             <a href={formData[field]} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Lihat dokumen</a>
-            <button type="button" onClick={() => { setFormData(f => ({...f, [field]: ""})); onDataChange?.({ [field]: "" }); }} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
+            <button type="button" onClick={() => clearUploaded(field)} className="text-xs text-danger underline mt-2">Hapus & Ganti</button>
           </div>
         ) : pending ? (
           <div className="flex flex-col items-center gap-2">
@@ -205,13 +255,21 @@ export default function Step3Akademik({
             )}
             <span className="text-sm font-medium break-all max-w-xs">{pending.name}</span>
             <span className="text-xs text-text-secondary">{pendingSize}</span>
-            <div className="flex gap-2 mt-1">
-              <button type="button" onClick={() => handleFileUpload(field)} disabled={uploading[field]} className="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-light disabled:opacity-50">
-                {uploading[field] ? "Sedang Mengunggah..." : "Unggah"}
-              </button>
-              <button type="button" onClick={() => clearSelection(field)} className="px-4 py-1.5 text-sm text-danger underline">Ganti</button>
-            </div>
-            <span className="text-xs text-text-secondary">Periksa dulu dokumennya sebelum diunggah.</span>
+            {uploading[field] ? (
+              <span className="text-sm text-primary font-medium mt-1">Sedang mengunggah…</span>
+            ) : uploadError[field] ? (
+              <>
+                <span className="text-xs text-danger mt-1">Gagal mengunggah: {uploadError[field]}</span>
+                <div className="flex gap-2 mt-1">
+                  <button type="button" onClick={() => handleFileUpload(field)} className="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-light">Coba lagi</button>
+                  <button type="button" onClick={() => clearSelection(field)} className="px-4 py-1.5 text-sm text-danger underline">Ganti</button>
+                </div>
+              </>
+            ) : (
+              <div className="flex gap-2 mt-1">
+                <button type="button" onClick={() => clearSelection(field)} className="px-4 py-1.5 text-sm text-danger underline">Ganti</button>
+              </div>
+            )}
           </div>
         ) : (
           <label className="cursor-pointer flex flex-col items-center">
