@@ -203,8 +203,7 @@ export default function SpreadsheetDarulLughoh({
             value={selectedGelombangId}
             onChange={(e) => {
               const params = new URLSearchParams(window.location.search);
-              if (e.target.value !== "all") params.set('gelombangId', e.target.value);
-              else params.delete('gelombangId');
+              params.set('gelombangId', e.target.value);
               router.push(`?${params.toString()}`);
             }}
           >
