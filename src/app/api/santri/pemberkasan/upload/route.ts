@@ -2,14 +2,32 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSantriSession } from "@/lib/santri-auth";
 import { ensureSantriFolder, uploadFileToDrive } from "@/lib/googleDrive";
+import {
+  MAX_UPLOAD_SIZE,
+  sanitizeFileNamePart,
+  validateUploadBuffer,
+} from "@/lib/uploadValidation";
+import { isRateLimited } from "@/lib/rateLimit";
 
 export const maxDuration = 60; // Set longer timeout if supported by hosting, Drive API can take time.
+
+// Satu santri normal hanya mengunggah segelintir berkas; 30/jam/akun
+// cukup longgar untuk retry, tapi menghentikan flood dari satu akun.
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 export async function POST(req: Request) {
   try {
     const session = await getSantriSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (isRateLimited(`pemberkasan-upload:${session.santriId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Terlalu banyak upload. Silakan coba lagi nanti." },
+        { status: 429 }
+      );
     }
 
     const formData = await req.formData();
@@ -19,6 +37,21 @@ export async function POST(req: Request) {
 
     if (!file || (!itemPemberkasanId && !field)) {
       return NextResponse.json({ error: "File dan dokumen pendaftaran tidak lengkap." }, { status: 400 });
+    }
+
+    if (file.size > MAX_UPLOAD_SIZE) {
+      return NextResponse.json(
+        { error: "Ukuran file maksimal 10MB." },
+        { status: 400 }
+      );
+    }
+
+    // Validasi ISI file (magic bytes) sebelum apa pun menyentuh Drive/DB.
+    // Tipe dan ekstensi dari browser tidak dipercaya sama sekali.
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const validation = validateUploadBuffer(buffer, { allowPdf: true });
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     // 1. Get Santri data to construct folder path
@@ -37,7 +70,7 @@ export async function POST(req: Request) {
 
     const periodeNama = santri.gelombang.periode.nama.replace(/\//g, "-");
     const gelombangNama = santri.gelombang.nama.replace(/\//g, "-");
-    const safeSantriName = santri.namaLengkap.replace(/\//g, "-");
+    const safeSantriName = sanitizeFileNamePart(santri.namaLengkap);
 
     // Cabang dokumen FORM (field Santri): dipakai tombol upload di seksi
     // Dokumen Pendaftaran portal santri. Berkas disimpan ke field Santri
@@ -57,11 +90,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Field dokumen tidak dikenal." }, { status: 400 });
       }
       const santriFolderId = await ensureSantriFolder(periodeNama, gelombangNama, safeSantriName);
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const originalExt = file.name.split('.').pop() || "pdf";
-      const newFileName = `${label} - ${safeSantriName}.${originalExt}`;
-      const driveRes = await uploadFileToDrive(buffer, newFileName, file.type, santriFolderId);
+      const newFileName = `${label} - ${safeSantriName}.${validation.ext}`;
+      const driveRes = await uploadFileToDrive(buffer, newFileName, validation.mime, santriFolderId);
       await prisma.santri.update({
         where: { id: session.santriId },
         data: { [field]: driveRes.webViewLink } as any,
@@ -84,20 +114,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Item pemberkasan tidak ditemukan." }, { status: 404 });
     }
 
-    // 2. Ensure Google Drive Folder 
+    // 2. Ensure Google Drive Folder
     const santriFolderId = await ensureSantriFolder(periodeNama, gelombangNama, safeSantriName);
 
-    // 3. Convert File to Node Buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // 3. Upload File (nama + MIME dari hasil deteksi, bukan dari browser)
+    const newFileName = `${item.nama} - ${safeSantriName}.${validation.ext}`;
 
-    // 4. Upload File
-    const originalExt = file.name.split('.').pop() || "pdf";
-    const newFileName = `${item.nama} - ${safeSantriName}.${originalExt}`;
+    const driveRes = await uploadFileToDrive(buffer, newFileName, validation.mime, santriFolderId);
 
-    const driveRes = await uploadFileToDrive(buffer, newFileName, file.type, santriFolderId);
-
-    // 5. Update Database Record
+    // 4. Update Database Record
     const update = await prisma.pemberkasanSantri.upsert({
       where: {
         santriId_itemPemberkasanId: {
@@ -125,6 +150,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Upload Pemberkasan Santri Error:", error);
-    return NextResponse.json({ error: "Gagal mengupload berkas: " + error.message }, { status: 500 });
+    // Pesan error internal tidak dikirim ke klien.
+    return NextResponse.json({ error: "Gagal mengupload berkas." }, { status: 500 });
   }
 }

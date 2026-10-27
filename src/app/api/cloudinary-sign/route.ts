@@ -1,30 +1,15 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 
-export async function POST(req: Request) {
-  try {
-    const timestamp = Math.round((new Date).getTime() / 1000);
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    
-    if (!apiSecret) {
-      console.error("CLOUDINARY_API_SECRET is missing in environment variables");
-      return NextResponse.json({ error: "Konfigurasi Cloudinary belum lengkap di Server" }, { status: 500 });
-    }
-
-    // Mengamankan upload dengan Signature SHA-1 berdasarkan API Secret (Wajib untuk Signed Uploads)
-    const signature = crypto
-      .createHash("sha1")
-      .update(`timestamp=${timestamp}${apiSecret}`)
-      .digest("hex");
-    
-    return NextResponse.json({ 
-      timestamp, 
-      signature,
-      apiKey: process.env.CLOUDINARY_API_KEY,
-      cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
-    });
-  } catch (error) {
-    console.error("Cloudinary Sign Error:", error);
-    return NextResponse.json({ error: "Gagal membuat signature Cloudinary" }, { status: 500 });
-  }
+// Endpoint ini SUDAH TIDAK DIGUNAKAN: jalur upload paspor pindah ke
+// Google Drive (/api/upload-drive) dan pemakaian terakhirnya di
+// Step4Paspor sudah di-comment. Stub 410 ini menggantikan penandatangan
+// lama yang tanpa auth dan hanya menandatangani timestamp — siapa pun
+// bisa memintanya lalu mengunggah ke akun Cloudinary.
+// Bila Cloudinary dipakai lagi suatu hari, endpoint ini harus ditulis
+// ulang dengan auth + parameter upload yang ikut ditandatangani.
+export async function POST() {
+  return NextResponse.json(
+    { error: "Endpoint sudah tidak digunakan." },
+    { status: 410 }
+  );
 }

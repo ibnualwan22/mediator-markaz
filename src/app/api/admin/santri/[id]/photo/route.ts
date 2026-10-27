@@ -35,7 +35,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     if (!fileId) {
-      return NextResponse.redirect(fotoUrl);
+      // URL bukan Drive (mis. foto lama dari Cloudinary) hanya boleh
+      // di-redirect bila host-nya diizinkan. Tanpa allowlist ini, URL
+      // sembarang dari isian form akan me-redirect admin yang membuka
+      // foto santri ke situs phishing (open redirect).
+      const REDIRECT_HOSTS = new Set([
+        "drive.google.com",
+        "drive.usercontent.google.com",
+        "res.cloudinary.com",
+      ]);
+      try {
+        const target = new URL(fotoUrl);
+        if (target.protocol === "https:" && REDIRECT_HOSTS.has(target.hostname)) {
+          return NextResponse.redirect(target.toString());
+        }
+      } catch {
+        /* URL tidak valid -> 404 di bawah */
+      }
+      return new NextResponse("No photo", { status: 404 });
     }
 
     const drive = getDriveClient();

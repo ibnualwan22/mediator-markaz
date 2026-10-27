@@ -1,25 +1,30 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureSantriFolder, uploadFileToDrive } from "@/lib/googleDrive";
+import {
+  MAX_UPLOAD_SIZE,
+  sanitizeFileNamePart,
+  validateUploadBuffer,
+} from "@/lib/uploadValidation";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 
 export const maxDuration = 60; // Set longer timeout if supported by hosting, Drive API can take time.
 
-// Batas ukuran file 10MB dan tipe yang diizinkan (mencegah penyalahgunaan
-// endpoint publik sebagai tempat upload file sembarangan).
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/pdf",
-];
+// Endpoint publik (form pendaftaran belum punya sesi), jadi pembatasnya
+// per IP. Admin yang sedang login dibebaskan karena spreadsheet admin
+// bisa mengunggah ratusan berkas dari satu IP yang sama.
+// Batas: 30 upload per IP per jam — satu pendaftar normal hanya ~7 berkas.
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    let santriName = formData.get("santriName") as string;
-    const documentName = formData.get("documentName") as string; // e.g. "Pas Foto", "Akte Kelahiran"
+    const santriNameRaw = formData.get("santriName") as string;
+    const documentNameRaw = formData.get("documentName") as string; // e.g. "Pas Foto", "Akte Kelahiran"
 
     // Optional: admin spreadsheet can pass the santri's actual gelombang/periode
     const overrideGelombang = formData.get("gelombangNama") as string | null;
@@ -29,23 +34,36 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    // Pembatas laju (admin login dikecualikan, lihat komentar di atas).
+    const adminSession = await getServerSession(authOptions);
+    if (!adminSession) {
+      const ip = getClientIp(req);
+      if (isRateLimited(`upload-drive:${ip}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
+        return NextResponse.json(
+          { error: "Terlalu banyak upload. Silakan coba lagi nanti." },
+          { status: 429 }
+        );
+      }
+    }
+
+    if (file.size > MAX_UPLOAD_SIZE) {
       return NextResponse.json(
         { error: "Ukuran file maksimal 10MB." },
         { status: 400 }
       );
     }
 
-    if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Tipe file tidak diizinkan. Hanya JPG, PNG, WebP, dan PDF." },
-        { status: 400 }
-      );
+    // Validasi ISI file (magic bytes) SEBELUM folder dibuat, agar berkas
+    // tidak valid tidak sempat membuat folder spam di Drive. Tipe dan
+    // ekstensi dari browser tidak dipercaya sama sekali.
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const validation = validateUploadBuffer(buffer, { allowPdf: true });
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    if (!santriName || santriName.trim() === "") {
-      santriName = "Tanpa Nama"; // fallback if user hasn't filled Step 1 completely
-    }
+    const santriName = sanitizeFileNamePart(santriNameRaw);
+    const documentName = sanitizeFileNamePart(documentNameRaw);
 
     let periodeNama: string;
     let gelombangNama: string;
@@ -74,15 +92,10 @@ export async function POST(req: Request) {
     // 2. Siapkan Folder Google Drive (Otomatis)
     const santriFolderId = await ensureSantriFolder(periodeNama, gelombangNama, safeSantriName);
 
-    // 3. Konversi File Web Ke Buffer Node.js
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // 3. Unggah File (nama + MIME dari hasil deteksi, bukan dari browser)
+    const newFileName = `${documentName} - ${safeSantriName}.${validation.ext}`;
 
-    // 4. Unggah File (Simpan dengan penamaan terstruktur)
-    const originalExt = file.name.split('.').pop() || "pdf";
-    const newFileName = `${documentName} - ${safeSantriName}.${originalExt}`;
-
-    const driveRes = await uploadFileToDrive(buffer, newFileName, file.type, santriFolderId);
+    const driveRes = await uploadFileToDrive(buffer, newFileName, validation.mime, santriFolderId);
 
     // Kembalikan URL WebView agar bisa di-preview atau disimpan ke string URL DB.
     return NextResponse.json({
@@ -93,6 +106,7 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Upload Drive Error:", error);
-    return NextResponse.json({ error: "Gagal menyimpan foto/dokumen ke sistem: " + error.message }, { status: 500 });
+    // Pesan error internal (Drive/Prisma) tidak dikirim ke klien.
+    return NextResponse.json({ error: "Gagal menyimpan foto/dokumen ke sistem." }, { status: 500 });
   }
 }

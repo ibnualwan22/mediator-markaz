@@ -2,13 +2,31 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSantriSession } from "@/lib/santri-auth";
 import { ensureSantriFolder, uploadFileToDrive, getDriveClient } from "@/lib/googleDrive";
+import {
+  MAX_UPLOAD_SIZE,
+  sanitizeFileNamePart,
+  validateUploadBuffer,
+} from "@/lib/uploadValidation";
+import { isRateLimited } from "@/lib/rateLimit";
 
 export const maxDuration = 60;
+
+// Satu santri normal hanya mengganti foto sesekali; 30/jam/akun cukup
+// longgar untuk retry, tapi menghentikan flood dari satu akun.
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 export async function POST(req: Request) {
   try {
     const session = await getSantriSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (isRateLimited(`profile-photo:${session.santriId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Terlalu banyak upload. Silakan coba lagi nanti." },
+        { status: 429 }
+      );
+    }
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
@@ -17,8 +35,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "File harus berupa gambar (JPG/PNG), bukan PDF/Dokumen." }, { status: 400 });
+    if (file.size > MAX_UPLOAD_SIZE) {
+      return NextResponse.json(
+        { error: "Ukuran file maksimal 10MB." },
+        { status: 400 }
+      );
+    }
+
+    // Validasi ISI file (magic bytes). Cek lama `image/*` meloloskan SVG
+    // (`image/svg+xml`) — SVG tidak cocok dengan signature mana pun di
+    // sini sehingga tertolak, dan PDF pun ditolak untuk foto profil.
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const validation = validateUploadBuffer(buffer, { allowPdf: false });
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     const santri = await prisma.santri.findUnique({
@@ -32,17 +62,14 @@ export async function POST(req: Request) {
 
     const periodeNama = santri.gelombang.periode.nama.replace(/\//g, "-");
     const gelombangNama = santri.gelombang.nama.replace(/\//g, "-");
-    const safeSantriName = santri.namaLengkap.replace(/\//g, "-");
+    const safeSantriName = sanitizeFileNamePart(santri.namaLengkap);
 
     const santriFolderId = await ensureSantriFolder(periodeNama, gelombangNama, safeSantriName);
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Nama + MIME dari hasil deteksi, bukan dari browser.
+    const newFileName = `Pas Foto - ${safeSantriName}.${validation.ext}`;
 
-    const originalExt = file.name.split('.').pop() || "jpg";
-    const newFileName = `Pas Foto - ${safeSantriName}.${originalExt}`;
-
-    const driveRes = await uploadFileToDrive(buffer, newFileName, file.type, santriFolderId);
+    const driveRes = await uploadFileToDrive(buffer, newFileName, validation.mime, santriFolderId);
 
     if (!driveRes.id) throw new Error("Gagal mendapatkan link dari Google Drive");
     

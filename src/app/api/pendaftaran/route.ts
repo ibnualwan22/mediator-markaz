@@ -42,6 +42,45 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    // Field dokumen hanya boleh berisi link Google Drive hasil upload
+    // lewat form (upload-drive). Tanpa validasi ini, siapa pun bisa
+    // menitipkan URL sembarang (mis. situs phishing) yang kemudian
+    // di-redirect oleh proxy foto admin. Nilai kosong = belum upload.
+    const DOKUMEN_FIELDS = [
+      "fileAkteLahir",
+      "fileKtp",
+      "fileKK",
+      "filePasFoto",
+      "fileIjazah",
+      "fileTranskrip",
+      "filePaspor",
+    ];
+    const isDriveUrl = (v: unknown): boolean => {
+      if (typeof v !== "string" || v.trim() === "") return true;
+      try {
+        const u = new URL(v);
+        if (u.protocol !== "https:") return false;
+        if (u.hostname === "drive.google.com") {
+          return (
+            /\/d\/[a-zA-Z0-9_-]+/.test(u.pathname) ||
+            /[?&]id=[a-zA-Z0-9_-]+/.test(u.search)
+          );
+        }
+        if (u.hostname === "drive.usercontent.google.com") return true;
+        return false;
+      } catch {
+        return false;
+      }
+    };
+    for (const f of DOKUMEN_FIELDS) {
+      if (!isDriveUrl(body[f])) {
+        return NextResponse.json(
+          { error: `Link dokumen ${f} tidak valid. Silakan unggah ulang lewat form.` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Normalisasi nomor WA ke format 628xxx (untuk otomatisasi).
     // Terima 08xxx, 628xxx, +628xxx, dengan/tanpa spasi & strip.
     const normalizePhone = (phone: any): string => {
@@ -170,9 +209,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, id: santri.id, noPendaftaran });
   } catch (error: any) {
     console.error("Pendaftaran Error:", error);
+    // Detail error internal tidak dikirim ke klien.
     return NextResponse.json({
-      error: "Terjadi kesalahan sistem saat menyimpan data.",
-      details: error.message
+      error: "Terjadi kesalahan sistem saat menyimpan data."
     }, { status: 500 });
   }
 }
