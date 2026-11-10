@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Search, Settings } from "lucide-react";
 import SpreadsheetPembayaran from "@/components/admin/SpreadsheetPembayaran";
+import BuktiPembayaranList, { BuktiPembayaranItem } from "@/components/admin/BuktiPembayaranList";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -117,6 +118,55 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
     return (a.namaLengkap || "").localeCompare(b.namaLengkap || "");
   });
 
+  // Bukti transfer booking (Tahap 1) yang diunggah santri di form pendaftaran.
+  // Diluar filter gelombang/paket spreadsheet: bukti masuk sebelum verifikasi,
+  // jadi cakupannya satu periode yang sedang dipilih.
+  const buktiSantri = selectedPeriodeId ? await prisma.santri.findMany({
+    where: {
+      fileBuktiPembayaran: { not: null },
+      gelombang: { periodeId: selectedPeriodeId },
+    },
+    include: {
+      gelombang: { select: { nama: true } },
+      pembayaranSantri: { select: { poinTahapId: true, nominalHarus: true, isLunas: true } },
+      paketPembayaran: {
+        include: {
+          tahapPaket: {
+            orderBy: { urutan: "asc" },
+            include: { poinTahap: { orderBy: { urutan: "asc" }, select: { id: true } } },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  }) : [];
+
+  const buktiItems: BuktiPembayaranItem[] = buktiSantri
+    .map((s) => {
+      const bookingPoinId = s.paketPembayaran?.tahapPaket[0]?.poinTahap[0]?.id;
+      const booking = bookingPoinId
+        ? s.pembayaranSantri.find((p) => p.poinTahapId === bookingPoinId)
+        : undefined;
+      return {
+        id: s.id,
+        namaLengkap: s.namaLengkap,
+        noPendaftaran: s.noPendaftaran,
+        noWaSantri: s.noWaSantri,
+        gelombangNama: s.gelombang.nama,
+        isVerified: s.isVerified,
+        fileBuktiPembayaran: s.fileBuktiPembayaran as string,
+        buktiPembayaranStatus: s.buktiPembayaranStatus,
+        createdAt: s.createdAt.toISOString(),
+        bookingStatus: booking ? (booking.isLunas ? "LUNAS" as const : "BELUM" as const) : "TANPA_TAGIHAN" as const,
+        bookingNominal: booking ? booking.nominalHarus : null,
+      };
+    })
+    // Yang masih menunggu konfirmasi tampil paling atas.
+    .sort((a, b) => {
+      const rank = (s: string | null) => (s === "DITERIMA" || s === "DITOLAK" ? 1 : 0);
+      return rank(a.buktiPembayaranStatus) - rank(b.buktiPembayaranStatus);
+    });
+
   return (
     <div className="space-y-4 md:space-y-6 min-w-0">
       <div className="flex justify-between items-start">
@@ -131,6 +181,8 @@ export default async function AdminPembayaranPage({ searchParams }: { searchPara
           <Settings size={16} /> Master Paket
         </Link>
       </div>
+
+      <BuktiPembayaranList items={buktiItems} />
 
       <SpreadsheetPembayaran 
         santriList={santriList} 

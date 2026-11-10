@@ -83,11 +83,14 @@ export async function verifySantri(santriId: string) {
         const poin = tahap.poinTahap[p];
         const nominalActive = (tahap.isIjazahBased && isAgama && poin.nominalIjazah !== null) ? poin.nominalIjazah : poin.nominal;
         
-        // Auto-pay Tahap 1 Poin 1 (Booking Rp 1.000.000)
+        // Auto-pay Tahap 1 Poin 1 (Booking Rp 1.000.000) — HANYA bila bukti
+        // transfernya sudah DITERIMA admin. Bila bukti masih menunggu /
+        // ditolak (atau belum ada), tagihan booking dibuat BELUM lunas dan
+        // menunggu konfirmasi di halaman Pembayaran.
         let nominalDibayar = 0;
         let isLunas = nominalActive === 0 && !poin.isBebas;
-        
-        if (t === 0 && p === 0) {
+
+        if (t === 0 && p === 0 && santri.buktiPembayaranStatus === "DITERIMA") {
           nominalDibayar = nominalActive;
           isLunas = true; // Full bayar booking
         }

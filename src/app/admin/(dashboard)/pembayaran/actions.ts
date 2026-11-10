@@ -437,3 +437,74 @@ export async function changePaketSantri(santriId: string, paketPembayaranId: str
   revalidatePath('/admin/pembayaran');
   return { success: true };
 }
+
+// ============ BUKTI PEMBAYARAN BOOKING (TAHAP 1) ============
+// Bukti transfer manual yang diunggah santri di Step 4 form pendaftaran.
+// Konfirmasi di sini menandai bukti DITERIMA dan melunasi tagihan booking
+// bila tagihannya sudah ada (santri terverifikasi). Bila tagihan belum ada,
+// verifikasi nanti akan auto-lunas karena status bukti sudah DITERIMA.
+
+// Tagihan booking = poin pertama tahap pertama dari paket santri.
+async function findTagihanBooking(santriId: string) {
+  const santri = await prisma.santri.findUnique({
+    where: { id: santriId },
+    include: {
+      paketPembayaran: {
+        include: {
+          tahapPaket: {
+            orderBy: { urutan: "asc" },
+            include: { poinTahap: { orderBy: { urutan: "asc" } } },
+          },
+        },
+      },
+    },
+  });
+  if (!santri?.paketPembayaran) return null;
+  const poin = santri.paketPembayaran.tahapPaket[0]?.poinTahap[0];
+  if (!poin) return null;
+  return prisma.pembayaranSantri.findUnique({
+    where: { santriId_poinTahapId: { santriId, poinTahapId: poin.id } },
+  });
+}
+
+export async function konfirmasiBuktiPembayaran(santriId: string) {
+  const santri = await prisma.santri.findUnique({ where: { id: santriId } });
+  if (!santri || !santri.fileBuktiPembayaran) {
+    return { success: false, error: "Santri atau bukti pembayaran tidak ditemukan." };
+  }
+
+  await prisma.santri.update({
+    where: { id: santriId },
+    data: { buktiPembayaranStatus: "DITERIMA" },
+  });
+
+  const tagihan = await findTagihanBooking(santriId);
+  if (tagihan && !tagihan.isLunas) {
+    await prisma.pembayaranSantri.update({
+      where: { id: tagihan.id },
+      data: {
+        nominalDibayar: tagihan.nominalHarus,
+        isLunas: true,
+        tanggalLunas: new Date(),
+      },
+    });
+  }
+
+  revalidatePath("/admin/pembayaran");
+  return { success: true };
+}
+
+export async function tolakBuktiPembayaran(santriId: string) {
+  const santri = await prisma.santri.findUnique({ where: { id: santriId } });
+  if (!santri || !santri.fileBuktiPembayaran) {
+    return { success: false, error: "Santri atau bukti pembayaran tidak ditemukan." };
+  }
+
+  await prisma.santri.update({
+    where: { id: santriId },
+    data: { buktiPembayaranStatus: "DITOLAK" },
+  });
+
+  revalidatePath("/admin/pembayaran");
+  return { success: true };
+}

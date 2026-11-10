@@ -97,7 +97,7 @@ model Santri {
   riwayatAkademik       RiwayatAkademik
   riwayatAkademikLainnya String?     // Jika pilih LAINNYA
   tahunKelulusan        Int
-  fileIjazah            String       // Cloudinary URL - Scan ijazah asli
+  fileIjazah            String?      // Cloudinary URL - Scan ijazah asli (opsional; bisa dilengkapi belakangan via pemberkasan)
   fileTranskrip         String?      // Google Drive URL - Scan transkrip nilai
   jurusan               JurusanType?
 
@@ -107,6 +107,13 @@ model Santri {
   tanggalPembuatanPaspor DateTime?
   tanggalKadaluarsaPaspor DateTime?
   filePaspor            String?      // Cloudinary URL
+
+  // Bukti Pembayaran (booking Tahap 1, transfer manual)
+  // Diunggah santri di Step 4 form pendaftaran; dikonfirmasi admin di
+  // halaman Pembayaran. Tagihan booking baru auto-lunas saat verifikasi
+  // bila status bukti ini DITERIMA.
+  fileBuktiPembayaran   String?      // Google Drive URL - Bukti transfer booking
+  buktiPembayaranStatus StatusBuktiTransfer?
 
   // Konfirmasi
   isVerified        Boolean          @default(false) // Admin verifikasi → trigger NIS generation
@@ -133,6 +140,13 @@ enum StatusBayar {
   BELUM_BAYAR
   MENUNGGU_VERIFIKASI
   LUNAS
+}
+
+// Status bukti transfer booking (Tahap 1) yang diunggah santri di form pendaftaran.
+enum StatusBuktiTransfer {
+  MENUNGGU_VERIFIKASI
+  DITERIMA
+  DITOLAK
 }
 
 model LegacyPembayaran {

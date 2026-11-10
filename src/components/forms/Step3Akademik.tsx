@@ -86,8 +86,7 @@ export default function Step3Akademik({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Simpan langsung ke cache wizard agar isian tidak hilang saat refresh
-    // (Step 3 adalah step terakhir — tidak ada tombol Next yang menyimpan).
+    // Simpan langsung ke cache wizard agar isian tidak hilang saat refresh.
     onDataChange?.({ [name]: value });
   };
 
@@ -178,14 +177,8 @@ export default function Step3Akademik({
       alert("Masih ada dokumen yang gagal diunggah atau sedang diproses. Silakan tunggu, klik \"Coba lagi\", atau ganti pilihannya.");
       return;
     }
-    if (!formData.fileIjazah) {
-      alert("Silakan upload scan ijazah.");
-      return;
-    }
-    if (!formData.fileTranskrip) {
-      alert("Silakan upload scan transkrip nilai.");
-      return;
-    }
+    // Ijazah + transkrip OPSIONAL (bisa dilengkapi belakangan via pemberkasan)
+    // — tidak ada lagi penolakan submit bila keduanya kosong.
     if (formData.riwayatAkademik === "LAINNYA" && !formData.riwayatAkademikLainnya) {
       alert("Silakan isi field Riwayat Akademik Lainnya.");
       return;
@@ -342,8 +335,8 @@ export default function Step3Akademik({
           </select>
         </div>
 
-        {renderUploadBox('fileIjazah', 'Scan Ijazah Asli')}
-        {renderUploadBox('fileTranskrip', 'Scan Transkrip Nilai')}
+        {renderUploadBox('fileIjazah', 'Scan Ijazah Asli (Opsional)', false)}
+        {renderUploadBox('fileTranskrip', 'Scan Transkrip Nilai (Opsional)', false)}
       </div>
 
       <div className="flex justify-between pt-6 border-t border-primary-light/20">
@@ -358,7 +351,7 @@ export default function Step3Akademik({
           type="submit" 
           className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-light transition-colors"
         >
-          Lanjut ke Konfirmasi &rarr;
+          Lanjut ke Pembayaran &rarr;
         </button>
       </div>
     </form>

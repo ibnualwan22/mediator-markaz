@@ -54,6 +54,7 @@ export async function POST(req: Request) {
       "fileIjazah",
       "fileTranskrip",
       "filePaspor",
+      "fileBuktiPembayaran",
     ];
     const isDriveUrl = (v: unknown): boolean => {
       if (typeof v !== "string" || v.trim() === "") return true;
@@ -127,8 +128,14 @@ export async function POST(req: Request) {
       riwayatAkademik: body.riwayatAkademik,
       riwayatAkademikLainnya: body.riwayatAkademikLainnya,
       tahunKelulusan: body.tahunKelulusan,
-      fileIjazah: body.fileIjazah,
+      fileIjazah: body.fileIjazah || null,
       fileTranskrip: body.fileTranskrip || null,
+
+      // Bukti transfer booking (wajib di Step 4). Status awal menunggu
+      // konfirmasi admin; tagihan booking baru auto-lunas saat verifikasi
+      // bila status ini sudah DITERIMA.
+      fileBuktiPembayaran: body.fileBuktiPembayaran || null,
+      buktiPembayaranStatus: body.fileBuktiPembayaran ? ("MENUNGGU_VERIFIKASI" as const) : null,
 
       nomorPaspor: body.nomorPaspor || null,
       kantorPenerbitPaspor: body.kantorPenerbitPaspor || null,

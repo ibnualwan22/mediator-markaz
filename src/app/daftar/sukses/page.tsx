@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, FileText, ArrowRight, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { resolveBiayaPendaftaran } from "@/lib/biayaPendaftaran";
 import { redirect } from "next/navigation";
 
 export default async function PendaftaranSuksesPage({ searchParams }: { searchParams: Promise<{ id: string }> }) {
@@ -19,7 +20,12 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
     redirect("/");
   }
 
-
+  // Nominal booking dari helper yang sama dengan Step 4 (bukan hardcode),
+  // agar angka yang tampil di sini sama dengan yang ditransfer santri.
+  // Fallback ke nilai lama bila paket tidak dapat di-resolve.
+  const biaya = await resolveBiayaPendaftaran(santri.gelombangId, santri.riwayatAkademik);
+  const totalTagihan = biaya?.nominal ?? 1000000;
+  const adaBukti = Boolean(santri.fileBuktiPembayaran);
 
   return (
     <div className="min-h-screen bg-bg-cream flex flex-col items-center justify-center p-4 py-12">
@@ -65,24 +71,38 @@ export default async function PendaftaranSuksesPage({ searchParams }: { searchPa
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-text-secondary">Status Pembayaran</span>
-                <span className="px-3 py-1 bg-danger/10 text-danger text-xs font-bold rounded-full">
-                  BELUM DIBAYAR
-                </span>
+                {adaBukti ? (
+                  <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                    MENUNGGU KONFIRMASI
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 bg-danger/10 text-danger text-xs font-bold rounded-full">
+                    BELUM DIBAYAR
+                  </span>
+                )}
               </div>
-              
+
               <div className="pt-4 border-t border-primary-light/20">
                 <div className="flex justify-between items-end">
                   <span className="text-text-primary font-medium">Total Tagihan</span>
-                  <span className="text-3xl font-bold text-primary">Rp 1.000.000</span>
+                  <span className="text-3xl font-bold text-primary">Rp {totalTagihan.toLocaleString("id-ID")}</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/20">
-              <p className="text-sm text-text-secondary mb-2">Silakan transfer biaya pendaftaran ke rekening berikut:</p>
-              <div className="text-xl font-bold text-text-primary tracking-wide">BRI 055501049030500</div>
-              <div className="text-sm font-medium text-text-primary">a.n. Markaz Arabiyah</div>
-            </div>
+            {adaBukti ? (
+              <div className="mt-8 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <p className="text-sm text-text-secondary">
+                  Bukti pembayaran Anda sudah kami terima dan sedang diverifikasi admin. Anda akan dihubungi via WhatsApp bila ada yang perlu dilengkapi.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                <p className="text-sm text-text-secondary mb-2">Silakan transfer biaya pendaftaran ke rekening berikut:</p>
+                <div className="text-xl font-bold text-text-primary tracking-wide">BRI 055501049030500</div>
+                <div className="text-sm font-medium text-text-primary">a.n. Markaz Arabiyah</div>
+              </div>
+            )}
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
