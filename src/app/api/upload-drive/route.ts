@@ -30,6 +30,9 @@ export async function POST(req: Request) {
     const overrideGelombang = formData.get("gelombangNama") as string | null;
     const overridePeriode = formData.get("periodeNama") as string | null;
 
+    // Optional: registration wizard passes the gelombang the applicant chose
+    const gelombangId = formData.get("gelombangId") as string | null;
+
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
     }
@@ -65,26 +68,44 @@ export async function POST(req: Request) {
     const santriName = sanitizeFileNamePart(santriNameRaw);
     const documentName = sanitizeFileNamePart(documentNameRaw);
 
-    let periodeNama: string;
-    let gelombangNama: string;
+    let periodeNama: string | undefined;
+    let gelombangNama: string | undefined;
 
-    if (overrideGelombang && overridePeriode) {
-      // Use the santri's actual gelombang/periode (from admin spreadsheet)
-      periodeNama = overridePeriode.replace(/\//g, "-");
-      gelombangNama = overrideGelombang.replace(/\//g, "-");
-    } else {
-      // Fallback: use active gelombang (for santri self-registration)
-      const activeGelombang = await prisma.gelombang.findFirst({
-        where: { isActive: true },
+    if (gelombangId) {
+      // Use the applicant's chosen gelombang (sent by the registration wizard,
+      // Step 1) so the file lands in that gelombang's folder — NOT the
+      // currently-active one. Previously every self-registration upload used
+      // the active gelombang, so all files for 2026/2027 went to Gelombang 1
+      // even for santri who chose Gelombang 2 or 3.
+      const chosen = await prisma.gelombang.findUnique({
+        where: { id: gelombangId },
         include: { periode: true },
       });
-
-      if (!activeGelombang) {
-        return NextResponse.json({ error: "Pendaftaran sedang ditutup. Tidak ada gelombang aktif." }, { status: 400 });
+      if (chosen?.periode) {
+        periodeNama = chosen.periode.nama.replace(/\//g, "-");
+        gelombangNama = chosen.nama.replace(/\//g, "-");
       }
+    }
 
-      periodeNama = activeGelombang.periode.nama.replace(/\//g, "-");
-      gelombangNama = activeGelombang.nama.replace(/\//g, "-");
+    if (!periodeNama || !gelombangNama) {
+      if (overrideGelombang && overridePeriode) {
+        // Use the santri's actual gelombang/periode (from admin spreadsheet)
+        periodeNama = overridePeriode.replace(/\//g, "-");
+        gelombangNama = overrideGelombang.replace(/\//g, "-");
+      } else {
+        // Fallback: use active gelombang (for santri self-registration)
+        const activeGelombang = await prisma.gelombang.findFirst({
+          where: { isActive: true },
+          include: { periode: true },
+        });
+
+        if (!activeGelombang) {
+          return NextResponse.json({ error: "Pendaftaran sedang ditutup. Tidak ada gelombang aktif." }, { status: 400 });
+        }
+
+        periodeNama = activeGelombang.periode.nama.replace(/\//g, "-");
+        gelombangNama = activeGelombang.nama.replace(/\//g, "-");
+      }
     }
 
     const safeSantriName = santriName.replace(/\//g, "-");

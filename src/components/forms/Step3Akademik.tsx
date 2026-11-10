@@ -130,6 +130,9 @@ export default function Step3Akademik({
       fd.append("file", file);
       fd.append("santriName", initialData.namaLengkap || "Tanpa Nama");
       fd.append("documentName", documentNames[field]);
+      // Gelombang yang dipilih pendaftar di Step 1 — supaya berkas masuk
+      // folder gelombang yang benar, bukan folder gelombang aktif.
+      if (initialData.gelombangId) fd.append("gelombangId", initialData.gelombangId);
 
       const driveRes = await fetch('/api/upload-drive', {
         method: "POST",
