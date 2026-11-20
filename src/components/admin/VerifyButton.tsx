@@ -5,7 +5,7 @@ import { verifySantri } from "@/app/admin/(dashboard)/santri/actions";
 import { CheckCircle2 } from "lucide-react";
 import Swal from "sweetalert2";
 
-export default function VerifyButton({ santriId, isVerified }: { santriId: string, isVerified: boolean }) {
+export default function VerifyButton({ santriId, isVerified, buktiPembayaranStatus, hasBuktiPembayaran }: { santriId: string, isVerified: boolean, buktiPembayaranStatus?: string | null, hasBuktiPembayaran?: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
 
   if (isVerified) {
@@ -18,9 +18,20 @@ export default function VerifyButton({ santriId, isVerified }: { santriId: strin
   }
 
   const handleVerify = async () => {
+    // Peringatan bila bukti pembayaran belum DITERIMA — tombol tetap bisa diklik,
+    // hanya tagihan booking Tahap 1 yang tidak ikut ditandai lunas.
+    let alertText = "Tindakan ini akan membuat NIS baru untuk camaba ini.";
+    if (hasBuktiPembayaran === false) {
+      alertText = "Camaba ini belum mengunggah bukti pembayaran. Verifikasi tetap membuat NIS baru, tetapi tagihan booking Tahap 1 tidak akan ditandai lunas. Lanjutkan verifikasi?";
+    } else if (buktiPembayaranStatus === "DITOLAK") {
+      alertText = "Bukti pembayaran camaba ini DITOLAK. Verifikasi tetap membuat NIS baru, tetapi tagihan booking Tahap 1 tidak akan ditandai lunas. Lanjutkan verifikasi?";
+    } else if (buktiPembayaranStatus && buktiPembayaranStatus !== "DITERIMA") {
+      alertText = "Bukti pembayaran camaba ini masih menunggu konfirmasi. Verifikasi tetap membuat NIS baru, tetapi tagihan booking Tahap 1 tidak akan ditandai lunas sampai bukti dikonfirmasi di halaman Pembayaran. Lanjutkan verifikasi?";
+    }
+
     const confirmRes = await Swal.fire({
       title: 'Verifikasi Camaba?',
-      text: "Tindakan ini akan membuat NIS baru untuk camaba ini.",
+      text: alertText,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',

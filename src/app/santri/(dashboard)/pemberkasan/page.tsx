@@ -5,6 +5,7 @@ import { FolderCheck, CheckCircle2, AlertCircle, Download, FileText } from "luci
 import CollapsibleCategory from "@/components/santri/CollapsibleCategory";
 import PemberkasanUploadButton from "@/components/santri/PemberkasanUploadButton";
 import DokumenFormUploadButton from "@/components/santri/DokumenFormUploadButton";
+import DokumenPreview from "@/components/DokumenPreview";
 
 export default async function PemberkasanSantriPage() {
   const session = await getSantriSession();
@@ -142,18 +143,16 @@ export default async function PemberkasanSantriPage() {
                 <div className="mt-2 flex gap-2 flex-wrap">
                   {doc.url && (
                     <>
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <DokumenPreview
+                        title={doc.label}
+                        previewUrl={`/api/santri/pemberkasan/dokumen?field=${doc.field}`}
+                        driveUrl={doc.url}
+                        triggerTitle="Lihat pratinjau dokumen"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"
-                      >
-                        Lihat Dokumen
-                      </a>
+                        trigger={<>Lihat Dokumen</>}
+                      />
                       <a
-                        href={doc.url.replace('export=view', 'export=download')}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`/api/santri/pemberkasan/dokumen?field=${doc.field}&download=1`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-cream text-text-secondary rounded-lg text-xs font-bold hover:bg-primary-light/20 border border-primary-light/20 transition-colors"
                       >
                         <Download size={14} /> Download

@@ -3,8 +3,11 @@
 import { useState, useTransition, useCallback, useMemo } from "react";
 import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl, updateSantriDokumenForm } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
-import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2, Eye, Download } from "lucide-react";
+import DokumenPreview from "@/components/DokumenPreview";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
+import SalinLaporanButton from "@/components/admin/SalinLaporanButton";
+import { formatLaporanPerItem, formatLaporanGlobal, labelKonteksLaporan } from "@/lib/laporanBelum";
 
 export default function SpreadsheetPemberkasan({
   santriList,
@@ -30,6 +33,7 @@ export default function SpreadsheetPemberkasan({
   const [bulkLoading, setBulkLoading] = useState<Set<string>>(new Set());
   const [activeItemModal, setActiveItemModal] = useState<any | null>(null);
   const [itemModalView, setItemModalView] = useState<'MISSING' | 'ARSIP'>('MISSING');
+  const [activeDokumenModal, setActiveDokumenModal] = useState<{ field: string; nama: string } | null>(null);
 
   const visibleItems = items.filter(i => i.kategori !== "MESIR");
 
@@ -72,6 +76,42 @@ export default function SpreadsheetPemberkasan({
     });
     return stats;
   }, [santriList, visibleItems, optimisticData]);
+
+  // Statistik per dokumen pendaftaran (7 kolom form): siapa sudah / belum,
+  // dihitung dengan logika sel yang sama (optimisticData ikut dihitung).
+  // Juga dipakai untuk laporan global "belum terkumpul".
+  const { dokumenStats, laporanGlobalEntries } = useMemo(() => {
+    const stats: Record<string, { sudah: any[]; belum: any[] }> = {};
+    dokumenPendaftaran.forEach(dok => {
+      stats[dok.field] = { sudah: [], belum: [] };
+    });
+
+    santriList.forEach(santri => {
+      dokumenPendaftaran.forEach(dok => {
+        const cellKey = `${santri.id}:${dok.field}`;
+        const opt = optimisticData[cellKey];
+        const cellFileUrl = opt ? (opt.fileUrl ?? null) : (santri[dok.field] ?? null);
+        if (cellFileUrl) {
+          stats[dok.field].sudah.push(santri);
+        } else {
+          stats[dok.field].belum.push(santri);
+        }
+      });
+    });
+
+    const entries = santriList
+      .map(santri => ({
+        nama: santri.namaLengkap,
+        items: dokumenPendaftaran
+          .filter(dok => stats[dok.field].belum.includes(santri))
+          .map(dok => dok.nama),
+      }))
+      .filter(entry => entry.items.length > 0);
+
+    return { dokumenStats: stats, laporanGlobalEntries: entries };
+  }, [santriList, optimisticData]);
+
+  const konteksLaporan = labelKonteksLaporan(gelombangs, periodes, selectedGelombangId, selectedPeriodeId);
 
   const addLoading = (id: string) => setLoadingCells(prev => new Set(prev).add(id));
   const removeLoading = (id: string) => setLoadingCells(prev => { const next = new Set(prev); next.delete(id); return next; });
@@ -261,9 +301,62 @@ export default function SpreadsheetPemberkasan({
         />
       </div>
 
+      {/* Summary Cards — Dokumen Pendaftaran */}
+      {dokumenPendaftaran.length > 0 && santriList.length > 0 && (
+        <div className="border-b border-primary-light/10 dark:border-gray-800 bg-bg-cream/50 dark:bg-gray-800/20">
+          <div className="flex items-center justify-between gap-2 px-4 pt-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-text-secondary dark:text-gray-400">Dokumen Pendaftaran (dari Form)</h2>
+            <SalinLaporanButton
+              text={formatLaporanGlobal(`Laporan Dokumen Belum Terkumpul — ${konteksLaporan}`, laporanGlobalEntries)}
+              label="Salin Laporan"
+              disabled={laporanGlobalEntries.length === 0}
+              title="Salin laporan santri yang masih ada dokumen belum terkumpul"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-primary bg-white dark:bg-gray-900 border border-primary-light/30 rounded-lg hover:bg-primary-bg transition-colors disabled:opacity-50"
+            />
+          </div>
+          <div className="flex gap-4 overflow-x-auto p-4 pt-3 custom-scrollbar">
+            {dokumenPendaftaran.map(dok => {
+              const stat = dokumenStats[dok.field];
+              const total = stat.sudah.length + stat.belum.length;
+              const progress = total === 0 ? 0 : Math.round((stat.sudah.length / total) * 100);
+
+              return (
+                <div
+                  key={dok.field}
+                  onClick={() => setActiveDokumenModal(dok)}
+                  className="flex-shrink-0 w-60 bg-white dark:bg-gray-900 border border-primary-light/20 dark:border-gray-700 rounded-xl p-3 shadow-sm cursor-pointer hover:border-primary/50 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-sm text-text-primary dark:text-gray-100 truncate" title={dok.nama}>{dok.nama}</h3>
+                    <SalinLaporanButton
+                      text={formatLaporanPerItem(`Belum mengumpulkan: ${dok.nama} (${stat.belum.length} santri)`, stat.belum.map((s: any) => s.namaLengkap))}
+                      label="Salin"
+                      disabled={stat.belum.length === 0}
+                      title="Salin daftar santri yang belum mengumpulkan dokumen ini"
+                      className="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-primary bg-primary-bg border border-primary-light/30 rounded-md hover:bg-primary-light/20 transition-colors disabled:opacity-50"
+                    />
+                  </div>
+                  <div className="flex justify-between mt-2 text-xs">
+                    <span className="text-success font-semibold">Sudah: {stat.sudah.length}</span>
+                    <span className="text-danger font-semibold">Belum: {stat.belum.length}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                    <div className="bg-success h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       {visibleItems.length > 0 && santriList.length > 0 && (
-        <div className="flex gap-4 overflow-x-auto p-4 border-b border-primary-light/10 dark:border-gray-800 custom-scrollbar bg-bg-cream/50 dark:bg-gray-800/20">
+        <div className="border-b border-primary-light/10 dark:border-gray-800 bg-bg-cream/50 dark:bg-gray-800/20">
+          <div className="px-4 pt-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-text-secondary dark:text-gray-400">Berkas Tambahan</h2>
+          </div>
+          <div className="flex gap-4 overflow-x-auto p-4 pt-3 custom-scrollbar">
           {visibleItems.map(item => {
             const stat = itemStats[item.id];
             const total = stat.sudah.length + stat.belum.length;
@@ -289,6 +382,7 @@ export default function SpreadsheetPemberkasan({
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
@@ -445,6 +539,14 @@ export default function SpreadsheetPemberkasan({
         </div>
       )}
 
+      {activeDokumenModal && (
+        <DokumenStatsModal
+          dok={activeDokumenModal}
+          stats={dokumenStats[activeDokumenModal.field]}
+          onClose={() => setActiveDokumenModal(null)}
+        />
+      )}
+
       {/* Spreadsheet Table */}
       <div className="flex-1 min-h-0 overflow-auto custom-scrollbar">
         <table className="w-full text-left border-collapse min-w-max">
@@ -527,6 +629,21 @@ export default function SpreadsheetPemberkasan({
                             <div className="flex items-stretch justify-center h-full gap-0.5">
                               <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
                                 <span className="truncate">Diupload ✓</span>
+                              </a>
+                              <DokumenPreview
+                                title={`${dok.nama} — ${santri.namaLengkap}`}
+                                previewUrl={`/api/admin/santri/${santri.id}/dokumen?field=${dok.field}`}
+                                driveUrl={cellFileUrl}
+                                triggerTitle="Pratinjau Dokumen"
+                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 transition-colors shrink-0 flex items-center justify-center"
+                                trigger={<Eye size={12} />}
+                              />
+                              <a
+                                href={`/api/admin/santri/${santri.id}/dokumen?field=${dok.field}&download=1`}
+                                title="Download Dokumen"
+                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 transition-colors shrink-0 flex items-center justify-center"
+                              >
+                                <Download size={12} />
                               </a>
                               <button
                                 onClick={() => handleDeleteFormDoc(santri.id, dok.field)}
@@ -643,6 +760,80 @@ export default function SpreadsheetPemberkasan({
 
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// Modal daftar santri per dokumen pendaftaran (pola yang sama dengan
+// ProgresStatsModal di progres camaba): tab Sudah / Belum, nama saja,
+// plus tombol salin laporan "belum" di tab Belum.
+function DokumenStatsModal({ dok, stats, onClose }: {
+  dok: { field: string; nama: string };
+  stats: { sudah: any[]; belum: any[] };
+  onClose: () => void;
+}) {
+  const [tab, setTab] = useState<'SUDAH' | 'BELUM'>('BELUM');
+  const list = tab === 'SUDAH' ? stats.sudah : stats.belum;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
+          <div>
+            <h2 className="text-lg font-heading font-bold text-gray-800 dark:text-gray-100 pr-4">{dok.nama}</h2>
+            <p className="text-xs text-text-secondary mt-0.5">Daftar santri pada dokumen ini</p>
+          </div>
+          <button onClick={onClose} className="p-2 shrink-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 rounded-lg transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex border-b border-gray-200 dark:border-gray-700 text-sm">
+          <button
+             onClick={() => setTab('SUDAH')}
+             className={`flex-1 py-3 font-semibold text-center transition-colors ${tab === 'SUDAH' ? 'text-success border-b-2 border-success bg-success/5' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+          >
+            Sudah ({stats.sudah.length})
+          </button>
+          <button
+             onClick={() => setTab('BELUM')}
+             className={`flex-1 py-3 font-semibold text-center transition-colors ${tab === 'BELUM' ? 'text-danger border-b-2 border-danger bg-danger/5' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+          >
+            Belum ({stats.belum.length})
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar min-h-[300px]">
+          {tab === 'BELUM' && list.length > 0 && (
+            <div className="flex justify-end mb-3">
+              <SalinLaporanButton
+                text={formatLaporanPerItem(`Belum mengumpulkan: ${dok.nama} (${stats.belum.length} santri)`, stats.belum.map((s: any) => s.namaLengkap))}
+                label="Salin Daftar Belum"
+                title="Salin daftar santri yang belum mengumpulkan dokumen ini"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary bg-primary-bg border border-primary-light/30 rounded-lg hover:bg-primary-light/20 transition-colors"
+              />
+            </div>
+          )}
+          {list.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400 h-full">
+              <CheckCircle2 size={32} className="mb-2 opacity-20" />
+              <p className="text-sm font-medium">Kosong</p>
+              <p className="text-xs">Tidak ada santri dengan status ini pada filter tabel aktif.</p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {list.map((s: any, idx: number) => (
+                <li key={s.id} className="flex gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                  <div className="font-mono text-xs font-bold text-gray-400 w-6 text-right mt-0.5">{idx + 1}.</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm text-gray-900 dark:text-gray-100 truncate w-full" title={s.namaLengkap}>{s.namaLengkap}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ import { UploadCloud, CheckCircle2, Loader2, Trash2, X } from "lucide-react";
 import { toggleCheckboxProgres, updateProgresFileUrl } from "@/app/admin/(dashboard)/progres/actions";
 import { useRouter } from "next/navigation";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
+import SalinLaporanButton from "@/components/admin/SalinLaporanButton";
+import { formatLaporanPerItem, formatLaporanGlobal, labelKonteksLaporan } from "@/lib/laporanBelum";
 
 export default function SpreadsheetProgres({
   santriList,
@@ -53,6 +55,28 @@ export default function SpreadsheetProgres({
 
   const activeTahaps = tahaps.filter(t => t.isActive);
   const inactiveTahapsCount = tahaps.length - activeTahaps.length;
+
+  // Laporan global "belum selesai": nama santri dulu, lalu tahap-tahap
+  // aktif yang belum selesai di bawahnya. Hanya tahap aktif yang dihitung
+  // (tahap non-aktif/legacy tidak ikut).
+  const laporanGlobalEntries = useMemo(() => {
+    const active = tahaps.filter((t: any) => t.isActive);
+    return santriList
+      .map(santri => ({
+        nama: santri.namaLengkap,
+        items: active
+          .filter(tahap => {
+            const record = santri.progresSantri.find((p: any) => p.tahapProgresId === tahap.id);
+            const opt = record ? optimisticData[record.id] : undefined;
+            const isSelesai = opt?.selesai ?? record?.selesai ?? false;
+            return !isSelesai;
+          })
+          .map((tahap: any) => tahap.nama),
+      }))
+      .filter(entry => entry.items.length > 0);
+  }, [santriList, tahaps, optimisticData]);
+
+  const konteksLaporan = labelKonteksLaporan(gelombangs, periodes, selectedGelombangId, selectedPeriodeId);
 
   const addLoading = (id: string) => setLoadingCells(prev => new Set(prev).add(id));
   const removeLoading = (id: string) => setLoadingCells(prev => { const next = new Set(prev); next.delete(id); return next; });
@@ -174,7 +198,18 @@ export default function SpreadsheetProgres({
 
       {/* Summary Cards */}
       {tahaps.length > 0 && santriList.length > 0 && (
-        <div className="flex gap-4 overflow-x-auto p-4 border-b border-primary-light/10 dark:border-gray-800 custom-scrollbar bg-bg-cream/50 dark:bg-gray-800/20">
+        <div className="border-b border-primary-light/10 dark:border-gray-800 bg-bg-cream/50 dark:bg-gray-800/20">
+          <div className="flex items-center justify-between gap-2 px-4 pt-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-text-secondary dark:text-gray-400">Ringkasan Tahap</h2>
+            <SalinLaporanButton
+              text={formatLaporanGlobal(`Laporan Tahap Belum Selesai — ${konteksLaporan}`, laporanGlobalEntries)}
+              label="Salin Laporan"
+              disabled={laporanGlobalEntries.length === 0}
+              title="Salin laporan santri yang masih ada tahap belum selesai"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-primary bg-white dark:bg-gray-900 border border-primary-light/30 rounded-lg hover:bg-primary-bg transition-colors disabled:opacity-50"
+            />
+          </div>
+          <div className="flex gap-4 overflow-x-auto p-4 pt-3 custom-scrollbar">
           {tahaps.map(tahap => {
             const stat = tahapStats[tahap.id];
             const total = stat.selesai.length + stat.belum.length;
@@ -186,7 +221,16 @@ export default function SpreadsheetProgres({
                 onClick={() => setModalTahap(tahap)}
                 className="flex-shrink-0 w-60 bg-white dark:bg-gray-900 border border-primary-light/20 dark:border-gray-700 rounded-xl p-3 shadow-sm cursor-pointer hover:border-primary/50 hover:shadow-md transition-all"
               >
-                <h3 className="font-bold text-sm text-text-primary dark:text-gray-100 truncate" title={tahap.nama}>{tahap.nama}</h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-bold text-sm text-text-primary dark:text-gray-100 truncate" title={tahap.nama}>{tahap.nama}</h3>
+                  <SalinLaporanButton
+                    text={formatLaporanPerItem(`Belum selesai: ${tahap.nama} (${stat.belum.length} santri)`, stat.belum.map((s: any) => s.namaLengkap))}
+                    label="Salin"
+                    disabled={stat.belum.length === 0}
+                    title="Salin daftar santri yang belum menyelesaikan tahap ini"
+                    className="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-primary bg-primary-bg border border-primary-light/30 rounded-md hover:bg-primary-light/20 transition-colors disabled:opacity-50"
+                  />
+                </div>
                 <div className="flex justify-between mt-2 text-xs">
                   <span className="text-success font-semibold">Selesai: {stat.selesai.length}</span>
                   <span className="text-danger font-semibold">Belum: {stat.belum.length}</span>
@@ -197,6 +241,7 @@ export default function SpreadsheetProgres({
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
