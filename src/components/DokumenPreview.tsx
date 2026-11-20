@@ -1,25 +1,31 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Loader2, ExternalLink, Download } from "lucide-react";
+import { X, Loader2, ExternalLink, Download, FileText } from "lucide-react";
 
 // Tombol + modal pratinjau dokumen Drive, dipakai bersama oleh halaman
 // pemberkasan santri dan spreadsheet admin. Isi file diambil lewat route
 // proxy (bukan tautan Drive langsung) supaya gambar/PDF tampil di dalam
 // halaman; tautan "Buka di Drive" tetap disediakan di footer modal.
-export default function DokumenPreview({ title, previewUrl, driveUrl, trigger, triggerTitle, className }: {
+// Dengan prop thumbnail, pemicunya berupa gambar kecil dokumen itu sendiri
+// (lazy loading): foto tampil langsung, PDF tampil sebagai kartu "PDF"
+// karena PDF tidak bisa dirender sebagai <img>. Diklik, membuka modal
+// pratinjau yang sama.
+export default function DokumenPreview({ title, previewUrl, driveUrl, trigger, triggerTitle, className, thumbnail }: {
   title: string;
   previewUrl: string;
   driveUrl?: string | null;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
   triggerTitle?: string;
   className?: string;
+  thumbnail?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thumbFailed, setThumbFailed] = useState(false);
 
   const downloadUrl = `${previewUrl}${previewUrl.includes("?") ? "&" : "?"}download=1`;
 
@@ -71,9 +77,35 @@ export default function DokumenPreview({ title, previewUrl, driveUrl, trigger, t
 
   return (
     <>
-      <button type="button" onClick={openPreview} title={triggerTitle} className={className}>
-        {trigger}
-      </button>
+      {thumbnail ? (
+        <button
+          type="button"
+          onClick={openPreview}
+          title={triggerTitle ?? `Lihat pratinjau ${title}`}
+          className={`overflow-hidden ${className ?? ""}`}
+        >
+          {thumbFailed ? (
+            <span className="w-full h-full flex flex-col items-center justify-center gap-0.5 bg-red-50 text-red-600">
+              <FileText size={18} />
+              <span className="text-[10px] font-bold">PDF</span>
+            </span>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrl}
+              alt={title}
+              loading="lazy"
+              decoding="async"
+              onError={() => setThumbFailed(true)}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </button>
+      ) : (
+        <button type="button" onClick={openPreview} title={triggerTitle} className={className}>
+          {trigger}
+        </button>
+      )}
 
       {open && (
         <div

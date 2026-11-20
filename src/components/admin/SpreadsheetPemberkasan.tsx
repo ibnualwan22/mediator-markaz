@@ -3,7 +3,7 @@
 import { useState, useTransition, useCallback, useMemo } from "react";
 import { toggleCheckboxPemberkasan, bulkToggleCheckboxPemberkasan, updateFileUrl, updateSantriDokumenForm } from "@/app/admin/(dashboard)/pemberkasan/actions";
 import { useRouter } from "next/navigation";
-import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2, Eye, Download } from "lucide-react";
+import { UploadCloud, CheckCircle2, ChevronDown, ChevronUp, FileText, X, AlertCircle, Loader2, Trash2, Download } from "lucide-react";
 import DokumenPreview from "@/components/DokumenPreview";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
 import SalinLaporanButton from "@/components/admin/SalinLaporanButton";
@@ -626,33 +626,32 @@ export default function SpreadsheetPemberkasan({
                           {cellLoading ? (
                             <Loader2 size={16} className="animate-spin text-primary" />
                           ) : cellFileUrl ? (
-                            <div className="flex items-stretch justify-center h-full gap-0.5">
-                              <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
-                                <span className="truncate">Diupload ✓</span>
-                              </a>
+                            <div className="flex flex-col items-center gap-1.5">
                               <DokumenPreview
                                 title={`${dok.nama} — ${santri.namaLengkap}`}
                                 previewUrl={`/api/admin/santri/${santri.id}/dokumen?field=${dok.field}`}
                                 driveUrl={cellFileUrl}
+                                thumbnail
                                 triggerTitle="Pratinjau Dokumen"
-                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 transition-colors shrink-0 flex items-center justify-center"
-                                trigger={<Eye size={12} />}
+                                className="w-full max-w-[120px] h-14 rounded-md border border-primary-light/20 hover:opacity-90 transition-opacity"
                               />
-                              <a
-                                href={`/api/admin/santri/${santri.id}/dokumen?field=${dok.field}&download=1`}
-                                title="Download Dokumen"
-                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 transition-colors shrink-0 flex items-center justify-center"
-                              >
-                                <Download size={12} />
-                              </a>
-                              <button
-                                onClick={() => handleDeleteFormDoc(santri.id, dok.field)}
-                                disabled={cellLoading}
-                                title="Hapus Dokumen"
-                                className="bg-danger/10 text-danger hover:bg-danger/20 px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 shrink-0 flex items-center justify-center"
-                              >
-                                <Trash2 size={12} />
-                              </button>
+                              <div className="flex items-stretch justify-center gap-0.5">
+                                <a
+                                  href={`/api/admin/santri/${santri.id}/dokumen?field=${dok.field}&download=1`}
+                                  title="Download Dokumen"
+                                  className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 rounded-l-md transition-colors shrink-0 flex items-center justify-center"
+                                >
+                                  <Download size={12} />
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteFormDoc(santri.id, dok.field)}
+                                  disabled={cellLoading}
+                                  title="Hapus Dokumen"
+                                  className="bg-danger/10 text-danger hover:bg-danger/20 px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 shrink-0 flex items-center justify-center"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
                             </div>
                           ) : (
                             <span className="text-xs text-text-secondary/70 dark:text-gray-500">Belum</span>

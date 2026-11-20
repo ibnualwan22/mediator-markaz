@@ -147,9 +147,9 @@ export default async function PemberkasanSantriPage() {
                         title={doc.label}
                         previewUrl={`/api/santri/pemberkasan/dokumen?field=${doc.field}`}
                         driveUrl={doc.url}
+                        thumbnail
                         triggerTitle="Lihat pratinjau dokumen"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 border border-blue-100 transition-colors"
-                        trigger={<>Lihat Dokumen</>}
+                        className="w-24 h-16 shrink-0 rounded-lg border border-primary-light/20 hover:opacity-90 transition-opacity"
                       />
                       <a
                         href={`/api/santri/pemberkasan/dokumen?field=${doc.field}&download=1`}

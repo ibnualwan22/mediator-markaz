@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition, useCallback, useMemo } from "react";
-import { UploadCloud, CheckCircle2, Loader2, Trash2, X } from "lucide-react";
+import { UploadCloud, CheckCircle2, Loader2, Trash2, X, Download } from "lucide-react";
 import { toggleCheckboxProgres, updateProgresFileUrl } from "@/app/admin/(dashboard)/progres/actions";
 import { useRouter } from "next/navigation";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
+import DokumenPreview from "@/components/DokumenPreview";
 import SalinLaporanButton from "@/components/admin/SalinLaporanButton";
 import { formatLaporanPerItem, formatLaporanGlobal, labelKonteksLaporan } from "@/lib/laporanBelum";
 
@@ -331,18 +332,32 @@ export default function SpreadsheetProgres({
                                    />
                                 </label>
                               ) : (
-                                <div className="flex items-stretch justify-center h-full gap-0.5">
-                                  <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
-                                    <span className="truncate">Diupload ✓</span>
-                                  </a>
-                                  <button 
-                                    onClick={() => handleDeleteFile(record.id)}
-                                    disabled={cellLoading}
-                                    title="Hapus Dokumen"
-                                    className="bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger-dark px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 flex items-center justify-center"
-                                  >
-                                    <Trash2 size={12} />
-                                  </button>
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <DokumenPreview
+                                    title={`${tahap.nama} — ${santri.namaLengkap}`}
+                                    previewUrl={`/api/admin/santri/${santri.id}/progres-file?record=${record.id}`}
+                                    driveUrl={cellFileUrl}
+                                    thumbnail
+                                    triggerTitle="Pratinjau Dokumen"
+                                    className="w-full max-w-[120px] h-14 rounded-md border border-primary-light/20 hover:opacity-90 transition-opacity"
+                                  />
+                                  <div className="flex items-stretch justify-center gap-0.5">
+                                    <a
+                                      href={`/api/admin/santri/${santri.id}/progres-file?record=${record.id}&download=1`}
+                                      title="Download Dokumen"
+                                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 rounded-l-md transition-colors shrink-0 flex items-center justify-center"
+                                    >
+                                      <Download size={12} />
+                                    </a>
+                                    <button
+                                      onClick={() => handleDeleteFile(record.id)}
+                                      disabled={cellLoading}
+                                      title="Hapus Dokumen"
+                                      className="bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger-dark px-1.5 py-0.5 rounded-r-md transition-colors disabled:opacity-50 flex items-center justify-center"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -500,15 +515,27 @@ function ProgresStatsModal({
                                />
                             </label>
                           ) : (
-                            <div className="flex items-stretch justify-center h-full gap-0.5 w-full">
-                              <a href={cellFileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-l-md hover:bg-blue-100 whitespace-nowrap min-w-0" title="Buka Dokumen">
-                                <span className="truncate hidden sm:inline">Diupload</span> <CheckCircle2 size={12} className="shrink-0" />
+                            <div className="flex items-center justify-end gap-1 w-full">
+                              <DokumenPreview
+                                title={`${tahap.nama} — ${s.namaLengkap}`}
+                                previewUrl={`/api/admin/santri/${s.id}/progres-file?record=${record.id}`}
+                                driveUrl={cellFileUrl}
+                                thumbnail
+                                triggerTitle="Pratinjau Dokumen"
+                                className="w-16 h-12 shrink-0 rounded-md border border-primary-light/20 hover:opacity-90 transition-opacity"
+                              />
+                              <a
+                                href={`/api/admin/santri/${s.id}/progres-file?record=${record.id}&download=1`}
+                                title="Download Dokumen"
+                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1.5 rounded-md transition-colors shrink-0 flex items-center justify-center"
+                              >
+                                <Download size={12} />
                               </a>
                               <button 
                                 onClick={() => handleDeleteFile(record.id)}
                                 disabled={cellLoading}
                                 title="Hapus Dokumen"
-                                className="bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger-dark px-2 py-1.5 rounded-r-md transition-colors disabled:opacity-50 flex items-center justify-center border-l border-white shrink-0"
+                                className="bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger-dark px-2 py-1.5 rounded-md transition-colors disabled:opacity-50 flex items-center justify-center shrink-0"
                               >
                                 <Trash2 size={12} />
                               </button>
