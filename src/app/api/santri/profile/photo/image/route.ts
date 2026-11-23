@@ -70,7 +70,12 @@ export async function GET(req: Request) {
       status: 200,
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        // JANGAN public: URL proxy ini sama untuk semua santri (?v=... sama
+        // untuk semua link Drive), isinya foto milik santri yang login.
+        // Cache-Control public membuat CDN menyimpan foto santri pertama
+        // yang membuka lalu menyajikannya ke santri lain (insiden 23 Nov
+        // 2026: dokumen Ummu Fathiyah muncul di akun santri lain).
+        "Cache-Control": "private, no-store",
       },
     });
   } catch (error: any) {

@@ -100,7 +100,12 @@ export async function GET(req: Request) {
       status: 200,
       headers: {
         "Content-Type": mimeType,
-        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        // JANGAN public: URL proxy ini sama untuk semua santri (hanya
+        // ?field=...), isinya milik santri yang login. Cache-Control public
+        // membuat CDN menyimpan dokumen santri pertama yang membuka lalu
+        // menyajikannya ke santri lain (insiden 23 Nov 2026: akte & pas
+        // foto Ummu Fathiyah muncul di akun Torib dkk).
+        "Cache-Control": "private, no-store",
       },
     });
   } catch (error: unknown) {
