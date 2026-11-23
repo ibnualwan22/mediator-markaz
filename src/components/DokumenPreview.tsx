@@ -8,9 +8,11 @@ import { X, Loader2, ExternalLink, Download, FileText } from "lucide-react";
 // proxy (bukan tautan Drive langsung) supaya gambar/PDF tampil di dalam
 // halaman; tautan "Buka di Drive" tetap disediakan di footer modal.
 // Dengan prop thumbnail, pemicunya berupa gambar kecil dokumen itu sendiri
-// (lazy loading): foto tampil langsung, PDF tampil sebagai kartu "PDF"
-// karena PDF tidak bisa dirender sebagai <img>. Diklik, membuka modal
-// pratinjau yang sama.
+// (lazy loading). Thumbnail diambil dari URL thumbnail kecil bawaan Google
+// Drive (sz=w200, ~10 KB) supaya scroll tidak memuat file ukuran penuh
+// lewat proxy; bila gagal, jatuh kembali ke previewUrl, dan bila itu pun
+// gagal tampil kartu "PDF" (PDF tidak bisa dirender sebagai <img>).
+// Diklik, membuka modal pratinjau yang sama.
 export default function DokumenPreview({ title, previewUrl, driveUrl, trigger, triggerTitle, className, thumbnail }: {
   title: string;
   previewUrl: string;
@@ -26,6 +28,19 @@ export default function DokumenPreview({ title, previewUrl, driveUrl, trigger, t
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thumbFailed, setThumbFailed] = useState(false);
+
+  // ID file Drive dari driveUrl (format /file/d/<id>/ atau ?id=<id>),
+  // dipakai untuk URL thumbnail kecil bawaan Google Drive.
+  const driveFileId = (() => {
+    if (!driveUrl) return null;
+    const m = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return m ? m[1] : null;
+  })();
+  const driveThumbUrl = driveFileId ? `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w200` : null;
+  // Bila thumbnail Drive gagal dimuat, coba sekali lagi lewat proxy
+  // (file ukuran penuh); bila itu pun gagal, tampil kartu "PDF".
+  const [thumbFallbackSrc, setThumbFallbackSrc] = useState<string | null>(null);
+  const thumbSrc = thumbFallbackSrc ?? driveThumbUrl ?? previewUrl;
 
   const downloadUrl = `${previewUrl}${previewUrl.includes("?") ? "&" : "?"}download=1`;
 
@@ -92,11 +107,14 @@ export default function DokumenPreview({ title, previewUrl, driveUrl, trigger, t
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={previewUrl}
+              src={thumbSrc}
               alt={title}
               loading="lazy"
               decoding="async"
-              onError={() => setThumbFailed(true)}
+              onError={() => {
+                if (thumbSrc === driveThumbUrl && driveThumbUrl) setThumbFallbackSrc(previewUrl);
+                else setThumbFailed(true);
+              }}
               className="w-full h-full object-cover"
             />
           )}

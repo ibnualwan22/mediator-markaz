@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { upsertCicilanPembayaran, changePaketSantri, markAsLunas, updatePembayaranSantriMeta } from "@/app/admin/(dashboard)/pembayaran/actions";
 import { updatePembayaranDL, markAsLunasDL, updateDarulLughohMeta, waivePembayaranDL, resetTagihanDL } from "@/app/admin/(dashboard)/darul-lughoh/actions";
-import { CheckCircle2, AlertCircle, CalendarRange, X, Save, Upload } from "lucide-react";
+import { CheckCircle2, AlertCircle, CalendarRange, X, Save, Upload, FileSpreadsheet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ImportExcelModal from "@/components/admin/ImportExcelModal";
 import SearchAutocomplete from "@/components/admin/SearchAutocomplete";
+import SalinLaporanButton from "@/components/admin/SalinLaporanButton";
+import { formatLaporanPerItem, formatLaporanGlobal, labelKonteksLaporan } from "@/lib/laporanBelum";
 // Utility formatting
 const fmt = (num: number) => `Rp ${num.toLocaleString('id-ID')}`;
 
@@ -80,6 +82,87 @@ export default function SpreadsheetPembayaran({
 
 
 
+  // Nominal yang harus dibayar seorang santri untuk satu poin tagihan —
+  // cerminan persis logika lunas di sel tabel (nominalHarus DB didahulukan,
+  // lalu nominalIjazah bila tahap berbasis ijazah).
+  const hitungHarus = (santri: any, t: any, pt: any) => {
+    let h = pt.nominal;
+    const ps = santri.pembayaranSantri.find((s: any) => s.poinTahapId === pt.id);
+    if (ps && ps.nominalHarus !== undefined) h = ps.nominalHarus;
+    else if (t.isIjazahBased && pt.nominalIjazah && (santri.riwayatAkademik === 'MA' || santri.riwayatAkademik === 'IJAZAH_PESANTREN')) h = pt.nominalIjazah;
+    return h;
+  };
+
+  const isPoinLunas = (santri: any, t: any, pt: any) => {
+    const ps = santri.pembayaranSantri.find((s: any) => s.poinTahapId === pt.id);
+    const h = hitungHarus(santri, t, pt);
+    const dibayar = ps?.nominalDibayar || 0;
+    return (dibayar >= h && (h > 0 || !pt.isBebas)) || ps?.isLunas === true;
+  };
+
+  // Statistik belum membayar per paket -> tahap -> poin (kartu ringkasan,
+  // angka "Belum" di header kolom, laporan WA, dan export Excel).
+  const belumPerPoin: { paketId: string; paketNama: string; tahapNama: string; poinId: string; poinNama: string; nominal: number; belum: string[]; sudah: number }[] = [];
+  targetPakets.forEach((pkt: any) => {
+    const pktSantris = santriList.filter((s: any) => s.paketPembayaranId === pkt.id);
+    (pkt.tahapPaket || []).forEach((t: any) => {
+      (t.poinTahap || []).forEach((pt: any) => {
+        const belum = pktSantris.filter((s: any) => !isPoinLunas(s, t, pt)).map((s: any) => s.namaLengkap);
+        belumPerPoin.push({ paketId: pkt.id, paketNama: pkt.nama, tahapNama: t.nama, poinId: pt.id, poinNama: pt.nama, nominal: pt.nominal, belum, sudah: pktSantris.length - belum.length });
+      });
+    });
+  });
+  const belumByPoinId: Record<string, { belum: string[]; sudah: number }> = {};
+  belumPerPoin.forEach((b) => { belumByPoinId[b.poinId] = { belum: b.belum, sudah: b.sudah }; });
+
+  const konteksLaporan = labelKonteksLaporan(gelombangs, periodes, selectedGelombangId, selectedPeriodeId);
+
+  // Entri laporan global: per santri, daftar poin yang belum lunas (semua paket).
+  const laporanGlobalEntries: { nama: string; items: string[] }[] = [];
+  santriList.forEach((s: any) => {
+    const items: string[] = [];
+    targetPakets.forEach((pkt: any) => {
+      if (s.paketPembayaranId !== pkt.id) return;
+      (pkt.tahapPaket || []).forEach((t: any) => {
+        (t.poinTahap || []).forEach((pt: any) => {
+          if (!isPoinLunas(s, t, pt)) items.push(`${pkt.nama} — ${t.nama}: ${pt.nama}`);
+        });
+      });
+    });
+    if (items.length > 0) laporanGlobalEntries.push({ nama: s.namaLengkap, items });
+  });
+
+  // Export Excel: satu sheet per paket (daftar nama belum membayar per poin)
+  // + satu sheet "Rekap Global" (jumlah belum per poin, semua paket).
+  const handleExportExcel = async () => {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.utils.book_new();
+    targetPakets.forEach((pkt: any) => {
+      const pktSantris = santriList.filter((s: any) => s.paketPembayaranId === pkt.id);
+      const rows: any[][] = [["Tahap", "Poin Tagihan", "Nama Camaba", "Nominal Harus", "Dibayar", "Kekurangan"]];
+      (pkt.tahapPaket || []).forEach((t: any) => {
+        (t.poinTahap || []).forEach((pt: any) => {
+          pktSantris.forEach((s: any) => {
+            if (isPoinLunas(s, t, pt)) return;
+            const ps = s.pembayaranSantri.find((x: any) => x.poinTahapId === pt.id);
+            const h = hitungHarus(s, t, pt);
+            const dibayar = ps?.nominalDibayar || 0;
+            rows.push([t.nama, pt.nama, s.namaLengkap, h, dibayar, Math.max(0, h - dibayar)]);
+          });
+        });
+      });
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws["!cols"] = [{ wch: 32 }, { wch: 42 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws, pkt.nama.slice(0, 31));
+    });
+    const globalRows: any[][] = [["Paket", "Tahap", "Poin Tagihan", "Nominal", "Belum (santri)", "Total (santri)"]];
+    belumPerPoin.forEach((b) => globalRows.push([b.paketNama, b.tahapNama, b.poinNama, b.nominal, b.belum.length, b.belum.length + b.sudah]));
+    const wsGlobal = XLSX.utils.aoa_to_sheet(globalRows);
+    wsGlobal["!cols"] = [{ wch: 16 }, { wch: 12 }, { wch: 42 }, { wch: 15 }, { wch: 14 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, wsGlobal, "Rekap Global");
+    XLSX.writeFile(wb, `Pembayaran-Belum-Lunas-${konteksLaporan.replace(/[^A-Za-z0-9]+/g, "-")}.xlsx`);
+  };
+
   // Levels for DL
   const dlLevels = [1, 2, 3, 4, 5, 6];
 
@@ -152,6 +235,61 @@ export default function SpreadsheetPembayaran({
   // Removed handleSetLunasAllTahap and handleSetLunasAllDL
 
   return (
+    <>
+      {/* Ringkasan Belum Membayar — di luar kotak spreadsheet supaya bisa sticky saat halaman di-scroll */}
+      {belumPerPoin.length > 0 && (
+        <div className="sticky top-16 lg:top-0 z-20 bg-bg-cream dark:bg-gray-900 border-b border-primary-light/10 dark:border-gray-800">
+          <div className="flex items-center justify-between gap-2 px-4 pt-3 flex-wrap">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-text-secondary dark:text-gray-400">Belum Membayar per Tahap</h2>
+            <div className="flex items-center gap-2">
+              <SalinLaporanButton
+                text={formatLaporanGlobal(`Laporan Belum Membayar — ${konteksLaporan}`, laporanGlobalEntries)}
+                label="Salin Laporan"
+                disabled={laporanGlobalEntries.length === 0}
+                title="Salin laporan global santri yang masih ada tagihan belum lunas (semua paket)"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-primary bg-white dark:bg-gray-900 border border-primary-light/30 rounded-lg hover:bg-primary-bg transition-colors disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                title="Unduh Excel: daftar belum membayar per paket + rekap global"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                <FileSpreadsheet size={14} /> Export Excel
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-4 overflow-x-auto p-4 pt-3 custom-scrollbar">
+            {belumPerPoin.map((b) => {
+              const total = b.belum.length + b.sudah;
+              const progress = total === 0 ? 0 : Math.round((b.sudah / total) * 100);
+              return (
+                <div key={b.poinId} className="flex-shrink-0 w-60 bg-white dark:bg-gray-900 border border-primary-light/20 dark:border-gray-700 rounded-xl p-3 shadow-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-sm text-text-primary dark:text-gray-100 truncate" title={`${b.paketNama} — ${b.tahapNama}: ${b.poinNama}`}>{b.poinNama}</h3>
+                    <SalinLaporanButton
+                      text={formatLaporanPerItem(`Belum membayar: ${b.paketNama} — ${b.tahapNama}: ${b.poinNama} (${b.belum.length} santri)`, b.belum)}
+                      label="Salin"
+                      disabled={b.belum.length === 0}
+                      title="Salin daftar santri yang belum membayar poin ini"
+                      className="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-primary bg-primary-bg border border-primary-light/30 rounded-md hover:bg-primary-light/20 transition-colors disabled:opacity-50"
+                    />
+                  </div>
+                  <p className="text-[11px] text-text-secondary dark:text-gray-400 mt-1 truncate" title={`${b.paketNama} — ${b.tahapNama}`}>{b.paketNama} — {b.tahapNama}</p>
+                  <div className="flex justify-between mt-2 text-xs">
+                    <span className="text-success font-semibold">Lunas: {b.sudah}</span>
+                    <span className="text-danger font-semibold">Belum: {b.belum.length}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                    <div className="bg-success h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-140px)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
       {/* Overdue Alert */}
       {overdueItems.length > 0 && !overdueAlertClosed && (
@@ -362,6 +500,9 @@ export default function SpreadsheetPembayaran({
                               <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
                                 {tahap1.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
                               </div>
+                              <div className="text-xs font-bold text-danger mt-0.5">
+                                Belum: {belumByPoinId[poin.id]?.belum.length ?? 0}
+                              </div>
                             </th>
                           ))}
 
@@ -382,6 +523,9 @@ export default function SpreadsheetPembayaran({
                                 </div>
                                   <div className="text-xs text-text-secondary dark:text-gray-400 font-normal mt-0.5">
                                     {t.isIjazahBased && poin.nominalIjazah ? `${fmt(poin.nominal)} / ${fmt(poin.nominalIjazah)}` : fmt(poin.nominal)}
+                                  </div>
+                                  <div className="text-xs font-bold text-danger mt-0.5">
+                                    Belum: {belumByPoinId[poin.id]?.belum.length ?? 0}
                                   </div>
                                 </th>
                               ))
@@ -793,5 +937,6 @@ export default function SpreadsheetPembayaran({
         }}
       />
     </div>
+    </>
   );
 }

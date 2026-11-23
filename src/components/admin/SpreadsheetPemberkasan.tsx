@@ -255,52 +255,9 @@ export default function SpreadsheetPemberkasan({
   }, [router]);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-10rem)] md:h-[calc(100vh-12rem)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
-      
-      {/* Filter and Search Bar */}
-      <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream dark:bg-gray-800/30">
-        <div className="flex gap-2">
-          {/* PERIODE FILTER */}
-          <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-[200px]"
-            value={selectedPeriodeId}
-            onChange={(e) => {
-              const params = new URLSearchParams(window.location.search);
-              if (e.target.value) {
-                params.set('periodeId', e.target.value);
-                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
-              }
-              else params.delete('periodeId');
-              
-              params.delete('gelombangId'); // reset gelombang when changing periode
-              router.push(`/admin/pemberkasan?${params.toString()}`);
-            }}
-          >
-            <option value="" disabled>Pilih Periode</option>
-            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
-          </select>
-
-          {/* GELOMBANG FILTER */}
-          <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary"
-            value={selectedGelombangId}
-            onChange={(e) => {
-              const params = new URLSearchParams(window.location.search);
-              if (e.target.value) params.set('gelombangId', e.target.value);
-              router.push(`/admin/pemberkasan?${params.toString()}`);
-            }}
-          >
-            <option value="all">Semua Gelombang</option>
-            {gelombangs.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
-          </select>
-        </div>
-        
-        <SearchAutocomplete 
-          periodeId={selectedPeriodeId} 
-          currentQuery={query}
-        />
-      </div>
-
+    <div className="w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0">
+      {/* Kartu ringkasan — di luar kotak spreadsheet supaya bisa sticky saat halaman di-scroll */}
+      <div className="sticky top-16 lg:top-0 z-20 bg-bg-cream dark:bg-gray-900">
       {/* Summary Cards — Dokumen Pendaftaran */}
       {dokumenPendaftaran.length > 0 && santriList.length > 0 && (
         <div className="border-b border-primary-light/10 dark:border-gray-800 bg-bg-cream/50 dark:bg-gray-800/20">
@@ -385,6 +342,54 @@ export default function SpreadsheetPemberkasan({
           </div>
         </div>
       )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-10rem)] md:h-[calc(100vh-12rem)] w-full overflow-hidden">
+
+      
+      {/* Filter and Search Bar */}
+      <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream dark:bg-gray-800/30">
+        <div className="flex gap-2">
+          {/* PERIODE FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-[200px]"
+            value={selectedPeriodeId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) {
+                params.set('periodeId', e.target.value);
+                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
+              }
+              else params.delete('periodeId');
+              
+              params.delete('gelombangId'); // reset gelombang when changing periode
+              router.push(`/admin/pemberkasan?${params.toString()}`);
+            }}
+          >
+            <option value="" disabled>Pilih Periode</option>
+            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+
+          {/* GELOMBANG FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary"
+            value={selectedGelombangId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) params.set('gelombangId', e.target.value);
+              router.push(`/admin/pemberkasan?${params.toString()}`);
+            }}
+          >
+            <option value="all">Semua Gelombang</option>
+            {gelombangs.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
+          </select>
+        </div>
+        
+        <SearchAutocomplete 
+          periodeId={selectedPeriodeId} 
+          currentQuery={query}
+        />
+      </div>
 
       {/* Item Modal (Popup Detail Ringkasan) */}
       {activeItemModal && (
@@ -570,7 +575,7 @@ export default function SpreadsheetPemberkasan({
             {/* Header 2: Item Names */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
               <th className="px-1 py-2 md:p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[40px] md:min-w-[60px] w-[40px] md:w-[60px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)] text-center">No.</th>
-              <th className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[130px] md:min-w-[160px] max-w-[130px] md:max-w-[160px] sticky left-[40px] md:left-[60px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+              <th className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[220px] max-w-[220px] sticky left-[40px] md:left-[60px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] md:min-w-[100px] z-20">NIC</th>
 
               {dokumenPendaftaran.map(dok => (
@@ -611,7 +616,7 @@ export default function SpreadsheetPemberkasan({
                   <td className="px-1 py-2 md:p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-bold text-text-secondary dark:text-gray-400 text-center sticky left-0 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)] min-w-[40px] md:min-w-[60px] w-[40px] md:w-[60px]">
                     {santri.nomorUrut || (santri.nis ? santri.nis.slice(-3) : '-')}
                   </td>
-                  <td className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-semibold min-w-[130px] md:min-w-[160px] max-w-[130px] md:max-w-[160px] whitespace-normal break-words leading-tight sticky left-[40px] md:left-[60px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]" title={santri.namaLengkap}>{santri.namaLengkap}</td>
+                  <td className="px-2 py-2 md:p-2 border-r border-primary-light/30 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-semibold min-w-[220px] max-w-[220px] whitespace-normal break-words leading-tight sticky left-[40px] md:left-[60px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]" title={santri.namaLengkap}>{santri.namaLengkap}</td>
                   <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-medium text-primary text-[11px] whitespace-nowrap z-0 min-w-[80px] md:min-w-[100px]">{santri.nis}</td>
 
                   {dokumenPendaftaran.map(dok => {
@@ -760,6 +765,7 @@ export default function SpreadsheetPemberkasan({
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

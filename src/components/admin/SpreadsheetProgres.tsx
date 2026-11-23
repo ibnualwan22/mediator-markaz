@@ -151,52 +151,9 @@ export default function SpreadsheetProgres({
   }, [router]);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-12rem)] w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0 overflow-hidden">
-      
-      {/* Filter and Search Bar */}
-      <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream dark:bg-gray-800/30 justify-between">
-        <div className="flex gap-2">
-          {/* PERIODE FILTER */}
-          <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-[200px]"
-            value={selectedPeriodeId}
-            onChange={(e) => {
-              const params = new URLSearchParams(window.location.search);
-              if (e.target.value) {
-                params.set('periodeId', e.target.value);
-                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
-              }
-              else params.delete('periodeId');
-              
-              params.delete('gelombangId'); // reset gelombang when changing periode
-              router.push(`/admin/progres?${params.toString()}`);
-            }}
-          >
-            <option value="" disabled>Pilih Periode</option>
-            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
-          </select>
-
-          {/* GELOMBANG FILTER */}
-          <select
-            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary"
-            value={selectedGelombangId}
-            onChange={(e) => {
-              const params = new URLSearchParams(window.location.search);
-              if (e.target.value) params.set('gelombangId', e.target.value);
-              router.push(`/admin/progres?${params.toString()}`);
-            }}
-          >
-            <option value="all">Semua Gelombang</option>
-            {gelombangs.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
-          </select>
-        </div>
-        
-        <SearchAutocomplete 
-          periodeId={selectedPeriodeId} 
-          currentQuery={query}
-        />
-      </div>
-
+    <div className="w-full max-w-full lg:max-w-[calc(100vw-275px)] min-w-0">
+      {/* Kartu ringkasan — di luar kotak spreadsheet supaya bisa sticky saat halaman di-scroll */}
+      <div className="sticky top-16 lg:top-0 z-20 bg-bg-cream dark:bg-gray-900">
       {/* Summary Cards */}
       {tahaps.length > 0 && santriList.length > 0 && (
         <div className="border-b border-primary-light/10 dark:border-gray-800 bg-bg-cream/50 dark:bg-gray-800/20">
@@ -245,6 +202,54 @@ export default function SpreadsheetProgres({
           </div>
         </div>
       )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-primary-light/20 dark:border-gray-700 flex flex-col h-[calc(100vh-12rem)] w-full overflow-hidden">
+
+      
+      {/* Filter and Search Bar */}
+      <div className="p-4 border-b border-primary-light/20 dark:border-gray-700 flex flex-shrink-0 flex-wrap gap-4 items-center bg-bg-cream dark:bg-gray-800/30 justify-between">
+        <div className="flex gap-2">
+          {/* PERIODE FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary max-w-[200px]"
+            value={selectedPeriodeId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) {
+                params.set('periodeId', e.target.value);
+                document.cookie = `admin_active_periode=${e.target.value}; path=/; max-age=31536000`;
+              }
+              else params.delete('periodeId');
+              
+              params.delete('gelombangId'); // reset gelombang when changing periode
+              router.push(`/admin/progres?${params.toString()}`);
+            }}
+          >
+            <option value="" disabled>Pilih Periode</option>
+            {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+
+          {/* GELOMBANG FILTER */}
+          <select
+            className="px-3 py-1.5 rounded-lg border border-primary-light/30 dark:border-gray-700 text-sm outline-none bg-white dark:bg-gray-900 font-medium text-text-secondary dark:text-gray-400 focus:border-primary"
+            value={selectedGelombangId}
+            onChange={(e) => {
+              const params = new URLSearchParams(window.location.search);
+              if (e.target.value) params.set('gelombangId', e.target.value);
+              router.push(`/admin/progres?${params.toString()}`);
+            }}
+          >
+            <option value="all">Semua Gelombang</option>
+            {gelombangs.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
+          </select>
+        </div>
+        
+        <SearchAutocomplete 
+          periodeId={selectedPeriodeId} 
+          currentQuery={query}
+        />
+      </div>
 
       {/* Spreadsheet Table */}
       <div className="flex-1 overflow-auto custom-scrollbar">
@@ -267,7 +272,7 @@ export default function SpreadsheetProgres({
             {/* Header 2: Item Names */}
             <tr className="border-b border-primary-light/20 dark:border-gray-700">
               <th className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[80px] sticky left-0 z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">NIC</th>
-              <th className="p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[150px] sticky left-[80px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
+              <th className="p-2 border-r border-primary-light/30 dark:border-gray-700 bg-[#f4f2eb] dark:bg-gray-800 min-w-[240px] sticky left-[80px] z-30 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">Nama</th>
               
               {tahaps.map(tahap => (
                 <th key={tahap.id} className={`p-2 border-r border-primary-light/10 dark:border-gray-700 min-w-[100px] align-bottom ${tahap.isActive ? 'bg-[#f4f2eb] dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`} title={tahap.nama}>
@@ -288,7 +293,7 @@ export default function SpreadsheetProgres({
               return (
                 <tr key={santri.id} className="border-b border-primary-light/10 dark:border-gray-700 hover:bg-[#faf9f5] dark:bg-gray-800 transition-colors group">
                   <td className="p-2 border-r border-primary-light/10 dark:border-gray-700 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-mono font-bold text-primary whitespace-nowrap px-3 sticky left-0 z-10 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.nis}</td>
-                  <td className="p-2 border-r border-primary-light/30 dark:border-gray-700 sticky left-[80px] z-10 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-bold text-sm truncate min-w-[170px] max-w-[200px] shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.namaLengkap}</td>
+                  <td className="p-2 border-r border-primary-light/30 dark:border-gray-700 sticky left-[80px] z-10 bg-white dark:bg-gray-900 group-hover:bg-[#faf9f5] dark:bg-gray-800 font-bold text-sm truncate min-w-[240px] max-w-[240px] shadow-[2px_0_4px_rgba(0,0,0,0.06)]">{santri.namaLengkap}</td>
                   
                   {tahaps.map(tahap => {
                     const record = santri.progresSantri.find((p: any) => p.tahapProgresId === tahap.id);
@@ -409,6 +414,7 @@ export default function SpreadsheetProgres({
           handleDeleteFile={handleDeleteFile}
         />
       )}
+    </div>
     </div>
   );
 }
