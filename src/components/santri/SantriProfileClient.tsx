@@ -66,6 +66,7 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
     nomorPaspor: santriData.nomorPaspor || "",
     tanggalPembuatanPaspor: santriData.tanggalPembuatanPaspor ? new Date(santriData.tanggalPembuatanPaspor).toISOString().split('T')[0] : "",
     tanggalKadaluarsaPaspor: santriData.tanggalKadaluarsaPaspor ? new Date(santriData.tanggalKadaluarsaPaspor).toISOString().split('T')[0] : "",
+    kantorPenerbitPaspor: santriData.kantorPenerbitPaspor || "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -392,7 +393,24 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
             )}
           </dd>
         </div>
-        <div className="sm:col-span-1"></div>
+        <div className="sm:col-span-1">
+          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            <Calendar size={10} />
+            Tanggal Pembuatan
+          </dt>
+          <dd className="text-sm text-text-primary font-semibold">
+            {isEditing ? (
+              <input
+                type="date"
+                value={formData.tanggalPembuatanPaspor}
+                onChange={(e) => setFormData({ ...formData, tanggalPembuatanPaspor: e.target.value })}
+                className="w-full px-3 py-2 border border-primary-light/30 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-normal"
+              />
+            ) : (
+              santriData.tanggalPembuatanPaspor ? new Date(santriData.tanggalPembuatanPaspor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"
+            )}
+          </dd>
+        </div>
 
         <div className="sm:col-span-1">
           <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
@@ -409,6 +427,25 @@ export default function SantriProfileClient({ santriData }: { santriData: any })
               />
             ) : (
               santriData.tanggalKadaluarsaPaspor ? new Date(santriData.tanggalKadaluarsaPaspor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"
+            )}
+          </dd>
+        </div>
+
+        <div className="sm:col-span-2">
+          <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            Kantor Penerbit
+          </dt>
+          <dd className="text-sm text-text-primary font-semibold">
+            {isEditing ? (
+              <input
+                type="text"
+                value={formData.kantorPenerbitPaspor}
+                onChange={(e) => setFormData({ ...formData, kantorPenerbitPaspor: e.target.value })}
+                className="w-full px-3 py-2 border border-primary-light/30 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-normal"
+                placeholder="Kantor Imigrasi ..."
+              />
+            ) : (
+              santriData.kantorPenerbitPaspor || <span className="text-text-secondary/40 italic font-normal">Belum diisi</span>
             )}
           </dd>
         </div>
